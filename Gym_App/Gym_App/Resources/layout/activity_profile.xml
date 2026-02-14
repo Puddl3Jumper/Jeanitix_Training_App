@@ -1,0 +1,177 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/bg_screen"
+    android:paddingStart="20dp"
+    android:paddingEnd="20dp"
+    android:paddingTop="20dp"
+    android:paddingBottom="0dp">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Profile"
+                android:textSize="30sp"
+                android:textStyle="bold"
+                android:textColor="@color/color_text_primary" />
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Your basic account and workout summary"
+                android:textSize="14sp"
+                android:textColor="@color/color_text_secondary"
+                android:layout_marginTop="4dp"
+                android:layout_marginBottom="16dp" />
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_card"
+                android:padding="16dp"
+                android:layout_marginBottom="16dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Name"
+                    android:textSize="12sp"
+                    android:textColor="@color/color_text_secondary" />
+
+                <TextView
+                    android:id="@+id/profileNameValue"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Not set"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/color_text_primary"
+                    android:layout_marginBottom="12dp" />
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Email"
+                    android:textSize="12sp"
+                    android:textColor="@color/color_text_secondary" />
+
+                <TextView
+                    android:id="@+id/profileEmailValue"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Not set"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/color_text_primary" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="vertical"
+                android:background="@drawable/bg_card"
+                android:padding="16dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Workout Stats"
+                    android:textSize="18sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/color_primary"
+                    android:layout_marginBottom="12dp" />
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="8dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Total Workouts"
+                        android:textSize="14sp"
+                        android:textColor="@color/color_text_secondary" />
+
+                    <TextView
+                        android:id="@+id/profileTotalWorkoutsValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/color_text_primary" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:layout_marginBottom="8dp">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Total Duration"
+                        android:textSize="14sp"
+                        android:textColor="@color/color_text_secondary" />
+
+                    <TextView
+                        android:id="@+id/profileTotalDurationValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0h 0m"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/color_text_primary" />
+                </LinearLayout>
+
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal">
+
+                    <TextView
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:text="Last Workout"
+                        android:textSize="14sp"
+                        android:textColor="@color/color_text_secondary" />
+
+                    <TextView
+                        android:id="@+id/profileLastWorkoutValue"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="No records yet"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/color_text_primary" />
+                </LinearLayout>
+
+            </LinearLayout>
+
+        </LinearLayout>
+
+    </ScrollView>
+
+    <include layout="@layout/layout_bottom_bar" />
+
+</LinearLayout>

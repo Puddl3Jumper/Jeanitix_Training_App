@@ -1,0 +1,43 @@
+# Build outputs
+**/bin/
+**/obj/
+
+# Visual Studio / VS Code
+.vs/
+.vscode/
+*.user
+*.suo
+*.userosscache
+*.sln.docstates
+
+# Rider / JetBrains
+.idea/
+*.sln.iml
+
+# NuGet
+*.nupkg
+packages/
+
+# Xamarin / Android
+*.apk
+*.aab
+*.apks
+*.idsig
+*.keystore
+*.jks
+*.aar
+*.dex
+*.so
+
+# Logs
+*.log
+
+# macOS
+.DS_Store
+
+# Local environment
+.env
+.env.*
+
+# Optional: keep this if you don't want generated icons tracked
+# Gym_App/Gym_App/Resources/mipmap-*/appicon*.png

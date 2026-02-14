@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:orientation="vertical"
+    android:background="@drawable/bg_screen">
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1"
+        android:fillViewport="true">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="vertical"
+        android:padding="20dp">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Create Account"
+            android:textSize="30sp"
+            android:textStyle="bold"
+            android:textColor="@color/color_primary"
+            android:layout_marginTop="40dp" />
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Enter basic information to get started"
+            android:textSize="15sp"
+            android:textColor="@color/color_text_secondary"
+            android:layout_marginTop="8dp"
+            android:layout_marginBottom="30dp" />
+
+        <EditText
+            android:id="@+id/createNameInput"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:hint="Full Name"
+            android:inputType="textPersonName"
+            android:textColor="@color/color_text_primary"
+            android:textColorHint="@color/color_text_secondary"
+            android:background="@drawable/bg_input_field"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:layout_marginBottom="12dp" />
+
+        <EditText
+            android:id="@+id/createEmailInput"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:hint="Email"
+            android:inputType="textEmailAddress"
+            android:textColor="@color/color_text_primary"
+            android:textColorHint="@color/color_text_secondary"
+            android:background="@drawable/bg_input_field"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:layout_marginBottom="12dp" />
+
+        <EditText
+            android:id="@+id/createPasswordInput"
+            android:layout_width="match_parent"
+            android:layout_height="56dp"
+            android:hint="Password"
+            android:inputType="textPassword"
+            android:textColor="@color/color_text_primary"
+            android:textColorHint="@color/color_text_secondary"
+            android:background="@drawable/bg_input_field"
+            android:paddingStart="16dp"
+            android:paddingEnd="16dp"
+            android:layout_marginBottom="22dp" />
+
+        <Button
+            android:id="@+id/createAccountButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Create Account"
+            android:textAllCaps="false"
+            android:textStyle="bold"
+            android:textColor="@color/color_on_primary"
+            android:background="@drawable/bg_liquid_glass_primary"
+            android:minHeight="62dp"
+            android:gravity="center" />
+
+    </LinearLayout>
+    </ScrollView>
+
+</LinearLayout>

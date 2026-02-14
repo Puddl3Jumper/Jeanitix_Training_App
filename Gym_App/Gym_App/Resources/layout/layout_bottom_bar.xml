@@ -1,0 +1,158 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="70dp"
+    android:layout_marginBottom="12dp"
+    android:orientation="horizontal"
+    android:baselineAligned="false"
+    android:weightSum="4"
+    android:gravity="center"
+    android:background="@color/color_surface"
+    android:paddingStart="8dp"
+    android:paddingEnd="8dp">
+
+    <LinearLayout
+        android:id="@+id/homeTab"
+        android:layout_width="0dp"
+        android:layout_height="56dp"
+        android:minHeight="56dp"
+        android:maxHeight="56dp"
+        android:layout_weight="1"
+        android:layout_gravity="center_vertical"
+        android:orientation="vertical"
+        android:baselineAligned="false"
+        android:gravity="center"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp"
+        android:background="@drawable/bg_bottom_tab_selector">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🏠"
+            android:textSize="18sp"
+            android:includeFontPadding="false"
+            android:textColor="@color/bottom_tab_text_selector"
+            android:duplicateParentState="true" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Home"
+            android:textColor="@color/bottom_tab_text_selector"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:singleLine="true"
+            android:includeFontPadding="false"
+            android:duplicateParentState="true" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/diaryTab"
+        android:layout_width="0dp"
+        android:layout_height="56dp"
+        android:minHeight="56dp"
+        android:maxHeight="56dp"
+        android:layout_weight="1"
+        android:layout_gravity="center_vertical"
+        android:orientation="vertical"
+        android:baselineAligned="false"
+        android:gravity="center"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp"
+        android:background="@drawable/bg_bottom_tab_selector">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="📓"
+            android:textSize="18sp"
+            android:includeFontPadding="false"
+            android:textColor="@color/bottom_tab_text_selector"
+            android:duplicateParentState="true" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Diary"
+            android:textColor="@color/bottom_tab_text_selector"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:singleLine="true"
+            android:includeFontPadding="false"
+            android:duplicateParentState="true" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/workoutTab"
+        android:layout_width="0dp"
+        android:layout_height="56dp"
+        android:minHeight="56dp"
+        android:maxHeight="56dp"
+        android:layout_weight="1"
+        android:layout_gravity="center_vertical"
+        android:orientation="vertical"
+        android:baselineAligned="false"
+        android:gravity="center"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp"
+        android:background="@drawable/bg_bottom_tab_selector">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🏋️"
+            android:textSize="18sp"
+            android:includeFontPadding="false"
+            android:textColor="@color/bottom_tab_text_selector"
+            android:duplicateParentState="true" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Workout"
+            android:textColor="@color/bottom_tab_text_selector"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:singleLine="true"
+            android:includeFontPadding="false"
+            android:duplicateParentState="true" />
+    </LinearLayout>
+
+    <LinearLayout
+        android:id="@+id/profileTab"
+        android:layout_width="0dp"
+        android:layout_height="56dp"
+        android:minHeight="56dp"
+        android:maxHeight="56dp"
+        android:layout_weight="1"
+        android:layout_gravity="center_vertical"
+        android:orientation="vertical"
+        android:baselineAligned="false"
+        android:gravity="center"
+        android:paddingStart="8dp"
+        android:paddingEnd="8dp"
+        android:paddingTop="6dp"
+        android:paddingBottom="6dp"
+        android:background="@drawable/bg_bottom_tab_selector">
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="👤"
+            android:textSize="18sp"
+            android:includeFontPadding="false"
+            android:textColor="@color/bottom_tab_text_selector"
+            android:duplicateParentState="true" />
+        <TextView
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="Profile"
+            android:textColor="@color/bottom_tab_text_selector"
+            android:textSize="12sp"
+            android:textStyle="bold"
+            android:singleLine="true"
+            android:includeFontPadding="false"
+            android:duplicateParentState="true" />
+    </LinearLayout>
+
+</LinearLayout>

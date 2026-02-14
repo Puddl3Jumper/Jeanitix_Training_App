@@ -1,0 +1,89 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:padding="20dp"
+    android:background="@drawable/bg_screen">
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="84dp"
+        android:layout_marginBottom="20dp"
+        android:gravity="center"
+        android:text="FIXING&#10;CHANGING&#10;SOLVING"
+        android:fontFamily="sans-serif-black"
+        android:textColor="@color/color_primary"
+        android:textSize="42sp"
+        android:textStyle="bold" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/main_subtitle"
+        android:textSize="15sp"
+        android:fontFamily="serif"
+        android:textStyle="italic"
+        android:textColor="@color/color_text_secondary"
+        android:gravity="center"
+        android:layout_marginBottom="6dp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/main_subtitle_author"
+        android:textSize="13sp"
+        android:textColor="@color/color_text_secondary"
+        android:gravity="center"
+        android:layout_marginBottom="18dp" />
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/launch_copyright"
+        android:textSize="13sp"
+        android:textColor="@color/color_text_secondary"
+        android:gravity="center"
+        android:layout_marginBottom="20dp" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1" />
+
+    <Button
+        android:id="@+id/startWorkoutButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/start_workout"
+        android:textSize="20sp"
+        android:textAllCaps="false"
+        android:textColor="@color/color_on_primary"
+        android:background="@drawable/bg_liquid_glass_primary"
+        android:drawableStart="@android:drawable/ic_media_play"
+        android:drawablePadding="10dp"
+        android:gravity="center_vertical|center"
+        android:minHeight="62dp"
+        android:paddingStart="18dp"
+        android:paddingEnd="18dp"
+        android:layout_marginBottom="12dp" />
+
+    <Button
+        android:id="@+id/continueWorkoutButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/continue_workout"
+        android:textSize="18sp"
+        android:textAllCaps="false"
+        android:textColor="@color/color_text_primary"
+        android:background="@drawable/bg_liquid_glass_secondary"
+        android:drawableStart="@android:drawable/ic_menu_myplaces"
+        android:drawablePadding="10dp"
+        android:gravity="center_vertical|center"
+        android:minHeight="62dp"
+        android:paddingStart="18dp"
+        android:paddingEnd="18dp"
+        android:layout_marginBottom="8dp" />
+
+</LinearLayout>

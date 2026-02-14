@@ -1,0 +1,102 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingStart="20dp"
+    android:paddingEnd="20dp"
+    android:paddingTop="20dp"
+    android:paddingBottom="0dp"
+    android:background="@drawable/bg_screen">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:id="@+id/workoutNameText"
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/workout_session"
+            android:textSize="30sp"
+            android:textStyle="bold"
+            android:textColor="@color/color_text_primary"
+            android:layout_marginBottom="8dp" />
+
+        <TextView
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:text="✅"
+            android:gravity="center"
+            android:textSize="18sp"
+            android:background="@drawable/bg_glass_icon" />
+    </LinearLayout>
+
+    <TextView
+        android:id="@+id/workoutTimeText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/duration_default"
+        android:textSize="16sp"
+        android:textColor="@color/color_text_secondary"
+        android:layout_marginBottom="12dp" />
+
+    <HorizontalScrollView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:scrollbars="none"
+        android:layout_marginBottom="14dp">
+
+        <LinearLayout
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal">
+
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Chest" android:textColor="@color/color_primary" android:background="@drawable/bg_card" android:padding="10dp" android:layout_marginEnd="8dp"/>
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Back" android:textColor="@color/color_text_secondary" android:background="@drawable/bg_card" android:padding="10dp" android:layout_marginEnd="8dp"/>
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Shoulder" android:textColor="@color/color_text_secondary" android:background="@drawable/bg_card" android:padding="10dp" android:layout_marginEnd="8dp"/>
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Arm" android:textColor="@color/color_text_secondary" android:background="@drawable/bg_card" android:padding="10dp" android:layout_marginEnd="8dp"/>
+            <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Leg" android:textColor="@color/color_text_secondary" android:background="@drawable/bg_card" android:padding="10dp" android:layout_marginEnd="8dp"/>
+        </LinearLayout>
+    </HorizontalScrollView>
+
+    <Button
+        android:id="@+id/addExerciseButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/add_exercise_circuit"
+        android:textAllCaps="false"
+        android:textColor="@color/color_on_primary"
+        android:background="@drawable/bg_button_primary"
+        android:paddingVertical="12dp"
+        android:layout_marginBottom="16dp" />
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:id="@+id/exercisesContainer"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+    </ScrollView>
+
+    <Button
+        android:id="@+id/finishWorkoutButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/finish_workout"
+        android:textAllCaps="false"
+        android:textColor="@color/color_on_primary"
+        android:background="@drawable/bg_button_success"
+        android:paddingVertical="12dp" />
+
+    <include layout="@layout/layout_bottom_bar" />
+
+</LinearLayout>

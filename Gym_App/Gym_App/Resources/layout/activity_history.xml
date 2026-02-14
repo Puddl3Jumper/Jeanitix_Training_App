@@ -1,0 +1,70 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:orientation="vertical"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:paddingStart="20dp"
+    android:paddingEnd="20dp"
+    android:paddingTop="20dp"
+    android:paddingBottom="0dp"
+    android:background="@drawable/bg_screen">
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:gravity="center_vertical">
+
+        <TextView
+            android:layout_width="0dp"
+            android:layout_height="wrap_content"
+            android:layout_weight="1"
+            android:text="@string/history_title"
+            android:textSize="30sp"
+            android:textStyle="bold"
+            android:textColor="@color/color_text_primary"
+            android:layout_marginBottom="6dp" />
+
+        <TextView
+            android:layout_width="44dp"
+            android:layout_height="44dp"
+            android:text="🔍"
+            android:gravity="center"
+            android:textSize="18sp"
+            android:background="@drawable/bg_glass_icon" />
+    </LinearLayout>
+
+    <TextView
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:text="@string/history_subtitle"
+        android:textSize="14sp"
+        android:textColor="@color/color_text_secondary"
+        android:layout_marginBottom="16dp" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:orientation="horizontal"
+        android:layout_marginBottom="16dp">
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Day" android:textStyle="bold" android:textColor="@color/color_primary" android:layout_marginEnd="16dp" />
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Week" android:textColor="@color/color_text_secondary" android:layout_marginEnd="16dp" />
+        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Month" android:textColor="@color/color_text_secondary" />
+    </LinearLayout>
+
+    <ScrollView
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:layout_weight="1">
+
+        <LinearLayout
+            android:id="@+id/historyContainer"
+            android:orientation="vertical"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content" />
+
+    </ScrollView>
+
+    <include layout="@layout/layout_bottom_bar" />
+
+</LinearLayout>
