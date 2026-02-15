@@ -9,6 +9,7 @@ namespace Gym_App.Activities
         protected override void OnCreate(Bundle? savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
+               ThemeManager.ApplyTheme(this);
             ActionBar?.Hide();
             SetContentView(Resource.Layout.activity_create_account);
 

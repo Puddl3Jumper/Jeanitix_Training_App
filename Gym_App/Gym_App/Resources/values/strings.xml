@@ -28,7 +28,13 @@
     <string name="launch_copyright">© 2026 Fitness Diary</string>
     <string name="home_greeting">Hi, User</string>
     <string name="home_today_workout">Today\'s Workout</string>
-    <string name="home_start_workout">Start Workout</string>
+    <string name="home_start_workout">Start &amp; Select Workout</string>
+    <string name="home_start_workout_tooltip">Start a session, then choose exercises to track.</string>
     <string name="home_today_exercises">Today\'s Exercises</string>
     <string name="home_add_exercise">Add Exercise</string>
+    <string name="home_empty_first_step">No exercises logged yet. Pick your first step below.</string>
+    <string name="home_browse_exercises">Browse Exercises</string>
+    <string name="home_onboarding_title">Quick start</string>
+    <string name="home_onboarding_message">Tap \'Start &amp; Select Workout\' to begin tracking your session. Use Quick Log for fast entries and History to review progress.</string>
+    <string name="home_onboarding_cta">Got it</string>
 </resources>

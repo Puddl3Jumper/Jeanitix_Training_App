@@ -129,6 +129,11 @@ namespace Gym_App.Data
 
         public void AddSetToExercise(int workoutExerciseId, int reps, double weight, int loopNumber = 1, string weightUnit = "kg")
         {
+            AddSetToExercise(workoutExerciseId, reps, weight, null, loopNumber, weightUnit);
+        }
+
+        public void AddSetToExercise(int workoutExerciseId, int reps, double weight, string? notes, int loopNumber = 1, string weightUnit = "kg")
+        {
             foreach (var session in _workoutSessions)
             {
                 var workoutExercise = session.Exercises.FirstOrDefault(e => e.Id == workoutExerciseId);
@@ -145,13 +150,170 @@ namespace Gym_App.Data
                         Reps = reps,
                         Weight = weight,
                         WeightUnit = weightUnit,
-                        Completed = true
+                        Completed = true,
+                        Notes = string.IsNullOrWhiteSpace(notes) ? null : notes.Trim()
                     };
                     workoutExercise.Sets.Add(set);
                     SaveData();
                     return;
                 }
             }
+        }
+
+        public void UpdateWorkoutSession(int workoutSessionId, string? name, DateTime startDate, string? notes)
+        {
+            var session = _workoutSessions.FirstOrDefault(s => s.Id == workoutSessionId);
+            if (session == null)
+                return;
+
+            if (!string.IsNullOrWhiteSpace(name))
+                session.Name = name.Trim();
+
+            var normalizedDate = new DateTime(
+                startDate.Year,
+                startDate.Month,
+                startDate.Day,
+                session.StartTime.Hour,
+                session.StartTime.Minute,
+                session.StartTime.Second,
+                session.StartTime.Kind);
+
+            session.StartTime = normalizedDate;
+            session.Notes = string.IsNullOrWhiteSpace(notes) ? null : notes.Trim();
+            SaveData();
+        }
+
+        public void DeleteWorkoutSession(int workoutSessionId)
+        {
+            var session = _workoutSessions.FirstOrDefault(s => s.Id == workoutSessionId);
+            if (session == null)
+                return;
+
+            _workoutSessions.Remove(session);
+            SaveData();
+        }
+
+        public void UpdateWorkoutSet(int setId, int reps, double weight, string? notes)
+        {
+            foreach (var session in _workoutSessions)
+            {
+                foreach (var exercise in session.Exercises)
+                {
+                    var set = exercise.Sets.FirstOrDefault(s => s.Id == setId);
+                    if (set == null)
+                        continue;
+
+                    set.Reps = reps;
+                    set.Weight = weight;
+                    set.Notes = string.IsNullOrWhiteSpace(notes) ? null : notes.Trim();
+                    SaveData();
+                    return;
+                }
+            }
+        }
+
+        public void DeleteWorkoutSet(int setId)
+        {
+            foreach (var session in _workoutSessions)
+            {
+                foreach (var exercise in session.Exercises)
+                {
+                    var index = exercise.Sets.FindIndex(s => s.Id == setId);
+                    if (index < 0)
+                        continue;
+
+                    exercise.Sets.RemoveAt(index);
+                    for (int i = 0; i < exercise.Sets.Count; i++)
+                    {
+                        exercise.Sets[i].SetNumber = i + 1;
+                    }
+
+                    SaveData();
+                    return;
+                }
+            }
+        }
+
+        public List<(DateTime date, double maxWeight)> GetExerciseProgress(string exerciseName, int limit = 30)
+        {
+            return _workoutSessions
+                .Where(s => s.IsCompleted)
+                .SelectMany(s => s.Exercises.Select(e => new { Session = s, Exercise = e }))
+                .Where(x => string.Equals(x.Exercise.Exercise?.Name, exerciseName, StringComparison.OrdinalIgnoreCase))
+                .Where(x => x.Exercise.Sets.Any())
+                .Select(x => (date: x.Session.StartTime.Date, maxWeight: x.Exercise.Sets.Max(set => set.Weight)))
+                .OrderBy(x => x.date)
+                .TakeLast(limit)
+                .ToList();
+        }
+
+        public (double pr, double lastWeight) GetExercisePrAndLastWeight(string exerciseName)
+        {
+            var entries = _workoutSessions
+                .Where(s => s.IsCompleted)
+                .SelectMany(s => s.Exercises.Select(e => new { Session = s, Exercise = e }))
+                .Where(x => string.Equals(x.Exercise.Exercise?.Name, exerciseName, StringComparison.OrdinalIgnoreCase))
+                .ToList();
+
+            if (entries.Count == 0)
+                return (0, 0);
+
+            double pr = entries
+                .Where(x => x.Exercise.Sets.Any())
+                .Select(x => x.Exercise.Sets.Max(set => set.Weight))
+                .DefaultIfEmpty(0)
+                .Max();
+
+            double lastWeight = entries
+                .OrderByDescending(x => x.Session.StartTime)
+                .Select(x => x.Exercise.Sets.OrderByDescending(set => set.SetNumber).FirstOrDefault()?.Weight ?? 0)
+                .FirstOrDefault();
+
+            return (pr, lastWeight);
+        }
+
+        public string ExportWorkoutsCsv()
+        {
+            var fileName = $"gym_export_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
+            var filePath = Path.Combine(_dataPath, fileName);
+
+            using var writer = new StreamWriter(filePath, false);
+            writer.WriteLine("WorkoutDate,WorkoutName,Exercise,SetNumber,Reps,Weight,Unit,SetNotes,WorkoutNotes");
+
+            var sessions = _workoutSessions
+                .Where(s => s.IsCompleted)
+                .OrderBy(s => s.StartTime)
+                .ToList();
+
+            foreach (var session in sessions)
+            {
+                foreach (var exercise in session.Exercises)
+                {
+                    foreach (var set in exercise.Sets)
+                    {
+                        writer.WriteLine(string.Join(",",
+                            EscapeCsv(session.StartTime.ToString("yyyy-MM-dd")),
+                            EscapeCsv(session.Name),
+                            EscapeCsv(exercise.Exercise?.Name ?? ""),
+                            set.SetNumber,
+                            set.Reps,
+                            set.Weight.ToString(System.Globalization.CultureInfo.InvariantCulture),
+                            EscapeCsv(set.WeightUnit),
+                            EscapeCsv(set.Notes ?? ""),
+                            EscapeCsv(session.Notes ?? "")));
+                    }
+                }
+            }
+
+            return filePath;
+        }
+
+        private static string EscapeCsv(string input)
+        {
+            if (input.Contains(',') || input.Contains('"') || input.Contains('\n'))
+                return $"\"{input.Replace("\"", "\"\"")}\"";
+
+            return input;
         }
 
         public void CompleteWorkout(int workoutSessionId)

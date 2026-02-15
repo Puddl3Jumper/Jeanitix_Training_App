@@ -1,6 +1,7 @@
 using Android.Views;
 using Android.Widget;
 using Android.Content;
+using Android.Graphics;
 using Gym_App.Data;
 using Gym_App.Models;
 
@@ -14,6 +15,7 @@ namespace Gym_App.Activities
 
         protected override void OnCreate(Bundle? savedInstanceState)
         {
+            ThemeManager.ApplyTheme(this);
             base.OnCreate(savedInstanceState);
             SetContentView(Resource.Layout.activity_exercise_library);
 
@@ -29,6 +31,7 @@ namespace Gym_App.Activities
             if (diaryTab != null) diaryTab.Selected = false;
             if (workoutTab != null) workoutTab.Selected = false;
             if (profileTab != null) profileTab.Selected = false;
+            UpdateBottomNavLabelStyles();
 
             if (homeTab != null)
             {
@@ -69,6 +72,23 @@ namespace Gym_App.Activities
             LoadExercises();
         }
 
+        private void UpdateBottomNavLabelStyles()
+        {
+            SetTabLabelStyle(Resource.Id.homeTabLabel, FindViewById<LinearLayout>(Resource.Id.homeTab)?.Selected == true);
+            SetTabLabelStyle(Resource.Id.diaryTabLabel, FindViewById<LinearLayout>(Resource.Id.diaryTab)?.Selected == true);
+            SetTabLabelStyle(Resource.Id.workoutTabLabel, FindViewById<LinearLayout>(Resource.Id.workoutTab)?.Selected == true);
+            SetTabLabelStyle(Resource.Id.profileTabLabel, FindViewById<LinearLayout>(Resource.Id.profileTab)?.Selected == true);
+        }
+
+        private void SetTabLabelStyle(int labelId, bool isSelected)
+        {
+            var label = FindViewById<TextView>(labelId);
+            if (label == null)
+                return;
+
+            label.SetTypeface(null, isSelected ? TypefaceStyle.Bold : TypefaceStyle.Normal);
+        }
+
         private void LoadExercises()
         {
             if (_exerciseListContainer == null || _database == null)
@@ -86,13 +106,22 @@ namespace Gym_App.Activities
                     Text = group.Key,
                     TextSize = 20
                 };
-                groupHeader.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.color_text_primary)));
+                groupHeader.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.color_primary)));
                 groupHeader.SetTypeface(null, Android.Graphics.TypefaceStyle.Bold);
                 groupHeader.SetPadding(0, 16, 0, 8);
                 _exerciseListContainer.AddView(groupHeader);
 
                 foreach (var exercise in group)
                 {
+                    var exerciseTitle = new TextView(this)
+                    {
+                        Text = exercise.Name + (exercise.IsCustom ? " (Custom)" : ""),
+                        TextSize = 16
+                    };
+                    exerciseTitle.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.color_primary)));
+                    exerciseTitle.SetTypeface(null, Android.Graphics.TypefaceStyle.Bold);
+                    exerciseTitle.SetPadding(0, 2, 0, 6);
+
                     var exerciseView = new LinearLayout(this)
                     {
                         Orientation = Orientation.Vertical
@@ -106,14 +135,6 @@ namespace Gym_App.Activities
                     exerciseView.SetBackgroundResource(Resource.Drawable.bg_card);
                     exerciseView.SetPadding(16, 12, 16, 12);
 
-                    var nameText = new TextView(this)
-                    {
-                        Text = exercise.Name + (exercise.IsCustom ? " (Custom)" : ""),
-                        TextSize = 16
-                    };
-                    nameText.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.color_text_primary)));
-                    exerciseView.AddView(nameText);
-
                     if (!string.IsNullOrEmpty(exercise.Description))
                     {
                         var descText = new TextView(this)
@@ -121,11 +142,22 @@ namespace Gym_App.Activities
                             Text = exercise.Description,
                             TextSize = 14
                         };
-                        descText.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.color_text_secondary)));
-                        descText.SetPadding(0, 4, 0, 0);
+                        descText.SetTextColor(new Android.Graphics.Color(Color.White));
+                        descText.SetPadding(0, 0, 0, 0);
+                        exerciseView.AddView(descText);
+                    }
+                    else
+                    {
+                        var descText = new TextView(this)
+                        {
+                            Text = "No description",
+                            TextSize = 14
+                        };
+                        descText.SetTextColor(new Android.Graphics.Color(Color.White));
                         exerciseView.AddView(descText);
                     }
 
+                    _exerciseListContainer.AddView(exerciseTitle);
                     _exerciseListContainer.AddView(exerciseView);
                 }
             }

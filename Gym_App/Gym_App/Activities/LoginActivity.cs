@@ -10,11 +10,16 @@ namespace Gym_App.Activities
     public class LoginActivity : Activity
     {
         private const int GoogleSignInRequestCode = 9001;
+        private const string SessionPrefsName = "auth_session";
+        private const string SessionLoggedInKey = "is_logged_in";
+        private const string SessionEmailKey = "email";
+        private const string TestEmail = "test.user@gym.local";
         private GoogleSignInClient? _googleSignInClient;
 
         protected override void OnCreate(Bundle? savedInstanceState)
         {
             base.OnCreate(savedInstanceState);
+                ThemeManager.ApplyTheme(this);
             ActionBar?.Hide();
             SetContentView(Resource.Layout.activity_login);
 
@@ -32,9 +37,17 @@ namespace Gym_App.Activities
 
             _googleSignInClient = GoogleSignIn.GetClient(this, signInOptions);
 
+            if (HasLocalSession())
+            {
+                StartActivity(new Intent(this, typeof(HomeActivity)));
+                Finish();
+                return;
+            }
+
             var currentAccount = GoogleSignIn.GetLastSignedInAccount(this);
             if (currentAccount != null)
             {
+                SaveLocalSession(currentAccount.Email ?? TestEmail);
                 StartActivity(new Intent(this, typeof(HomeActivity)));
                 Finish();
                 return;
@@ -53,7 +66,10 @@ namespace Gym_App.Activities
                         return;
                     }
 
+                    SaveLocalSession(TestEmail);
+                    Toast.MakeText(this, $"Test login active: {TestEmail}", ToastLength.Short)?.Show();
                     StartActivity(new Intent(this, typeof(HomeActivity)));
+                    Finish();
                 };
             }
 
@@ -122,6 +138,7 @@ namespace Gym_App.Activities
                     return;
                 }
 
+                SaveLocalSession(account.Email ?? TestEmail);
                 Toast.MakeText(this, $"Welcome, {account.DisplayName ?? account.Email}", ToastLength.Short)?.Show();
                 StartActivity(new Intent(this, typeof(HomeActivity)));
                 Finish();
@@ -139,6 +156,21 @@ namespace Gym_App.Activities
 
                 Toast.MakeText(this, message, ToastLength.Long)?.Show();
             }
+        }
+
+        private bool HasLocalSession()
+        {
+            var prefs = GetSharedPreferences(SessionPrefsName, FileCreationMode.Private);
+            return prefs?.GetBoolean(SessionLoggedInKey, false) == true;
+        }
+
+        private void SaveLocalSession(string email)
+        {
+            var prefs = GetSharedPreferences(SessionPrefsName, FileCreationMode.Private);
+            prefs?.Edit()
+                ?.PutBoolean(SessionLoggedInKey, true)
+                ?.PutString(SessionEmailKey, email)
+                ?.Apply();
         }
     }
 }

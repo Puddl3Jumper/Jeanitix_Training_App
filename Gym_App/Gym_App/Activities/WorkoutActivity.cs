@@ -1,6 +1,8 @@
 using Android.Views;
 using Android.Widget;
 using Android.Content;
+using Android.Graphics;
+using Android.Graphics.Drawables;
 using Gym_App.Data;
 using Gym_App.Models;
 
@@ -13,11 +15,13 @@ namespace Gym_App.Activities
         private WorkoutSession? _currentWorkout;
         private TextView? _workoutNameText;
         private TextView? _workoutTimeText;
+        private TextView? _workoutDateText;
         private LinearLayout? _exercisesContainer;
         private System.Threading.Timer? _timer;
 
         protected override void OnCreate(Bundle? savedInstanceState)
         {
+            ThemeManager.ApplyTheme(this);
             base.OnCreate(savedInstanceState);
             SetContentView(Resource.Layout.activity_workout);
 
@@ -25,6 +29,7 @@ namespace Gym_App.Activities
             
             _workoutNameText = FindViewById<TextView>(Resource.Id.workoutNameText);
             _workoutTimeText = FindViewById<TextView>(Resource.Id.workoutTimeText);
+            _workoutDateText = FindViewById<TextView>(Resource.Id.workoutDateText);
             _exercisesContainer = FindViewById<LinearLayout>(Resource.Id.exercisesContainer);
             
             var addExerciseButton = FindViewById<Button>(Resource.Id.addExerciseButton);
@@ -38,6 +43,7 @@ namespace Gym_App.Activities
             if (diaryTab != null) diaryTab.Selected = false;
             if (workoutTab != null) workoutTab.Selected = true;
             if (profileTab != null) profileTab.Selected = false;
+            UpdateBottomNavLabelStyles();
 
             if (homeTab != null)
             {
@@ -67,11 +73,13 @@ namespace Gym_App.Activities
             
             if (workoutId == -1)
             {
-                _currentWorkout = _database.CreateWorkoutSession("Workout Session");
+                _currentWorkout = _database.GetCurrentWorkout() ?? _database.CreateWorkoutSession("Workout Session");
             }
             else
             {
-                _currentWorkout = _database.GetWorkoutSession(workoutId);
+                _currentWorkout = _database.GetWorkoutSession(workoutId)
+                                 ?? _database.GetCurrentWorkout()
+                                 ?? _database.CreateWorkoutSession("Workout Session");
             }
 
             if (addExerciseButton != null)
@@ -83,8 +91,30 @@ namespace Gym_App.Activities
             if (finishWorkoutButton != null)
                 finishWorkoutButton.Click += FinishWorkoutButton_Click;
 
+            if (_workoutDateText != null)
+            {
+                _workoutDateText.Click += (s, e) => ShowWorkoutDatePicker();
+            }
+
             UpdateUI();
             StartTimer();
+        }
+
+        private void UpdateBottomNavLabelStyles()
+        {
+            SetTabLabelStyle(Resource.Id.homeTabLabel, FindViewById<LinearLayout>(Resource.Id.homeTab)?.Selected == true);
+            SetTabLabelStyle(Resource.Id.diaryTabLabel, FindViewById<LinearLayout>(Resource.Id.diaryTab)?.Selected == true);
+            SetTabLabelStyle(Resource.Id.workoutTabLabel, FindViewById<LinearLayout>(Resource.Id.workoutTab)?.Selected == true);
+            SetTabLabelStyle(Resource.Id.profileTabLabel, FindViewById<LinearLayout>(Resource.Id.profileTab)?.Selected == true);
+        }
+
+        private void SetTabLabelStyle(int labelId, bool isSelected)
+        {
+            var label = FindViewById<TextView>(labelId);
+            if (label == null)
+                return;
+
+            label.SetTypeface(null, isSelected ? TypefaceStyle.Bold : TypefaceStyle.Normal);
         }
 
         private void StartTimer()
@@ -110,6 +140,10 @@ namespace Gym_App.Activities
                 return;
 
             _workoutNameText.Text = _currentWorkout.Name;
+            if (_workoutDateText != null)
+            {
+                _workoutDateText.Text = $"{_currentWorkout.StartTime:yyyy-MM-dd}";
+            }
             _exercisesContainer.RemoveAllViews();
 
             foreach (var workoutExercise in _currentWorkout.Exercises)
@@ -123,6 +157,19 @@ namespace Gym_App.Activities
             if (_exercisesContainer == null || workoutExercise.Exercise == null)
                 return;
 
+            var sectionContainer = new LinearLayout(this)
+            {
+                Orientation = Orientation.Vertical
+            };
+
+            var sectionLayoutParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MatchParent,
+                ViewGroup.LayoutParams.WrapContent);
+            sectionLayoutParams.SetMargins(0, 0, 0, 24);
+            sectionContainer.LayoutParameters = sectionLayoutParams;
+            sectionContainer.SetBackgroundResource(Resource.Drawable.bg_exercise_section);
+            sectionContainer.SetPadding(DpToPx(16), DpToPx(16), DpToPx(16), DpToPx(16));
+
             var exerciseCard = new LinearLayout(this)
             {
                 Orientation = Orientation.Vertical
@@ -131,53 +178,118 @@ namespace Gym_App.Activities
             var layoutParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MatchParent,
                 ViewGroup.LayoutParams.WrapContent);
-            layoutParams.SetMargins(0, 0, 0, 24);
+            layoutParams.SetMargins(0, 0, 0, 0);
             exerciseCard.LayoutParameters = layoutParams;
-            exerciseCard.SetBackgroundResource(Resource.Drawable.bg_card);
-            exerciseCard.SetPadding(16, 16, 16, 16);
+            exerciseCard.SetPadding(0, 0, 0, 0);
 
             string titleText = workoutExercise.Exercise.Name;
             if (!string.IsNullOrWhiteSpace(workoutExercise.CircuitName))
             {
                 titleText = $"{workoutExercise.Exercise.Name} (Circuit: {workoutExercise.CircuitName} #{workoutExercise.CircuitOrder})";
             }
+            titleText = $"🏋️ {titleText}";
 
             var exerciseTitle = new TextView(this)
             {
                 Text = titleText,
                 TextSize = 20
             };
-            exerciseTitle.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.color_text_primary)));
-            exerciseTitle.SetTypeface(null, Android.Graphics.TypefaceStyle.Bold);
-            exerciseCard.AddView(exerciseTitle);
+            exerciseTitle.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.color_primary)));
+            exerciseTitle.Typeface = Typeface.Create("sans-serif-medium", TypefaceStyle.Normal);
+            exerciseTitle.SetLineSpacing(0f, 1.4f);
+            exerciseTitle.SetPadding(0, 0, 0, 8);
+            sectionContainer.AddView(exerciseTitle);
 
-            foreach (var set in workoutExercise.Sets)
+            var setListContainer = new LinearLayout(this)
             {
+                Orientation = Orientation.Vertical
+            };
+            setListContainer.SetBackgroundResource(Resource.Drawable.bg_set_item);
+            setListContainer.SetPadding(DpToPx(16), DpToPx(8), DpToPx(16), DpToPx(8));
+            var setListLayoutParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MatchParent,
+                ViewGroup.LayoutParams.WrapContent);
+            setListLayoutParams.SetMargins(0, 0, 0, DpToPx(8));
+            setListContainer.LayoutParameters = setListLayoutParams;
+
+            for (int index = 0; index < workoutExercise.Sets.Count; index++)
+            {
+                var set = workoutExercise.Sets[index];
                 string setDisplay = !string.IsNullOrWhiteSpace(workoutExercise.CircuitName)
                     ? $"Set {set.SetNumber} · Loop {set.LoopNumber}: {set.Reps} reps @ {set.Weight} {set.WeightUnit}"
                     : $"Set {set.SetNumber}: {set.Reps} reps @ {set.Weight} {set.WeightUnit}";
+
+                if (!string.IsNullOrWhiteSpace(set.Notes))
+                {
+                    setDisplay += $" · Note: {set.Notes}";
+                }
+                setDisplay += "  ✏️  🗑️";
 
                 var setText = new TextView(this)
                 {
                     Text = setDisplay,
                     TextSize = 16
                 };
-                setText.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.color_text_secondary)));
-                setText.SetPadding(16, 8, 0, 0);
-                exerciseCard.AddView(setText);
+                setText.SetTextColor(new Android.Graphics.Color(Color.White));
+                setText.SetLineSpacing(0f, 1.4f);
+                setText.SetPadding(0, 0, 0, 0);
+
+                var setLayoutParams = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MatchParent,
+                    ViewGroup.LayoutParams.WrapContent);
+                setLayoutParams.SetMargins(0, 0, 0, index == workoutExercise.Sets.Count - 1 ? 0 : DpToPx(8));
+                setText.LayoutParameters = setLayoutParams;
+                setListContainer.AddView(setText);
+            }
+
+            if (workoutExercise.Sets.Count > 0)
+            {
+                exerciseCard.AddView(setListContainer);
             }
 
             var addSetButton = new Button(this)
             {
-                Text = "Add Set"
+                Text = "ADD SET"
             };
-            addSetButton.SetBackgroundResource(Resource.Drawable.bg_button_primary);
+            var buttonSpacing = DpToPx(12);
+            var interButtonSpacing = DpToPx(8);
+            var addSetLayoutParams = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MatchParent,
+                ViewGroup.LayoutParams.WrapContent);
+            addSetLayoutParams.SetMargins(0, buttonSpacing, 0, 0);
+            addSetButton.LayoutParameters = addSetLayoutParams;
+            addSetButton.SetBackgroundResource(Resource.Drawable.bg_button_train_action);
             addSetButton.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.color_on_primary)));
-            addSetButton.TextSize = 15;
+            addSetButton.TextSize = 16;
+            addSetButton.SetTypeface(null, TypefaceStyle.Bold);
+            addSetButton.SetLineSpacing(0f, 1.4f);
+            addSetButton.SetMinimumHeight(DpToPx(43));
+            addSetButton.SetPadding(DpToPx(12), DpToPx(10), DpToPx(12), DpToPx(10));
             addSetButton.Click += (s, e) => ShowAddSetDialog(workoutExercise);
             exerciseCard.AddView(addSetButton);
 
-            _exercisesContainer.AddView(exerciseCard);
+            if (workoutExercise.Sets.Count > 0)
+            {
+                var copySetButton = new Button(this)
+                {
+                    Text = "COPY PREVIOUS SET"
+                };
+                var copySetLayoutParams = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MatchParent,
+                    ViewGroup.LayoutParams.WrapContent);
+                copySetLayoutParams.SetMargins(0, interButtonSpacing, 0, 0);
+                copySetButton.LayoutParameters = copySetLayoutParams;
+                copySetButton.SetBackgroundResource(Resource.Drawable.bg_button_train_action);
+                copySetButton.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.color_on_primary)));
+                copySetButton.TextSize = 16;
+                copySetButton.SetTypeface(null, TypefaceStyle.Bold);
+                copySetButton.SetLineSpacing(0f, 1.4f);
+                copySetButton.Click += (s, e) => CopyPreviousSet(workoutExercise);
+                exerciseCard.AddView(copySetButton);
+            }
+
+            sectionContainer.AddView(exerciseCard);
+            _exercisesContainer.AddView(sectionContainer);
         }
 
         private void ShowAddSetDialog(WorkoutExercise workoutExercise)
@@ -189,8 +301,11 @@ namespace Gym_App.Activities
             layout.SetPadding(32, 16, 32, 16);
 
             var repsInput = new EditText(this) { Hint = "Reps", InputType = Android.Text.InputTypes.ClassNumber };
-            var weightInput = new EditText(this) { Hint = "Weight (kg)", InputType = Android.Text.InputTypes.ClassNumber | Android.Text.InputTypes.NumberFlagDecimal };
+            var userPrefs = GetSharedPreferences("user_profile", FileCreationMode.Private);
+            var unit = userPrefs?.GetString("unit", "kg") ?? "kg";
+            var weightInput = new EditText(this) { Hint = $"Weight ({unit})", InputType = Android.Text.InputTypes.ClassNumber | Android.Text.InputTypes.NumberFlagDecimal };
             var loopInput = new EditText(this) { Hint = "Loop Number", InputType = Android.Text.InputTypes.ClassNumber };
+            var notesInput = new EditText(this) { Hint = "Notes (optional)" };
 
             bool isCircuitExercise = !string.IsNullOrWhiteSpace(workoutExercise.CircuitName);
             int suggestedLoop = workoutExercise.Sets.Count == 0
@@ -206,6 +321,7 @@ namespace Gym_App.Activities
             {
                 layout.AddView(loopInput);
             }
+            layout.AddView(notesInput);
             dialog.SetView(layout);
 
             dialog.SetPositiveButton("Add", (s, e) =>
@@ -222,7 +338,7 @@ namespace Gym_App.Activities
                         }
                     }
 
-                    _database?.AddSetToExercise(workoutExercise.Id, reps, weight, loopNumber);
+                    _database?.AddSetToExercise(workoutExercise.Id, reps, weight, notesInput.Text, loopNumber, unit);
                     _currentWorkout = _database?.GetWorkoutSession(_currentWorkout?.Id ?? -1);
                     UpdateUI();
                 }
@@ -232,35 +348,73 @@ namespace Gym_App.Activities
             dialog.Show();
         }
 
+        private void CopyPreviousSet(WorkoutExercise workoutExercise)
+        {
+            var latestSet = workoutExercise.Sets
+                .OrderByDescending(s => s.SetNumber)
+                .FirstOrDefault();
+
+            if (latestSet == null)
+                return;
+
+            _database?.AddSetToExercise(
+                workoutExercise.Id,
+                latestSet.Reps,
+                latestSet.Weight,
+                latestSet.Notes,
+                latestSet.LoopNumber,
+                latestSet.WeightUnit);
+
+            _currentWorkout = _database?.GetWorkoutSession(_currentWorkout?.Id ?? -1);
+            UpdateUI();
+            Toast.MakeText(this, "Previous set copied", ToastLength.Short)?.Show();
+        }
+
+        private void ShowWorkoutDatePicker()
+        {
+            if (_database == null || _currentWorkout == null)
+                return;
+
+            var currentDate = _currentWorkout.StartTime;
+            var datePicker = new DatePickerDialog(
+                this,
+                (s, e) =>
+                {
+                    var selectedDate = new DateTime(e.Year, e.Month + 1, e.DayOfMonth);
+                    _database.UpdateWorkoutSession(_currentWorkout.Id, _currentWorkout.Name, selectedDate, _currentWorkout.Notes);
+                    _currentWorkout = _database.GetWorkoutSession(_currentWorkout.Id);
+                    UpdateUI();
+                },
+                currentDate.Year,
+                currentDate.Month - 1,
+                currentDate.Day);
+
+            datePicker.Show();
+        }
+
         private void AddExerciseButton_Click(object? sender, EventArgs e)
         {
             var exercises = _database?.GetAllExercises() ?? new List<Exercise>();
             var exerciseNames = exercises.Select(ex => ex.Name).ToArray();
 
-            var dialog = new AlertDialog.Builder(this);
-            dialog.SetTitle("Select Exercise");
-            dialog.SetItems(exerciseNames, (s, args) =>
+            ShowStyledSelectionDialog("Select Exercise", exerciseNames, selectedIndex =>
             {
-                var selectedExercise = exercises[args.Which];
+                var selectedExercise = exercises[selectedIndex];
                 ShowExerciseModeDialog(selectedExercise);
             });
-            dialog.Show();
         }
 
         private void ShowExerciseModeDialog(Exercise selectedExercise)
         {
-            var modeDialog = new AlertDialog.Builder(this);
-            modeDialog.SetTitle($"Add {selectedExercise.Name}");
-
             var options = new[]
             {
                 "Add as Regular Exercise",
                 "Add to Circuit"
             };
 
-            modeDialog.SetItems(options, (sender, args) =>
+            ShowStyledSelectionDialog($"Add {selectedExercise.Name}", options, selectedIndex =>
             {
-                if (args.Which == 0)
+                if (selectedIndex == 0)
                 {
                     _database?.AddExerciseToWorkout(_currentWorkout?.Id ?? -1, selectedExercise.Id);
                     _currentWorkout = _database?.GetWorkoutSession(_currentWorkout?.Id ?? -1);
@@ -270,8 +424,64 @@ namespace Gym_App.Activities
 
                 ShowCircuitNameDialog(selectedExercise);
             });
+        }
 
-            modeDialog.Show();
+        private void ShowStyledSelectionDialog(string title, string[] options, Action<int> onSelected)
+        {
+            var listView = new ListView(this);
+            listView.SetBackgroundColor(new Color(GetColor(Resource.Color.color_surface)));
+            listView.DividerHeight = 0;
+
+            var adapter = new YellowListAdapter(this, options);
+            listView.Adapter = adapter;
+
+            var dialog = new AlertDialog.Builder(this).Create();
+            dialog.SetTitle(title);
+            dialog.SetView(listView);
+
+            listView.ItemClick += (sender, args) =>
+            {
+                dialog.Dismiss();
+                onSelected(args.Position);
+            };
+
+            dialog.Show();
+            dialog.Window?.SetBackgroundDrawable(new ColorDrawable(new Color(GetColor(Resource.Color.color_surface_alt))));
+
+            int titleId = Resources.GetIdentifier("alertTitle", "id", "android");
+            if (titleId > 0)
+            {
+                var titleView = dialog.FindViewById<TextView>(titleId);
+                if (titleView != null)
+                {
+                    titleView.SetTextColor(new Color(GetColor(Resource.Color.color_primary)));
+                }
+            }
+        }
+
+        private sealed class YellowListAdapter : ArrayAdapter<string>
+        {
+            private readonly Activity _activity;
+
+            public YellowListAdapter(Activity activity, string[] options)
+                : base(activity, Android.Resource.Layout.SimpleListItem1, options)
+            {
+                _activity = activity;
+            }
+
+            public override View GetView(int position, View? convertView, ViewGroup parent)
+            {
+                var view = base.GetView(position, convertView, parent);
+                if (view is TextView textView)
+                {
+                    textView.SetTextColor(new Color(_activity.GetColor(Resource.Color.color_primary)));
+                    textView.SetBackgroundColor(new Color(_activity.GetColor(Resource.Color.color_surface)));
+                    textView.TextSize = 16;
+                    textView.SetPadding(48, 32, 48, 32);
+                }
+
+                return view;
+            }
         }
 
         private void ShowCircuitNameDialog(Exercise selectedExercise)
@@ -311,13 +521,32 @@ namespace Gym_App.Activities
 
         private void FinishWorkoutButton_Click(object? sender, EventArgs e)
         {
+            if (_database == null)
+                return;
+
+            if (_currentWorkout == null)
+            {
+                Toast.MakeText(this, "No active workout found", ToastLength.Short)?.Show();
+                return;
+            }
+
+            if (_currentWorkout.Exercises.Count == 0)
+            {
+                Toast.MakeText(this, "Add at least one exercise before finishing", ToastLength.Short)?.Show();
+                return;
+            }
+
             var dialog = new AlertDialog.Builder(this);
             dialog.SetTitle("Finish Workout");
             dialog.SetMessage("Are you sure you want to finish this workout?");
             dialog.SetPositiveButton("Yes", (s, e) =>
             {
-                _database?.CompleteWorkout(_currentWorkout?.Id ?? -1);
+                _database.CompleteWorkout(_currentWorkout.Id);
                 Toast.MakeText(this, "Workout completed!", ToastLength.Short)?.Show();
+
+                var historyIntent = new Intent(this, typeof(HistoryActivity));
+                historyIntent.AddFlags(ActivityFlags.ClearTop);
+                StartActivity(historyIntent);
                 Finish();
             });
             dialog.SetNegativeButton("No", (s, e) => { });
@@ -328,6 +557,11 @@ namespace Gym_App.Activities
         {
             base.OnDestroy();
             _timer?.Dispose();
+        }
+
+        private int DpToPx(int dp)
+        {
+            return (int)(dp * Resources.DisplayMetrics.Density);
         }
     }
 }

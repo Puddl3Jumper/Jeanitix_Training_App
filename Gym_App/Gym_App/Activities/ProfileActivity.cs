@@ -1,6 +1,12 @@
 using Android.Content;
 using Android.Widget;
 using Gym_App.Data;
+using Gym_App.Models;
+using Android.Gms.Auth.Api.SignIn;
+using System.Globalization;
+using Android.Text;
+using Android.Graphics;
+using System;
 
 namespace Gym_App.Activities
 {
@@ -11,6 +17,7 @@ namespace Gym_App.Activities
 
         protected override void OnCreate(Bundle? savedInstanceState)
         {
+            ThemeManager.ApplyTheme(this);
             base.OnCreate(savedInstanceState);
             SetContentView(Resource.Layout.activity_profile);
 
@@ -25,6 +32,7 @@ namespace Gym_App.Activities
             if (diaryTab != null) diaryTab.Selected = false;
             if (workoutTab != null) workoutTab.Selected = false;
             if (profileTab != null) profileTab.Selected = true;
+            UpdateBottomNavLabelStyles();
 
             if (homeTab != null)
             {
@@ -50,53 +58,380 @@ namespace Gym_App.Activities
                 };
             }
 
-            LoadProfile();
-            LoadStats();
+            LoadProfileHeader();
+            LoadStatsOverview();
+            LoadPrs();
+            LoadTrainingSummary();
+            SetupActions();
         }
 
-        private void LoadProfile()
+        protected override void OnResume()
         {
-            var nameValue = FindViewById<TextView>(Resource.Id.profileNameValue);
-            var emailValue = FindViewById<TextView>(Resource.Id.profileEmailValue);
+            base.OnResume();
+            LoadProfileHeader();
+            LoadStatsOverview();
+        }
+
+        private void UpdateBottomNavLabelStyles()
+        {
+            SetTabLabelStyle(Resource.Id.homeTabLabel, FindViewById<LinearLayout>(Resource.Id.homeTab)?.Selected == true);
+            SetTabLabelStyle(Resource.Id.diaryTabLabel, FindViewById<LinearLayout>(Resource.Id.diaryTab)?.Selected == true);
+            SetTabLabelStyle(Resource.Id.workoutTabLabel, FindViewById<LinearLayout>(Resource.Id.workoutTab)?.Selected == true);
+            SetTabLabelStyle(Resource.Id.profileTabLabel, FindViewById<LinearLayout>(Resource.Id.profileTab)?.Selected == true);
+        }
+
+        private void SetTabLabelStyle(int labelId, bool isSelected)
+        {
+            var label = FindViewById<TextView>(labelId);
+            if (label == null)
+                return;
+
+            label.SetTypeface(null, isSelected ? TypefaceStyle.Bold : TypefaceStyle.Normal);
+        }
+
+        private void LoadProfileHeader()
+        {
+            var nameValue = FindViewById<TextView>(Resource.Id.profileName);
+            var bioValue = FindViewById<TextView>(Resource.Id.profileBio);
+            var editButton = FindViewById<Button>(Resource.Id.editProfileButton);
 
             var prefs = GetSharedPreferences("user_profile", FileCreationMode.Private);
             var fullName = prefs?.GetString("full_name", string.Empty) ?? string.Empty;
-            var email = prefs?.GetString("email", string.Empty) ?? string.Empty;
+            var fitnessTag = prefs?.GetString("fitness_tag", "Strength") ?? "Strength";
+            var trainingYears = prefs?.GetString("training_years", "1") ?? "1";
+            var trainingStage = prefs?.GetString("training_stage", "Intermediate") ?? "Intermediate";
+            var goal = prefs?.GetString("goal", "Build strength") ?? "Build strength";
 
             if (nameValue != null)
-                nameValue.Text = string.IsNullOrWhiteSpace(fullName) ? "Not set" : fullName;
+                nameValue.Text = string.IsNullOrWhiteSpace(fullName) ? "Nickname not set" : fullName;
 
-            if (emailValue != null)
-                emailValue.Text = string.IsNullOrWhiteSpace(email) ? "Not set" : email;
+            if (bioValue != null)
+                bioValue.Text = $"{goal} · {fitnessTag} · {trainingYears}y {trainingStage}";
+
+            if (editButton != null)
+            {
+                editButton.Click -= OnEditProfileClick;
+                editButton.Click += OnEditProfileClick;
+            }
         }
 
-        private void LoadStats()
+        private void OnEditProfileClick(object? sender, EventArgs e)
+        {
+            StartActivity(new Intent(this, typeof(EditProfileActivity)));
+        }
+
+        private void LoadStatsOverview()
+        {
+            var weightValue = FindViewById<TextView>(Resource.Id.statWeightValue);
+            var heightValue = FindViewById<TextView>(Resource.Id.statHeightValue);
+            var ageValue = FindViewById<TextView>(Resource.Id.statAgeValue);
+            var bodyFatValue = FindViewById<TextView>(Resource.Id.statBodyFatValue);
+
+            if (weightValue == null || heightValue == null || ageValue == null || bodyFatValue == null)
+                return;
+
+            var prefs = GetSharedPreferences("user_profile", FileCreationMode.Private);
+            var unit = prefs?.GetString("unit", "kg") ?? "kg";
+
+            var height = prefs?.GetString("height_cm", "--") ?? "--";
+            var currentWeight = prefs?.GetString("current_weight", "--") ?? "--";
+            var age = prefs?.GetString("age", "--") ?? "--";
+
+            weightValue.Text = $"{currentWeight} {unit}";
+            heightValue.Text = $"{height} cm";
+            ageValue.Text = age == "--" ? "--" : $"{age} yrs";
+
+            if (TryParseNumber(currentWeight, out var weightNumeric) &&
+                TryParseNumber(height, out var heightCmNumeric) &&
+                TryParseNumber(age, out var ageNumeric) &&
+                heightCmNumeric > 0)
+            {
+                var weightKg = unit.Equals("lb", StringComparison.OrdinalIgnoreCase)
+                    ? weightNumeric * 0.45359237
+                    : weightNumeric;
+
+                var heightMeters = heightCmNumeric / 100.0;
+                var bmi = weightKg / (heightMeters * heightMeters);
+                var bodyFatPercent = (1.2 * bmi) + (0.23 * ageNumeric) - 5.4;
+                var clampedBodyFat = Math.Clamp(bodyFatPercent, 2.0, 65.0);
+
+                bodyFatValue.Text = $"{clampedBodyFat:F1}%";
+            }
+            else
+            {
+                bodyFatValue.Text = "--";
+            }
+        }
+
+        private bool TryParseNumber(string value, out double number)
+        {
+            return double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out number) ||
+                   double.TryParse(value, NumberStyles.Float, CultureInfo.CurrentCulture, out number);
+        }
+
+        private void LoadPrs()
         {
             if (_database == null)
                 return;
 
-            var workouts = _database.GetWorkoutHistory(1000);
+            var squatView = FindViewById<TextView>(Resource.Id.prSquatValue);
+            var benchView = FindViewById<TextView>(Resource.Id.prBenchValue);
+            var deadliftView = FindViewById<TextView>(Resource.Id.prDeadliftValue);
+            var overheadView = FindViewById<TextView>(Resource.Id.prOverheadValue);
 
-            var totalWorkoutsValue = FindViewById<TextView>(Resource.Id.profileTotalWorkoutsValue);
-            var totalDurationValue = FindViewById<TextView>(Resource.Id.profileTotalDurationValue);
-            var lastWorkoutValue = FindViewById<TextView>(Resource.Id.profileLastWorkoutValue);
+            if (squatView == null || benchView == null || deadliftView == null || overheadView == null)
+                return;
 
-            var totalWorkouts = workouts.Count;
-            var totalDuration = workouts.Aggregate(TimeSpan.Zero, (sum, session) => sum + session.Duration);
-            var lastWorkout = workouts.OrderByDescending(w => w.StartTime).FirstOrDefault();
+            var workouts = _database.GetWorkoutHistory(5000);
+            var squatPr = ComputePrForCategory(workouts, "squat");
+            var benchPr = ComputePrForCategory(workouts, "bench");
+            var deadliftPr = ComputePrForCategory(workouts, "deadlift");
+            var optionalPr = ComputePrForCategory(workouts, "overhead");
 
-            if (totalWorkoutsValue != null)
-                totalWorkoutsValue.Text = totalWorkouts.ToString();
+            squatView.Text = $"Squat 1RM: {FormatPr(squatPr)}";
+            benchView.Text = $"Bench 1RM: {FormatPr(benchPr)}";
+            deadliftView.Text = $"Deadlift 1RM: {FormatPr(deadliftPr)}";
+            overheadView.Text = $"Overhead Press (optional): {FormatPr(optionalPr)}";
+        }
 
-            if (totalDurationValue != null)
-                totalDurationValue.Text = $"{(int)totalDuration.TotalHours}h {totalDuration.Minutes}m";
+        private void LoadTrainingSummary()
+        {
+            if (_database == null)
+                return;
 
-            if (lastWorkoutValue != null)
+            var weekView = FindViewById<TextView>(Resource.Id.summaryWeekValue);
+            var totalView = FindViewById<TextView>(Resource.Id.summaryTotalValue);
+            var streakView = FindViewById<TextView>(Resource.Id.summaryStreakValue);
+            var volumeView = FindViewById<TextView>(Resource.Id.summaryVolumeValue);
+
+            if (weekView == null || totalView == null || streakView == null || volumeView == null)
+                return;
+
+            var workouts = _database.GetWorkoutHistory(5000);
+
+            DateTime today = DateTime.Today;
+            DateTime weekStart = today.AddDays(-(int)today.DayOfWeek + (int)DayOfWeek.Monday);
+            if (weekStart > today)
+                weekStart = weekStart.AddDays(-7);
+
+            int weekCount = workouts.Count(w => w.StartTime.Date >= weekStart && w.StartTime.Date <= today);
+            int totalCount = workouts.Count;
+            int currentStreak = CalculateCurrentStreak(workouts.Select(w => w.StartTime.Date).Distinct().OrderBy(d => d).ToList());
+
+            double totalVolume = workouts
+                .SelectMany(w => w.Exercises)
+                .SelectMany(e => e.Sets)
+                .Sum(s => s.Weight * s.Reps);
+
+            weekView.Text = $"Workouts this week: {weekCount}";
+            totalView.Text = $"Total workouts: {totalCount}";
+            streakView.Text = $"Current streak: {currentStreak} days";
+            volumeView.Text = $"Volume lifted (optional): {Math.Round(totalVolume, 1)} kg";
+        }
+
+        private void SetupActions()
+        {
+            var startWorkoutButton = FindViewById<Button>(Resource.Id.quickStartWorkoutButton);
+            var logWeightButton = FindViewById<Button>(Resource.Id.quickLogWeightButton);
+            var viewHistoryButton = FindViewById<Button>(Resource.Id.quickViewHistoryButton);
+            var viewProgressButton = FindViewById<Button>(Resource.Id.quickViewProgressButton);
+            var settingsButton = FindViewById<Button>(Resource.Id.settingsButton);
+            var logoutButton = FindViewById<Button>(Resource.Id.logoutButton);
+
+            if (startWorkoutButton != null)
             {
-                lastWorkoutValue.Text = lastWorkout == null
-                    ? "No records yet"
-                    : lastWorkout.StartTime.ToString("MMM dd, yyyy");
+                startWorkoutButton.Click += (s, e) =>
+                {
+                    StartActivity(new Intent(this, typeof(WorkoutActivity)));
+                };
             }
+
+            if (viewHistoryButton != null)
+            {
+                viewHistoryButton.Click += (s, e) =>
+                {
+                    StartActivity(new Intent(this, typeof(HistoryActivity)));
+                };
+            }
+
+            if (viewProgressButton != null)
+            {
+                viewProgressButton.Click += (s, e) =>
+                {
+                    StartActivity(new Intent(this, typeof(ProgressActivity)));
+                };
+            }
+
+            if (logWeightButton != null)
+            {
+                logWeightButton.Click += (s, e) => ShowLogWeightDialog();
+            }
+
+            if (settingsButton != null)
+            {
+                settingsButton.Click += (s, e) =>
+                {
+                    StartActivity(new Intent(this, typeof(SettingsActivity)));
+                };
+            }
+
+            if (logoutButton != null)
+            {
+                logoutButton.Click += (s, e) =>
+                {
+                    try
+                    {
+                        var gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DefaultSignIn).Build();
+                        GoogleSignIn.GetClient(this, gso).SignOut();
+                    }
+                    catch
+                    {
+                    }
+
+                    var authPrefs = GetSharedPreferences("auth_session", FileCreationMode.Private);
+                    authPrefs?.Edit()?.Clear()?.Apply();
+
+                    var intent = new Intent(this, typeof(LoginActivity));
+                    intent.SetFlags(ActivityFlags.NewTask | ActivityFlags.ClearTask);
+                    StartActivity(intent);
+                    Finish();
+                };
+            }
+        }
+
+        private void ShowLogWeightDialog()
+        {
+            var input = new EditText(this)
+            {
+                Hint = "Enter current weight"
+            };
+            input.InputType = InputTypes.ClassNumber | InputTypes.NumberFlagDecimal;
+
+            var dialog = new AlertDialog.Builder(this);
+            dialog.SetTitle("Log Weight");
+            dialog.SetView(input);
+            dialog.SetPositiveButton("Save", (s, e) =>
+            {
+                var value = input.Text?.Trim() ?? string.Empty;
+                if (string.IsNullOrWhiteSpace(value))
+                {
+                    Toast.MakeText(this, "Please enter a valid weight", ToastLength.Short)?.Show();
+                    return;
+                }
+
+                var prefs = GetSharedPreferences("user_profile", FileCreationMode.Private);
+                prefs?.Edit()?.PutString("current_weight", value)?.Apply();
+                LoadStatsOverview();
+                Toast.MakeText(this, "Weight updated", ToastLength.Short)?.Show();
+            });
+            dialog.SetNegativeButton("Cancel", (s, e) => { });
+            dialog.Show();
+        }
+
+        private static (double weight, DateTime? date) ComputePrForCategory(IEnumerable<WorkoutSession> workouts, string category)
+        {
+            double best = 0;
+            DateTime? date = null;
+
+            foreach (var workout in workouts)
+            {
+                foreach (var exercise in workout.Exercises)
+                {
+                    var exerciseName = exercise.Exercise?.Name?.ToLowerInvariant() ?? string.Empty;
+                    bool isMatch = category switch
+                    {
+                        "squat" => exerciseName.Contains("squat"),
+                        "bench" => exerciseName.Contains("bench") || exerciseName.Contains("press"),
+                        "deadlift" => exerciseName.Contains("deadlift"),
+                        "overhead" => exerciseName.Contains("overhead") || exerciseName.Contains("shoulder") || exerciseName.Contains("pull-up") || exerciseName.Contains("pull up"),
+                        _ => false
+                    };
+
+                    if (!isMatch)
+                        continue;
+
+                    foreach (var set in exercise.Sets)
+                    {
+                        if (set.Reps <= 0 || set.Weight <= 0)
+                            continue;
+
+                        double estimatedOneRm = set.Weight * (1 + set.Reps / 30.0);
+                        if (estimatedOneRm > best)
+                        {
+                            best = estimatedOneRm;
+                            date = workout.StartTime.Date;
+                        }
+                    }
+                }
+            }
+
+            return (Math.Round(best, 1), date);
+        }
+
+        private static string FormatPr((double weight, DateTime? date) pr)
+        {
+            if (pr.weight <= 0 || pr.date == null)
+                return "-- kg (--)";
+
+            return $"{pr.weight} kg ({pr.date.Value:yyyy-MM-dd})";
+        }
+
+        private static int CalculateLongestStreak(List<DateTime> dates)
+        {
+            if (dates.Count == 0)
+                return 0;
+
+            int maxStreak = 1;
+            int currentStreak = 1;
+
+            for (int i = 1; i < dates.Count; i++)
+            {
+                if (dates[i] == dates[i - 1].AddDays(1))
+                {
+                    currentStreak++;
+                    if (currentStreak > maxStreak)
+                        maxStreak = currentStreak;
+                }
+                else
+                {
+                    currentStreak = 1;
+                }
+            }
+
+            return maxStreak;
+        }
+
+        private static int CalculateCurrentStreak(List<DateTime> dates)
+        {
+            if (dates.Count == 0)
+                return 0;
+
+            var dateSet = new HashSet<DateTime>(dates);
+            int streak = 0;
+            DateTime cursor = DateTime.Today;
+
+            if (!dateSet.Contains(cursor) && dateSet.Contains(cursor.AddDays(-1)))
+            {
+                cursor = cursor.AddDays(-1);
+            }
+
+            while (dateSet.Contains(cursor))
+            {
+                streak++;
+                cursor = cursor.AddDays(-1);
+            }
+
+            return streak;
+        }
+
+        private static double ParseDouble(string? value)
+        {
+            if (string.IsNullOrWhiteSpace(value))
+                return 0;
+
+            return double.TryParse(value, NumberStyles.Float, CultureInfo.InvariantCulture, out var parsed)
+                ? parsed
+                : 0;
         }
     }
 }

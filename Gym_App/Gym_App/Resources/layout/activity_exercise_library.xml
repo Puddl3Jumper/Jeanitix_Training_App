@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -9,14 +10,13 @@
     android:paddingBottom="0dp"
     android:background="@drawable/bg_screen">
 
-    <TextView
+    <com.google.android.material.appbar.MaterialToolbar
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:text="@string/library_title"
-        android:textSize="30sp"
-        android:textStyle="bold"
-        android:textColor="@color/color_text_primary"
-        android:layout_marginBottom="6dp" />
+        android:layout_marginBottom="8dp"
+        android:backgroundTint="@color/md_theme_surfaceVariant"
+        app:title="@string/library_title"
+        app:titleTextColor="@color/color_text_primary" />
 
     <TextView
         android:layout_width="match_parent"
@@ -26,7 +26,7 @@
         android:textColor="@color/color_text_secondary"
         android:layout_marginBottom="16dp" />
 
-    <Button
+    <com.google.android.material.button.MaterialButton
         android:id="@+id/addCustomExerciseButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"

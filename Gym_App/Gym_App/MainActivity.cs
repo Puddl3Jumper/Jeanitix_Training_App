@@ -15,6 +15,7 @@ namespace Gym_App
         {
             try
             {
+                ThemeManager.ApplyTheme(this);
                 base.OnCreate(savedInstanceState);
                 GymApplication.InstallGlobalCrashHandlers();
 
@@ -29,6 +30,17 @@ namespace Gym_App
                     crashText.SetPadding(24, 24, 24, 24);
                     SetContentView(crashText);
                     GymApplication.ClearCrash();
+                    return;
+                }
+
+                var authPrefs = GetSharedPreferences("auth_session", FileCreationMode.Private);
+                var autoEnterHomeForTesting = authPrefs?.GetBoolean("auto_home_test", true) ?? true;
+                if (autoEnterHomeForTesting)
+                {
+                    var autoHomeIntent = new Intent(this, typeof(HomeActivity));
+                    autoHomeIntent.SetFlags(ActivityFlags.NewTask | ActivityFlags.ClearTask);
+                    StartActivity(autoHomeIntent);
+                    Finish();
                     return;
                 }
 

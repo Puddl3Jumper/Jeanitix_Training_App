@@ -1,0 +1,68 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+  <style name="Theme.GymApp" parent="Theme.Material3.Dark.NoActionBar">
+    <item name="colorPrimary">@color/md_theme_primary</item>
+    <item name="colorOnPrimary">@color/md_theme_onPrimary</item>
+    <item name="colorPrimaryContainer">@color/md_theme_primaryContainer</item>
+    <item name="colorOnPrimaryContainer">@color/md_theme_onPrimaryContainer</item>
+    <item name="colorSecondary">@color/md_theme_secondary</item>
+    <item name="colorOnSecondary">@color/md_theme_onSecondary</item>
+    <item name="colorSecondaryContainer">@color/md_theme_secondaryContainer</item>
+    <item name="colorOnSecondaryContainer">@color/md_theme_onSecondaryContainer</item>
+    <item name="colorOnBackground">@color/md_theme_onBackground</item>
+    <item name="colorSurface">@color/md_theme_surface</item>
+    <item name="colorOnSurface">@color/md_theme_onSurface</item>
+    <item name="colorSurfaceVariant">@color/md_theme_surfaceVariant</item>
+    <item name="colorOnSurfaceVariant">@color/md_theme_onSurfaceVariant</item>
+    <item name="colorOutline">@color/md_theme_outline</item>
+    <item name="android:colorBackground">@color/md_theme_background</item>
+    <item name="android:windowBackground">@color/md_theme_background</item>
+    <item name="android:statusBarColor">@android:color/transparent</item>
+    <item name="android:navigationBarColor">@color/md_theme_surface</item>
+    <item name="materialButtonStyle">@style/Widget.GymApp.Button</item>
+  </style>
+
+  <style name="Theme.GymApp.Light" parent="Theme.Material3.Light.NoActionBar">
+    <item name="colorPrimary">@color/md_theme_light_primary</item>
+    <item name="colorOnPrimary">@color/md_theme_light_onPrimary</item>
+    <item name="colorPrimaryContainer">@color/md_theme_light_primaryContainer</item>
+    <item name="colorOnPrimaryContainer">@color/md_theme_light_onPrimaryContainer</item>
+    <item name="colorSecondary">@color/md_theme_light_secondary</item>
+    <item name="colorOnSecondary">@color/md_theme_light_onSecondary</item>
+    <item name="colorSecondaryContainer">@color/md_theme_light_secondaryContainer</item>
+    <item name="colorOnSecondaryContainer">@color/md_theme_light_onSecondaryContainer</item>
+    <item name="colorOnBackground">@color/md_theme_light_onBackground</item>
+    <item name="colorSurface">@color/md_theme_light_surface</item>
+    <item name="colorOnSurface">@color/md_theme_light_onSurface</item>
+    <item name="colorSurfaceVariant">@color/md_theme_light_surfaceVariant</item>
+    <item name="colorOnSurfaceVariant">@color/md_theme_light_onSurfaceVariant</item>
+    <item name="colorOutline">@color/md_theme_light_outline</item>
+    <item name="android:colorBackground">@color/md_theme_light_background</item>
+    <item name="android:windowBackground">@color/md_theme_light_background</item>
+    <item name="android:statusBarColor">@android:color/transparent</item>
+    <item name="android:navigationBarColor">@color/md_theme_light_surface</item>
+    <item name="materialButtonStyle">@style/Widget.GymApp.Button</item>
+  </style>
+
+  <style name="Widget.GymApp.Button" parent="Widget.Material3.Button">
+    <item name="android:insetLeft">0dp</item>
+    <item name="android:insetRight">0dp</item>
+    <item name="android:minHeight">52dp</item>
+    <item name="cornerRadius">16dp</item>
+  </style>
+
+  <style name="Widget.GymApp.TextInputLayout" parent="Widget.Material3.TextInputLayout.FilledBox">
+    <item name="boxBackgroundColor">@color/md_theme_surfaceVariant</item>
+    <item name="boxStrokeColor">@color/md_theme_outline</item>
+    <item name="hintTextColor">@color/md_theme_onSurfaceVariant</item>
+    <item name="boxCornerRadiusTopStart">16dp</item>
+    <item name="boxCornerRadiusTopEnd">16dp</item>
+    <item name="boxCornerRadiusBottomStart">16dp</item>
+    <item name="boxCornerRadiusBottomEnd">16dp</item>
+  </style>
+
+  <style name="TextAppearance.GymApp.Toolbar.Small" parent="TextAppearance.Material3.TitleLarge">
+    <item name="android:textSize">16sp</item>
+    <item name="android:textColor">@color/color_text_secondary</item>
+  </style>
+</resources>
