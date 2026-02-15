@@ -57,6 +57,12 @@ namespace Gym_App.Activities
             var themeDarkButton = FindViewById<Button>(Resource.Id.themeDarkButton);
             var themeSystemButton = FindViewById<Button>(Resource.Id.themeSystemButton);
             var exportCsvButton = FindViewById<Button>(Resource.Id.exportCsvButton);
+            var appVersionText = FindViewById<TextView>(Resource.Id.appVersionText);
+
+            if (appVersionText != null)
+            {
+                appVersionText.Text = GetString(Resource.String.settings_release_text);
+            }
 
             var currentUnit = prefs?.GetString("unit", "kg") ?? "kg";
             if (currentUnit == "lbs")

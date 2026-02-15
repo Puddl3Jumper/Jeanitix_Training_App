@@ -37,4 +37,6 @@
     <string name="home_onboarding_title">Quick start</string>
     <string name="home_onboarding_message">Tap \'Start &amp; Select Workout\' to begin tracking your session. Use Quick Log for fast entries and History to review progress.</string>
     <string name="home_onboarding_cta">Got it</string>
+    <string name="settings_release_placeholder">Release</string>
+    <string name="settings_release_text">Version v1.0.0.0-Beta</string>
 </resources>

@@ -26,7 +26,6 @@ namespace Gym_App.Activities
         private LinearLayout? _todayExercisesContainer;
         private ImageView? _noRecordsIcon;
         private TextView? _noRecordsText;
-        private Button? _addExerciseButton;
 
         protected override void OnCreate(Bundle? savedInstanceState)
         {
@@ -50,7 +49,6 @@ namespace Gym_App.Activities
             var homeToolbar = FindViewById<MaterialToolbar>(Resource.Id.homeToolbar);
 
             var startWorkoutButton = FindViewById<Button>(Resource.Id.startWorkoutHomeButton);
-            _addExerciseButton = FindViewById<Button>(Resource.Id.addExerciseHomeButton);
             var homeTab = FindViewById<LinearLayout>(Resource.Id.homeTab);
             var diaryTab = FindViewById<LinearLayout>(Resource.Id.diaryTab);
             var workoutTab = FindViewById<LinearLayout>(Resource.Id.workoutTab);
@@ -61,10 +59,6 @@ namespace Gym_App.Activities
             if (string.IsNullOrWhiteSpace(name))
             {
                 name = "User";
-            }
-            if (homeToolbar != null)
-            {
-                homeToolbar.Title = "Home";
             }
             if (!_hasShownWelcomePromptThisLaunch)
             {
@@ -89,23 +83,6 @@ namespace Gym_App.Activities
                     {
                         intent.PutExtra("workoutId", currentWorkout.Id);
                     }
-                    StartActivity(intent);
-                };
-            }
-
-            if (_addExerciseButton != null)
-            {
-                _addExerciseButton.Click += (s, e) =>
-                {
-                    var currentWorkout = _database?.GetCurrentWorkout();
-                    if (currentWorkout == null)
-                    {
-                        Toast.MakeText(this, "Start a workout first", ToastLength.Short)?.Show();
-                        return;
-                    }
-
-                    var intent = new Intent(this, typeof(WorkoutActivity));
-                    intent.PutExtra("workoutId", currentWorkout.Id);
                     StartActivity(intent);
                 };
             }
@@ -189,11 +166,6 @@ namespace Gym_App.Activities
                 && insightSessions.All(session => session.Id != currentWorkout.Id))
             {
                 insightSessions.Add(currentWorkout);
-            }
-
-            if (_addExerciseButton != null)
-            {
-                _addExerciseButton.Visibility = currentWorkout != null ? ViewStates.Visible : ViewStates.Gone;
             }
 
             int totalSets = 0;

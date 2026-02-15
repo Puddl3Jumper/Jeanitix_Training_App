@@ -12,7 +12,6 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:backgroundTint="@color/md_theme_surfaceVariant"
-        app:title="Home"
         app:titleMarginTop="6dp"
         app:titleTextColor="@color/color_text_primary" />
 
@@ -287,19 +286,6 @@
                     android:textColor="@color/color_text_primary"
                     android:gravity="center" />
             </LinearLayout>
-
-            <com.google.android.material.button.MaterialButton
-                android:id="@+id/addExerciseHomeButton"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
-                android:layout_gravity="end"
-                android:text="+"
-                android:textSize="24sp"
-                android:textAllCaps="false"
-                android:textColor="@color/color_on_primary"
-                android:background="@drawable/bg_button_primary"
-                android:layout_marginTop="16dp"
-                android:layout_marginBottom="16dp" />
 
         </LinearLayout>
     </ScrollView>

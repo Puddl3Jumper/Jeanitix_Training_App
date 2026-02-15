@@ -19,16 +19,15 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:backgroundTint="@color/md_theme_surfaceVariant"
-            app:title="@string/history_title"
             app:titleTextColor="@color/color_text_primary" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/history_subtitle"
-            android:textSize="14sp"
-            android:textColor="@color/color_text_secondary"
-            android:layout_marginBottom="16dp" />
+            android:textSize="16sp"
+            android:textColor="@color/md_theme_onSurfaceVariant"
+            android:layout_marginBottom="20dp" />
 
         <LinearLayout
             android:layout_width="match_parent"
@@ -39,11 +38,12 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="40dp"
+                android:minWidth="48dp"
                 android:gravity="center_vertical"
                 android:text="Day"
                 android:textStyle="bold"
-                android:textColor="#000000"
-                android:background="@drawable/bg_log_tab_active"
+                android:textColor="@color/color_on_primary"
+                android:background="@drawable/bg_button_primary"
                 android:paddingStart="14dp"
                 android:paddingEnd="14dp"
                 android:layout_marginEnd="8dp" />
@@ -51,9 +51,10 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="40dp"
+                android:minWidth="48dp"
                 android:gravity="center_vertical"
                 android:text="Week"
-                android:textColor="#FFFFFF"
+                android:textColor="@color/md_theme_onSecondary"
                 android:background="@drawable/bg_log_tab_inactive"
                 android:paddingStart="14dp"
                 android:paddingEnd="14dp"
@@ -62,9 +63,10 @@
             <TextView
                 android:layout_width="wrap_content"
                 android:layout_height="40dp"
+                android:minWidth="48dp"
                 android:gravity="center_vertical"
                 android:text="Month"
-                android:textColor="#FFFFFF"
+                android:textColor="@color/md_theme_onSecondary"
                 android:background="@drawable/bg_log_tab_inactive"
                 android:paddingStart="14dp"
                 android:paddingEnd="14dp" />
@@ -73,13 +75,14 @@
         <ScrollView
             android:layout_width="match_parent"
             android:layout_height="0dp"
-            android:layout_weight="1">
+            android:layout_weight="1"
+            android:fillViewport="true">
 
             <LinearLayout
                 android:id="@+id/historyContainer"
                 android:orientation="vertical"
                 android:layout_width="match_parent"
-                android:layout_height="wrap_content" />
+                android:layout_height="match_parent" />
 
         </ScrollView>
     </LinearLayout>

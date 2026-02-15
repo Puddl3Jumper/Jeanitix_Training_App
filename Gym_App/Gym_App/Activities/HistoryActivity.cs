@@ -88,16 +88,66 @@ namespace Gym_App.Activities
 
             if (history.Count == 0)
             {
+                _historyContainer.SetGravity(GravityFlags.Center);
+
+                var emptyStateLayout = new LinearLayout(this)
+                {
+                    Orientation = Orientation.Vertical
+                };
+                emptyStateLayout.SetGravity(GravityFlags.CenterHorizontal);
+                emptyStateLayout.LayoutParameters = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MatchParent,
+                    ViewGroup.LayoutParams.WrapContent);
+
                 var noDataText = new TextView(this)
                 {
-                    Text = "No workout history yet. Start your first workout!",
+                    Text = "No workouts logged yet!",
+                    TextSize = 18
+                };
+                noDataText.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.color_text_primary)));
+                noDataText.SetTypeface(Typeface.Create("sans-serif-medium", TypefaceStyle.Normal), TypefaceStyle.Normal);
+                noDataText.Gravity = GravityFlags.Center;
+
+                var subText = new TextView(this)
+                {
+                    Text = "Track your first workout to see progress here.",
+                    TextSize = 14
+                };
+                subText.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.md_theme_onSurfaceVariant)));
+                subText.Gravity = GravityFlags.Center;
+                var subTextParams = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WrapContent,
+                    ViewGroup.LayoutParams.WrapContent);
+                subTextParams.TopMargin = DpToPx(8);
+                subText.LayoutParameters = subTextParams;
+
+                var startFirstWorkoutButton = new Button(this)
+                {
+                    Text = "Start First Workout",
                     TextSize = 16
                 };
-                noDataText.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.color_text_secondary)));
-                noDataText.SetPadding(16, 16, 16, 16);
-                _historyContainer.AddView(noDataText);
+                startFirstWorkoutButton.SetTypeface(null, TypefaceStyle.Bold);
+                startFirstWorkoutButton.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.color_on_primary)));
+                startFirstWorkoutButton.SetBackgroundResource(Resource.Drawable.bg_button_primary);
+                startFirstWorkoutButton.BackgroundTintList = null;
+                var buttonParams = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WrapContent,
+                    ViewGroup.LayoutParams.WrapContent);
+                buttonParams.TopMargin = DpToPx(16);
+                startFirstWorkoutButton.LayoutParameters = buttonParams;
+                startFirstWorkoutButton.Click += (s, e) =>
+                {
+                    StartActivity(new Intent(this, typeof(WorkoutActivity)));
+                };
+
+                emptyStateLayout.AddView(noDataText);
+                emptyStateLayout.AddView(subText);
+                emptyStateLayout.AddView(startFirstWorkoutButton);
+                _historyContainer.AddView(emptyStateLayout);
                 return;
             }
+
+            _historyContainer.SetGravity(GravityFlags.Top);
 
             if (history.Count == 1)
             {
