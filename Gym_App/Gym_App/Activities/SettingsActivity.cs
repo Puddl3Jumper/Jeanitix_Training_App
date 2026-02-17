@@ -2,6 +2,7 @@ using Android.Content;
 using Android.Widget;
 using Android.Graphics;
 using Gym_App.Data;
+using Java.Lang;
 
 namespace Gym_App.Activities
 {
@@ -66,7 +67,14 @@ namespace Gym_App.Activities
 
             if (appVersionText != null)
             {
-                appVersionText.Text = GetString(Resource.String.settings_release_text);
+                var (versionName, versionCode) = ReleaseInfo.GetAppVersion(this);
+                appVersionText.Text = GetString(
+                    Resource.String.settings_release_text,
+                    new Java.Lang.Object[]
+                    {
+                        new Java.Lang.String(versionName),
+                        Long.ValueOf(versionCode)
+                    });
             }
 
             var currentUnit = prefs?.GetString("unit", "kg") ?? "kg";
