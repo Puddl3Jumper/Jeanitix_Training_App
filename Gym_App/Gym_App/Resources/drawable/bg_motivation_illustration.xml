@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+  <!-- Base card surface -->
+  <item>
+    <shape android:shape="rectangle">
+      <solid android:color="@color/md_theme_surfaceVariant" />
+      <corners android:radius="16dp" />
+    </shape>
+  </item>
+
+  <!-- Soft primary blob (top-left) -->
+  <item android:left="-24dp" android:top="-36dp" android:alpha="0.28">
+    <shape android:shape="oval">
+      <size android:width="140dp" android:height="140dp" />
+      <solid android:color="@color/color_primary" />
+    </shape>
+  </item>
+
+  <!-- Soft primary blob (bottom-right) -->
+  <item android:right="-30dp" android:bottom="-46dp" android:alpha="0.20">
+    <shape android:shape="oval">
+      <size android:width="180dp" android:height="180dp" />
+      <solid android:color="@color/color_primary" />
+    </shape>
+  </item>
+
+  <!-- Center icon -->
+  <item android:gravity="center" android:alpha="0.95" android:drawable="@drawable/ic_dumbbell" />
+
+</layer-list>

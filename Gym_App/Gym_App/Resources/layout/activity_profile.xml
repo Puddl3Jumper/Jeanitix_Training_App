@@ -4,7 +4,8 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:background="@android:color/black">
+    android:background="@android:color/black"
+    android:fitsSystemWindows="true">
 
     <LinearLayout
         android:layout_width="match_parent"
@@ -13,7 +14,7 @@
         android:orientation="vertical"
         android:paddingStart="20dp"
         android:paddingEnd="20dp"
-        android:paddingTop="20dp">
+        android:paddingTop="32dp">
 
         <LinearLayout
             android:id="@+id/profileHeaderArea"
@@ -25,8 +26,8 @@
 
             <ImageView
                 android:id="@+id/profilePhoto"
-                android:layout_width="48dp"
-                android:layout_height="48dp"
+                android:layout_width="60dp"
+                android:layout_height="60dp"
                 android:src="@drawable/ic_nav_profile"
                 android:contentDescription="avatar"
                 android:background="@drawable/bg_avatar_circle"
@@ -40,25 +41,33 @@
                 android:layout_width="0dp"
                 android:layout_height="wrap_content"
                 android:layout_weight="1"
-                android:orientation="vertical"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
                 android:layout_marginStart="12dp">
 
                 <TextView
                     android:id="@+id/profileGreeting"
-                    android:layout_width="match_parent"
+                    android:layout_width="wrap_content"
                     android:layout_height="wrap_content"
                     android:text="Good morning,"
                     android:textSize="16sp"
-                    android:textColor="@color/color_text_secondary" />
+                    android:textColor="@color/color_text_secondary"
+                    android:singleLine="true"
+                    android:includeFontPadding="false" />
 
                 <TextView
                     android:id="@+id/profileName"
-                    android:layout_width="match_parent"
+                    android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="6dp"
                     android:text="Your Name"
                     android:textSize="22sp"
                     android:textStyle="bold"
-                    android:textColor="@android:color/white" />
+                    android:textColor="@android:color/white"
+                    android:singleLine="true"
+                    android:ellipsize="end"
+                    android:includeFontPadding="false" />
 
                 <TextView
                     android:id="@+id/profileBio"
@@ -69,15 +78,17 @@
                     android:textSize="13sp"
                     android:textColor="@android:color/white" />
             </LinearLayout>
-
+            
             <ImageButton
-                android:id="@+id/notificationsButton"
+                android:id="@+id/editProfileButton"
                 android:layout_width="40dp"
                 android:layout_height="40dp"
+                android:layout_marginStart="8dp"
                 android:background="@android:color/transparent"
-                android:contentDescription="notifications"
-                android:src="@drawable/ic_notifications"
+                android:contentDescription="Edit profile"
+                android:src="@drawable/ic_edit"
                 android:tint="@android:color/white" />
+
         </LinearLayout>
 
         <ScrollView
@@ -89,8 +100,7 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="vertical"
-                android:paddingBottom="16dp">
+                android:orientation="vertical">
 
                 <LinearLayout
                     android:layout_width="match_parent"
@@ -104,7 +114,7 @@
                         android:id="@+id/weeklyProgressHeadline"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:text="You've done 0 workouts this week!"
+                        android:text="Let's start your first workout today!"
                         android:textSize="16sp"
                         android:textStyle="bold"
                         android:textColor="@android:color/white" />
@@ -122,30 +132,25 @@
                         android:id="@+id/weeklyProgressBar"
                         style="?android:attr/progressBarStyleHorizontal"
                         android:layout_width="match_parent"
-                        android:layout_height="10dp"
-                        android:layout_marginTop="12dp"
+                        android:layout_height="4dp"
+                        android:layout_marginTop="10dp"
                         android:indeterminate="false"
                         android:max="100"
                         android:progress="0"
                         android:progressDrawable="@drawable/bg_weekly_progress" />
                 </LinearLayout>
 
-                <LinearLayout
+                <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:layout_marginBottom="8dp">
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Stats Overview"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/color_primary" />
-                </LinearLayout>
+                    android:text="Key Metrics"
+                    android:textSize="14sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/color_primary"
+                    android:layout_marginBottom="8dp" />
 
                 <LinearLayout
+                    android:id="@+id/keyMetricsCard"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
@@ -157,173 +162,221 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
+                        android:layout_marginTop="8dp"
                         android:layout_marginBottom="8dp">
 
-                        <LinearLayout
+                        <TextView
+                            android:id="@+id/keyMetricsTabStats"
                             android:layout_width="0dp"
-                            android:layout_height="wrap_content"
+                            android:layout_height="32dp"
                             android:layout_weight="1"
-                            android:orientation="vertical"
-                            android:padding="12dp"
-                            android:layout_marginEnd="6dp">
+                            android:gravity="center"
+                            android:text="Stats"
+                            android:textStyle="bold"
+                            android:textSize="13sp"
+                            android:textColor="@color/color_on_primary"
+                            android:background="@drawable/bg_log_tab_active" />
 
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:text="Weight"
-                                android:textSize="12sp"
-                                android:textColor="@android:color/white" />
+                        <TextView
+                            android:id="@+id/keyMetricsTabPrs"
+                            android:layout_width="0dp"
+                            android:layout_height="32dp"
+                            android:layout_weight="1"
+                            android:layout_marginStart="8dp"
+                            android:gravity="center"
+                            android:text="PRs"
+                            android:textStyle="bold"
+                            android:textSize="13sp"
+                            android:textColor="@color/color_text_secondary"
+                            android:background="@drawable/bg_log_tab_inactive" />
+                    </LinearLayout>
 
-                            <TextView
-                                android:id="@+id/statWeightValue"
-                                android:layout_width="match_parent"
+                    <LinearLayout
+                        android:id="@+id/keyMetricsStatsContainer"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical">
+
+                        <LinearLayout
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:orientation="horizontal"
+                            android:layout_marginBottom="8dp">
+
+                            <LinearLayout
+                                android:layout_width="0dp"
                                 android:layout_height="wrap_content"
-                                android:text="--"
-                                android:textStyle="bold"
-                                android:textSize="26sp"
-                                android:textColor="@android:color/white" />
+                                android:layout_weight="1"
+                                android:orientation="vertical"
+                                android:padding="8dp"
+                                android:layout_marginEnd="6dp">
+
+                                <TextView
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:text="Weight"
+                                    android:textSize="10sp"
+                                    android:textColor="@android:color/white"
+                                    android:includeFontPadding="false" />
+
+                                <TextView
+                                    android:id="@+id/statWeightValue"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:text="--"
+                                    android:textStyle="bold"
+                                    android:textSize="20sp"
+                                    android:textColor="@android:color/white"
+                                    android:maxLines="1"
+                                    android:ellipsize="end"
+                                    android:includeFontPadding="false" />
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:layout_width="0dp"
+                                android:layout_height="wrap_content"
+                                android:layout_weight="1"
+                                android:orientation="vertical"
+                                android:padding="8dp"
+                                android:layout_marginStart="6dp">
+
+                                <TextView
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:text="Height"
+                                    android:textSize="10sp"
+                                    android:textColor="@android:color/white"
+                                    android:includeFontPadding="false" />
+
+                                <TextView
+                                    android:id="@+id/statHeightValue"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:text="--"
+                                    android:textStyle="bold"
+                                    android:textSize="20sp"
+                                    android:textColor="@android:color/white"
+                                    android:maxLines="1"
+                                    android:ellipsize="end"
+                                    android:includeFontPadding="false" />
+                            </LinearLayout>
                         </LinearLayout>
 
                         <LinearLayout
-                            android:layout_width="0dp"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="vertical"
-                            android:padding="12dp"
-                            android:layout_marginStart="6dp">
+                            android:orientation="horizontal">
 
-                            <TextView
-                                android:layout_width="match_parent"
+                            <LinearLayout
+                                android:layout_width="0dp"
                                 android:layout_height="wrap_content"
-                                android:text="Height"
-                                android:textSize="12sp"
-                                android:textColor="@android:color/white" />
+                                android:layout_weight="1"
+                                android:orientation="vertical"
+                                android:padding="8dp"
+                                android:layout_marginEnd="6dp">
 
-                            <TextView
-                                android:id="@+id/statHeightValue"
-                                android:layout_width="match_parent"
+                                <TextView
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:text="Age"
+                                    android:textSize="10sp"
+                                    android:textColor="@android:color/white"
+                                    android:includeFontPadding="false" />
+
+                                <TextView
+                                    android:id="@+id/statAgeValue"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:text="--"
+                                    android:textStyle="bold"
+                                    android:textSize="20sp"
+                                    android:textColor="@android:color/white"
+                                    android:maxLines="1"
+                                    android:ellipsize="end"
+                                    android:includeFontPadding="false" />
+                            </LinearLayout>
+
+                            <LinearLayout
+                                android:layout_width="0dp"
                                 android:layout_height="wrap_content"
-                                android:text="--"
-                                android:textStyle="bold"
-                                android:textSize="26sp"
-                                android:textColor="@android:color/white" />
+                                android:layout_weight="1"
+                                android:orientation="vertical"
+                                android:padding="8dp"
+                                android:layout_marginStart="6dp">
+
+                                <TextView
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:text="Body Fat"
+                                    android:textSize="10sp"
+                                    android:textColor="@android:color/white"
+                                    android:includeFontPadding="false" />
+
+                                <TextView
+                                    android:id="@+id/statBodyFatValue"
+                                    android:layout_width="match_parent"
+                                    android:layout_height="wrap_content"
+                                    android:text="--"
+                                    android:textStyle="bold"
+                                    android:textSize="20sp"
+                                    android:textColor="@android:color/white"
+                                    android:maxLines="1"
+                                    android:ellipsize="end"
+                                    android:includeFontPadding="false" />
+                            </LinearLayout>
                         </LinearLayout>
                     </LinearLayout>
 
                     <LinearLayout
+                        android:id="@+id/keyMetricsPrsContainer"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal">
+                        android:orientation="vertical"
+                        android:visibility="gone">
 
-                        <LinearLayout
-                            android:layout_width="0dp"
+                        <TextView
+                            android:id="@+id/prSquatValue"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="vertical"
-                            android:padding="12dp"
-                            android:layout_marginEnd="6dp">
+                            android:text="Squat 1RM: --"
+                            android:textSize="12sp"
+                            android:textColor="@android:color/white"
+                            android:layout_marginBottom="2dp"
+                            android:singleLine="true"
+                            android:ellipsize="end" />
 
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:text="Age"
-                                android:textSize="12sp"
-                                android:textColor="@android:color/white" />
-
-                            <TextView
-                                android:id="@+id/statAgeValue"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:text="--"
-                                android:textStyle="bold"
-                                android:textSize="26sp"
-                                android:textColor="@android:color/white" />
-                        </LinearLayout>
-
-                        <LinearLayout
-                            android:layout_width="0dp"
+                        <TextView
+                            android:id="@+id/prBenchValue"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="vertical"
-                            android:padding="12dp"
-                            android:layout_marginStart="6dp">
+                            android:text="Bench 1RM: --"
+                            android:textSize="12sp"
+                            android:textColor="@android:color/white"
+                            android:layout_marginBottom="2dp"
+                            android:singleLine="true"
+                            android:ellipsize="end" />
 
-                            <TextView
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:text="Body Fat"
-                                android:textSize="12sp"
-                                android:textColor="@android:color/white" />
+                        <TextView
+                            android:id="@+id/prDeadliftValue"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Deadlift 1RM: --"
+                            android:textSize="12sp"
+                            android:textColor="@android:color/white"
+                            android:layout_marginBottom="2dp"
+                            android:singleLine="true"
+                            android:ellipsize="end" />
 
-                            <TextView
-                                android:id="@+id/statBodyFatValue"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:text="--"
-                                android:textStyle="bold"
-                                android:textSize="26sp"
-                                android:textColor="@android:color/white" />
-                        </LinearLayout>
+                        <TextView
+                            android:id="@+id/prOverheadValue"
+                            android:layout_width="match_parent"
+                            android:layout_height="wrap_content"
+                            android:text="Overhead Press (optional): --"
+                            android:textSize="12sp"
+                            android:textColor="@android:color/white"
+                            android:singleLine="true"
+                            android:ellipsize="end" />
                     </LinearLayout>
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:layout_marginBottom="8dp">
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="PRs"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/color_primary" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:background="@drawable/bg_card"
-                    android:padding="16dp"
-                    android:layout_marginBottom="12dp">
-
-                    <TextView
-                        android:id="@+id/prSquatValue"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Squat 1RM: --"
-                        android:textSize="14sp"
-                        android:textColor="@android:color/white"
-                        android:layout_marginBottom="6dp" />
-
-                    <TextView
-                        android:id="@+id/prBenchValue"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Bench 1RM: --"
-                        android:textSize="14sp"
-                        android:textColor="@android:color/white"
-                        android:layout_marginBottom="6dp" />
-
-                    <TextView
-                        android:id="@+id/prDeadliftValue"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Deadlift 1RM: --"
-                        android:textSize="14sp"
-                        android:textColor="@android:color/white"
-                        android:layout_marginBottom="6dp" />
-
-                    <TextView
-                        android:id="@+id/prOverheadValue"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Overhead Press (optional): --"
-                        android:textSize="14sp"
-                        android:textColor="@android:color/white" />
                 </LinearLayout>
 
                 <LinearLayout

@@ -19,6 +19,8 @@
     <PublishTrimmed>false</PublishTrimmed>
     <TrimMode>copy</TrimMode>
     <AndroidLinkMode>None</AndroidLinkMode>
+    <AndroidUseManagedCodeTrampolines>false</AndroidUseManagedCodeTrampolines>
+    <AndroidEnableMarshalMethods>false</AndroidEnableMarshalMethods>
     <RunAOTCompilation>false</RunAOTCompilation>
   </PropertyGroup>
 
@@ -34,5 +36,9 @@
 
   <ItemGroup>
     <GoogleServicesJson Include="google-services.json" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <AndroidAsset Include="google-services.json" />
   </ItemGroup>
 </Project>

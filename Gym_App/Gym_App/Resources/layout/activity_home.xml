@@ -5,15 +5,8 @@
     android:layout_height="match_parent"
     android:orientation="vertical"
     android:fontFamily="sans-serif"
-    android:background="@drawable/bg_screen">
-
-    <com.google.android.material.appbar.MaterialToolbar
-        android:id="@+id/homeToolbar"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:backgroundTint="@color/md_theme_surfaceVariant"
-        app:titleMarginTop="6dp"
-        app:titleTextColor="@color/color_text_primary" />
+    android:background="@drawable/bg_screen"
+    android:fitsSystemWindows="true">
 
     <ScrollView
         android:layout_width="match_parent"
@@ -137,7 +130,7 @@
                     android:id="@+id/weeklyProgressBar"
                     style="?android:attr/progressBarStyleHorizontal"
                     android:layout_width="match_parent"
-                    android:layout_height="8dp"
+                    android:layout_height="4dp"
                     android:layout_marginTop="10dp"
                     android:indeterminate="false"
                     android:max="100"

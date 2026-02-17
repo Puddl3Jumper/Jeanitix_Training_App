@@ -17,11 +17,11 @@ namespace Gym_App.Activities
             var nameInput = FindViewById<EditText>(Resource.Id.createNameInput);
             var emailInput = FindViewById<EditText>(Resource.Id.createEmailInput);
             var passwordInput = FindViewById<EditText>(Resource.Id.createPasswordInput);
-            var createButton = FindViewById<Button>(Resource.Id.createAccountButton);
+            var createButton = FindViewById(Resource.Id.createAccountButton);
 
             if (createButton != null)
             {
-                createButton.Click += (s, e) =>
+                createButton.Click += async (s, e) =>
                 {
                     var fullName = nameInput?.Text?.Trim() ?? string.Empty;
                     var email = emailInput?.Text?.Trim() ?? string.Empty;
@@ -45,13 +45,38 @@ namespace Gym_App.Activities
                         return;
                     }
 
-                    if (AuthCredentialStore.AccountExists(this, email))
+                    try
                     {
-                        Toast.MakeText(this, "Account already exists. Please log in or reset password.", ToastLength.Long)?.Show();
+                        createButton.Enabled = false;
+
+                        var config = FirebaseProjectConfig.LoadFromGoogleServicesJson(this);
+                        var auth = new FirebaseAuthService(config);
+
+                        var session = await auth.SignUpWithEmailPasswordAsync(email, password, CancellationToken.None);
+                        if (!string.IsNullOrWhiteSpace(fullName))
+                        {
+                            try
+                            {
+                                session = await auth.UpdateProfileDisplayNameAsync(session.IdToken, fullName, CancellationToken.None);
+                            }
+                            catch (Exception updateEx)
+                            {
+                                Android.Util.Log.Warn("FirebaseAuth", $"Profile update failed after sign-up: {updateEx}");
+                            }
+                        }
+
+                        AuthSessionStore.Save(this, session);
+                    }
+                    catch (Exception ex)
+                    {
+                        Android.Util.Log.Error("FirebaseAuth", ex.ToString());
+                        Toast.MakeText(this, ex.Message, ToastLength.Long)?.Show();
                         return;
                     }
-
-                    AuthCredentialStore.UpsertAccount(this, email, password);
+                    finally
+                    {
+                        createButton.Enabled = true;
+                    }
 
                     var prefs = GetSharedPreferences("user_profile", FileCreationMode.Private);
                     var editor = prefs?.Edit();
@@ -64,12 +89,6 @@ namespace Gym_App.Activities
                     editor?.PutString("goal", "Build strength");
                     editor?.PutString("unit", "kg");
                     editor?.Apply();
-
-                    var authPrefs = GetSharedPreferences("auth_session", FileCreationMode.Private);
-                    authPrefs?.Edit()
-                        ?.PutBoolean("is_logged_in", true)
-                        ?.PutString("email", email)
-                        ?.Apply();
 
                     Toast.MakeText(this, "Account created", ToastLength.Short)?.Show();
                     StartActivity(new Intent(this, typeof(HomeActivity)));

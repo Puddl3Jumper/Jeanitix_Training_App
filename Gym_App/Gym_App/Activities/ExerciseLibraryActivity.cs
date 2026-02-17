@@ -65,7 +65,7 @@ namespace Gym_App.Activities
                 };
             }
 
-            var addCustomExerciseButton = FindViewById<Button>(Resource.Id.addCustomExerciseButton);
+            var addCustomExerciseButton = FindViewById(Resource.Id.addCustomExerciseButton);
             if (addCustomExerciseButton != null)
                 addCustomExerciseButton.Click += AddCustomExerciseButton_Click;
 

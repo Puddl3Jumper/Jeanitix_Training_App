@@ -9,6 +9,7 @@ using Android.Net;
 using Android.Content.Res;
 using System;
 using System.Linq;
+using Android.Views;
 
 namespace Gym_App.Activities
 {
@@ -26,6 +27,8 @@ namespace Gym_App.Activities
             ThemeManager.ApplyTheme(this);
             base.OnCreate(savedInstanceState);
             SetContentView(Resource.Layout.activity_profile);
+
+            SetupKeyMetricsTabs();
 
             _database = new GymDatabase();
 
@@ -72,6 +75,87 @@ namespace Gym_App.Activities
             SetupActions();
             SetupHeaderActions();
             SetupAvatarPicker();
+        }
+
+        private void SetupKeyMetricsTabs()
+        {
+            var tabStats = FindViewById<TextView>(Resource.Id.keyMetricsTabStats);
+            var tabPrs = FindViewById<TextView>(Resource.Id.keyMetricsTabPrs);
+            var statsContainer = FindViewById<LinearLayout>(Resource.Id.keyMetricsStatsContainer);
+            var prsContainer = FindViewById<LinearLayout>(Resource.Id.keyMetricsPrsContainer);
+            var card = FindViewById<LinearLayout>(Resource.Id.keyMetricsCard);
+
+            if (tabStats == null || tabPrs == null || statsContainer == null || prsContainer == null || card == null)
+                return;
+
+            void SelectStats()
+            {
+                statsContainer.Visibility = ViewStates.Visible;
+                prsContainer.Visibility = ViewStates.Gone;
+
+                tabStats.SetBackgroundResource(Resource.Drawable.bg_log_tab_active);
+                tabStats.SetTextColor(new Color(GetColor(Resource.Color.color_on_primary)));
+                tabStats.SetTypeface(null, TypefaceStyle.Bold);
+
+                tabPrs.SetBackgroundResource(Resource.Drawable.bg_log_tab_inactive);
+                tabPrs.SetTextColor(new Color(GetColor(Resource.Color.color_text_secondary)));
+                tabPrs.SetTypeface(null, TypefaceStyle.Bold);
+            }
+
+            void SelectPrs()
+            {
+                statsContainer.Visibility = ViewStates.Gone;
+                prsContainer.Visibility = ViewStates.Visible;
+
+                tabPrs.SetBackgroundResource(Resource.Drawable.bg_log_tab_active);
+                tabPrs.SetTextColor(new Color(GetColor(Resource.Color.color_on_primary)));
+                tabPrs.SetTypeface(null, TypefaceStyle.Bold);
+
+                tabStats.SetBackgroundResource(Resource.Drawable.bg_log_tab_inactive);
+                tabStats.SetTextColor(new Color(GetColor(Resource.Color.color_text_secondary)));
+                tabStats.SetTypeface(null, TypefaceStyle.Bold);
+            }
+
+            tabStats.Click += (_, __) => SelectStats();
+            tabPrs.Click += (_, __) => SelectPrs();
+
+            SelectStats();
+
+            card.Post(() =>
+            {
+                if (card.Width <= 0)
+                    return;
+
+                var widthSpec = View.MeasureSpec.MakeMeasureSpec(card.Width - card.PaddingLeft - card.PaddingRight, MeasureSpecMode.AtMost);
+                var heightSpec = View.MeasureSpec.MakeMeasureSpec(0, MeasureSpecMode.Unspecified);
+
+                var originalStatsVisibility = statsContainer.Visibility;
+                var originalPrsVisibility = prsContainer.Visibility;
+
+                statsContainer.Visibility = ViewStates.Visible;
+                prsContainer.Visibility = ViewStates.Invisible;
+
+                statsContainer.Measure(widthSpec, heightSpec);
+                var statsHeight = statsContainer.MeasuredHeight;
+
+                prsContainer.Measure(widthSpec, heightSpec);
+                var prsHeight = prsContainer.MeasuredHeight;
+
+                var fixedHeight = Math.Max(statsHeight, prsHeight);
+                if (fixedHeight > 0)
+                {
+                    var statsLp = statsContainer.LayoutParameters;
+                    statsLp.Height = fixedHeight;
+                    statsContainer.LayoutParameters = statsLp;
+
+                    var prsLp = prsContainer.LayoutParameters;
+                    prsLp.Height = fixedHeight;
+                    prsContainer.LayoutParameters = prsLp;
+                }
+
+                statsContainer.Visibility = originalStatsVisibility;
+                prsContainer.Visibility = originalPrsVisibility;
+            });
         }
 
         protected override void OnResume()
@@ -224,16 +308,16 @@ namespace Gym_App.Activities
         private void SetupHeaderActions()
         {
             var headerArea = FindViewById<LinearLayout>(Resource.Id.profileHeaderArea);
-            var notificationsButton = FindViewById<ImageButton>(Resource.Id.notificationsButton);
+            var editButton = FindViewById<ImageButton>(Resource.Id.editProfileButton);
 
             if (headerArea != null)
             {
                 headerArea.Click += OnEditProfileClick;
             }
 
-            if (notificationsButton != null)
+            if (editButton != null)
             {
-                notificationsButton.Click += (s, e) => StartActivity(new Intent(this, typeof(SettingsActivity)));
+                editButton.Click += OnEditProfileClick;
             }
         }
 
@@ -265,7 +349,9 @@ namespace Gym_App.Activities
             var percent = (int)Math.Round((workoutsThisWeek / (double)weeklyGoal) * 100.0);
             percent = Math.Max(0, Math.Min(percent, 100));
 
-            headline.Text = $"You've done {workoutsThisWeek} workouts this week!";
+            headline.Text = workoutsThisWeek == 0
+                ? "Let's start your first workout today!"
+                : $"You've done {workoutsThisWeek} workouts this week!";
             detail.Text = $"{percent}% of your weekly goal is completed.";
             bar.Progress = percent;
         }
@@ -297,9 +383,17 @@ namespace Gym_App.Activities
             var currentWeight = prefs?.GetString("current_weight", "--") ?? "--";
             var age = prefs?.GetString("age", "--") ?? "--";
 
-            weightValue.Text = $"{currentWeight} {unit}";
-            heightValue.Text = $"{height} cm";
-            ageValue.Text = age == "--" ? "--" : $"{age} yrs";
+            weightValue.Text = currentWeight == "--"
+                ? "Tap to add your first weight log"
+                : $"{currentWeight} {unit}";
+
+            heightValue.Text = height == "--"
+                ? "Tap to add height"
+                : $"{height} cm";
+
+            ageValue.Text = age == "--"
+                ? "Tap to add age"
+                : $"{age} yrs";
 
             if (TryParseNumber(currentWeight, out var weightNumeric) &&
                 TryParseNumber(height, out var heightCmNumeric) &&
@@ -391,12 +485,12 @@ namespace Gym_App.Activities
 
         private void SetupActions()
         {
-            var startWorkoutButton = FindViewById<Button>(Resource.Id.quickStartWorkoutButton);
-            var logWeightButton = FindViewById<Button>(Resource.Id.quickLogWeightButton);
-            var viewHistoryButton = FindViewById<Button>(Resource.Id.quickViewHistoryButton);
-            var viewProgressButton = FindViewById<Button>(Resource.Id.quickViewProgressButton);
-            var settingsButton = FindViewById<Button>(Resource.Id.settingsButton);
-            var logoutButton = FindViewById<Button>(Resource.Id.logoutButton);
+            var startWorkoutButton = FindViewById(Resource.Id.quickStartWorkoutButton);
+            var logWeightButton = FindViewById(Resource.Id.quickLogWeightButton);
+            var viewHistoryButton = FindViewById(Resource.Id.quickViewHistoryButton);
+            var viewProgressButton = FindViewById(Resource.Id.quickViewProgressButton);
+            var settingsButton = FindViewById(Resource.Id.settingsButton);
+            var logoutButton = FindViewById(Resource.Id.logoutButton);
 
             if (startWorkoutButton != null)
             {
@@ -439,8 +533,7 @@ namespace Gym_App.Activities
             {
                 logoutButton.Click += (s, e) =>
                 {
-                    var authPrefs = GetSharedPreferences("auth_session", FileCreationMode.Private);
-                    authPrefs?.Edit()?.Clear()?.Apply();
+                    AuthSessionStore.Clear(this);
 
                     var intent = new Intent(this, typeof(LoginActivity));
                     intent.SetFlags(ActivityFlags.NewTask | ActivityFlags.ClearTask);

@@ -48,8 +48,8 @@ namespace Gym_App.Activities
             var heightInput = FindViewById<EditText>(Resource.Id.editHeightInput);
             var ageInput = FindViewById<EditText>(Resource.Id.editAgeInput);
             var sexSpinner = FindViewById<Spinner>(Resource.Id.editSexSpinner);
-            var saveButton = FindViewById<Button>(Resource.Id.saveProfileButton);
-            var cancelButton = FindViewById<Button>(Resource.Id.cancelEditProfileButton);
+            var saveButton = FindViewById(Resource.Id.saveProfileButton);
+            var cancelButton = FindViewById(Resource.Id.cancelEditProfileButton);
 
             if (weightInput != null)
             {

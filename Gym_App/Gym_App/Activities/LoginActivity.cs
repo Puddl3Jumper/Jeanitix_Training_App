@@ -2,6 +2,7 @@ using Android.Widget;
 using Android.Content;
 using Android.App;
 using Android.Util;
+using Android.Views;
 using Duende.IdentityModel.Client;
 using Duende.IdentityModel.OidcClient;
 using Duende.IdentityModel.OidcClient.Browser;
@@ -20,13 +21,9 @@ namespace Gym_App.Activities
     public class LoginActivity : Activity
     {
         private const string LogTag = "OAuth2";
-        private const string SessionPrefsName = "auth_session";
-        private const string SessionLoggedInKey = "is_logged_in";
-        private const string SessionEmailKey = "email";
-        private const string TestEmail = "test.user@gym.local";
         private readonly SemaphoreSlim _oauthLock = new(1, 1);
-        private Button? _googleLoginButton;
-        private Button? _primaryLoginButton;
+        private View? _googleLoginButton;
+        private View? _primaryLoginButton;
         private EditText? _usernameInput;
         private EditText? _passwordInput;
 
@@ -37,19 +34,14 @@ namespace Gym_App.Activities
             ActionBar?.Hide();
             SetContentView(Resource.Layout.activity_login);
 
-            _googleLoginButton = FindViewById<Button>(Resource.Id.googleLoginButton);
-            _primaryLoginButton = FindViewById<Button>(Resource.Id.primaryLoginButton);
+            _googleLoginButton = FindViewById(Resource.Id.googleLoginButton);
+            _primaryLoginButton = FindViewById(Resource.Id.primaryLoginButton);
             _usernameInput = FindViewById<EditText>(Resource.Id.loginUsernameInput);
             _passwordInput = FindViewById<EditText>(Resource.Id.loginPasswordInput);
 
             TryHandleOAuthCallback(Intent);
 
-            if (HasLocalSession())
-            {
-                StartActivity(new Intent(this, typeof(HomeActivity)));
-                Finish();
-                return;
-            }
+            _ = TryAutoSignInAsync();
 
             if (_googleLoginButton != null)
             {
@@ -61,10 +53,7 @@ namespace Gym_App.Activities
 
             if (_primaryLoginButton != null)
             {
-                _primaryLoginButton.Click += (s, e) =>
-                {
-                    BeginLocalPasswordSignIn();
-                };
+                _primaryLoginButton.Click += async (s, e) => await BeginEmailPasswordSignInAsync();
             }
         }
 
@@ -90,24 +79,19 @@ namespace Gym_App.Activities
                     _googleLoginButton.Enabled = false;
                 }
 
-                var clientId = GetString(Resource.String.oauth_client_id);
-                var authorityUrlText = GetString(Resource.String.oauth_authority_url);
+                var config = FirebaseProjectConfig.LoadFromGoogleServicesJson(this);
+                var googleWebClientId = config.GoogleWebClientId;
+                if (string.IsNullOrWhiteSpace(googleWebClientId))
+                {
+                    Toast.MakeText(this, "Google client ID not found in google-services.json.", ToastLength.Long)?.Show();
+                    return;
+                }
+
                 var redirectUrlText = GetString(Resource.String.oauth_redirect_url);
-                var scope = GetString(Resource.String.oauth_scope);
+                var scope = "openid profile email";
+                var authorityUrl = new Uri("https://accounts.google.com");
 
-                Log.Info(LogTag, $"Starting OIDC login. client_id='{clientId}', authority='{authorityUrlText}', redirect_uri='{redirectUrlText}', scope='{scope}'");
-
-                if (string.IsNullOrWhiteSpace(clientId) || clientId.Contains("YOUR_"))
-                {
-                    Toast.MakeText(this, "OAuth2 is not configured. Set oauth_client_id in Resources/values/strings.xml.", ToastLength.Long)?.Show();
-                    return;
-                }
-
-                if (!Uri.TryCreate(authorityUrlText, UriKind.Absolute, out var authorityUrl))
-                {
-                    Toast.MakeText(this, "OAuth2 authority URL is invalid.", ToastLength.Long)?.Show();
-                    return;
-                }
+                Log.Info(LogTag, $"Starting Google OIDC login for Firebase. client_id='{googleWebClientId}', authority='{authorityUrl}', redirect_uri='{redirectUrlText}', scope='{scope}'");
 
                 if (!Uri.TryCreate(redirectUrlText, UriKind.Absolute, out var redirectUrl))
                 {
@@ -118,7 +102,7 @@ namespace Gym_App.Activities
                 var oidcClient = new OidcClient(new OidcClientOptions
                 {
                     Authority = authorityUrl.AbsoluteUri,
-                    ClientId = clientId,
+                    ClientId = googleWebClientId,
                     Scope = scope,
                     RedirectUri = redirectUrl.AbsoluteUri,
                     Browser = new AndroidOidcBrowser(this),
@@ -126,11 +110,9 @@ namespace Gym_App.Activities
                     {
                         Discovery = new DiscoveryPolicy
                         {
-                            RequireHttps = false,
-                            ValidateIssuerName = false,
-                            ValidateEndpoints = false
+                            RequireHttps = true
                         },
-                        RequireIdentityTokenSignature = false
+                        RequireIdentityTokenSignature = true
                     }
                 });
 
@@ -147,22 +129,33 @@ namespace Gym_App.Activities
                     return;
                 }
 
+                var googleIdToken = loginResult.IdentityToken;
+                if (string.IsNullOrWhiteSpace(googleIdToken))
+                {
+                    Toast.MakeText(this, "Google sign-in did not return an ID token.", ToastLength.Long)?.Show();
+                    return;
+                }
+
+                var auth = new FirebaseAuthService(config);
+                var session = await auth.SignInWithGoogleIdTokenAsync(googleIdToken, redirectUrl.AbsoluteUri, CancellationToken.None);
+                AuthSessionStore.Save(this, session);
+
                 var email =
+                    session.Email ??
                     loginResult.User?.FindFirst("email")?.Value ??
                     loginResult.User?.FindFirst(ClaimTypes.Email)?.Value ??
-                    loginResult.User?.Identity?.Name;
+                    loginResult.User?.Identity?.Name ??
+                    string.Empty;
 
-                var resolvedEmail = string.IsNullOrWhiteSpace(email) ? TestEmail : email;
-                Log.Info(LogTag, $"OIDC login success. resolved_email='{resolvedEmail}'");
-                SaveLocalSession(resolvedEmail);
-                Toast.MakeText(this, $"Welcome, {resolvedEmail}", ToastLength.Short)?.Show();
+                Log.Info(LogTag, $"Firebase sign-in success. email='{email}'");
+                Toast.MakeText(this, "Signed in", ToastLength.Short)?.Show();
                 StartActivity(new Intent(this, typeof(HomeActivity)));
                 Finish();
             }
             catch (Exception ex)
             {
                 Log.Error(LogTag, ex.ToString());
-                Toast.MakeText(this, "Google sign-in crashed. Check Logcat for 'OAuth2' logs.", ToastLength.Long)?.Show();
+                Toast.MakeText(this, ex.Message, ToastLength.Long)?.Show();
             }
             finally
             {
@@ -188,22 +181,7 @@ namespace Gym_App.Activities
             }
         }
 
-        private bool HasLocalSession()
-        {
-            var prefs = GetSharedPreferences(SessionPrefsName, FileCreationMode.Private);
-            return prefs?.GetBoolean(SessionLoggedInKey, false) == true;
-        }
-
-        private void SaveLocalSession(string email)
-        {
-            var prefs = GetSharedPreferences(SessionPrefsName, FileCreationMode.Private);
-            prefs?.Edit()
-                ?.PutBoolean(SessionLoggedInKey, true)
-                ?.PutString(SessionEmailKey, email)
-                ?.Apply();
-        }
-
-        private void BeginLocalPasswordSignIn()
+        private async Task BeginEmailPasswordSignInAsync()
         {
             var username = _usernameInput?.Text?.Trim() ?? string.Empty;
             var password = _passwordInput?.Text ?? string.Empty;
@@ -226,25 +204,68 @@ namespace Gym_App.Activities
                 return;
             }
 
-            var accountExists = AuthCredentialStore.AccountExists(this, username);
-            if (!accountExists)
+            try
             {
-                Toast.MakeText(this, "No account found. Tap 'GET STARTED' to create one.", ToastLength.Long)?.Show();
-                return;
-            }
+                if (_primaryLoginButton != null)
+                    _primaryLoginButton.Enabled = false;
 
-            var isValid = AuthCredentialStore.ValidateCredentials(this, username, password);
-            if (!isValid)
+                var config = FirebaseProjectConfig.LoadFromGoogleServicesJson(this);
+                var auth = new FirebaseAuthService(config);
+                var session = await auth.SignInWithEmailPasswordAsync(username, password, CancellationToken.None);
+                AuthSessionStore.Save(this, session);
+
+                EnsureBasicUserProfile(username);
+                Toast.MakeText(this, "Signed in", ToastLength.Short)?.Show();
+                StartActivity(new Intent(this, typeof(HomeActivity)));
+                Finish();
+            }
+            catch (Exception ex)
             {
-                Toast.MakeText(this, "Invalid username or password", ToastLength.Short)?.Show();
-                return;
+                Android.Util.Log.Error("FirebaseAuth", ex.ToString());
+                Toast.MakeText(this, ex.Message, ToastLength.Long)?.Show();
             }
+            finally
+            {
+                if (_primaryLoginButton != null)
+                    _primaryLoginButton.Enabled = true;
+            }
+        }
 
-            EnsureBasicUserProfile(username);
-            SaveLocalSession(username);
-            Toast.MakeText(this, "Signed in", ToastLength.Short)?.Show();
-            StartActivity(new Intent(this, typeof(HomeActivity)));
-            Finish();
+        private async Task TryAutoSignInAsync()
+        {
+            try
+            {
+                if (!AuthSessionStore.HasSession(this))
+                    return;
+
+                var (refreshToken, _, expiresAtUtc) = AuthSessionStore.ReadSessionTokens(this);
+                if (string.IsNullOrWhiteSpace(refreshToken))
+                    return;
+
+                var now = DateTimeOffset.UtcNow;
+                if (expiresAtUtc.HasValue && expiresAtUtc.Value > now.AddSeconds(10))
+                {
+                    StartActivity(new Intent(this, typeof(HomeActivity)));
+                    Finish();
+                    return;
+                }
+
+                var config = FirebaseProjectConfig.LoadFromGoogleServicesJson(this);
+                var auth = new FirebaseAuthService(config);
+                var refreshed = await auth.RefreshIdTokenAsync(refreshToken, CancellationToken.None);
+
+                var email = AuthSessionStore.ReadEmail(this) ?? string.Empty;
+                var stitched = refreshed with { Email = email };
+                AuthSessionStore.Save(this, stitched);
+
+                StartActivity(new Intent(this, typeof(HomeActivity)));
+                Finish();
+            }
+            catch (Exception ex)
+            {
+                Log.Warn(LogTag, $"Auto sign-in failed: {ex}");
+                AuthSessionStore.Clear(this);
+            }
         }
 
         private void EnsureBasicUserProfile(string username)

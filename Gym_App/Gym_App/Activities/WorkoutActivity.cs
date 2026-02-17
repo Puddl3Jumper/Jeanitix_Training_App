@@ -32,8 +32,8 @@ namespace Gym_App.Activities
             _workoutDateText = FindViewById<TextView>(Resource.Id.workoutDateText);
             _exercisesContainer = FindViewById<LinearLayout>(Resource.Id.exercisesContainer);
             
-            var addExerciseButton = FindViewById<Button>(Resource.Id.addExerciseButton);
-            var finishWorkoutButton = FindViewById<Button>(Resource.Id.finishWorkoutButton);
+            var addExerciseButton = FindViewById<TextView>(Resource.Id.addExerciseButton);
+            var finishWorkoutButton = FindViewById<TextView>(Resource.Id.finishWorkoutButton);
             var homeTab = FindViewById<LinearLayout>(Resource.Id.homeTab);
             var diaryTab = FindViewById<LinearLayout>(Resource.Id.diaryTab);
             var workoutTab = FindViewById<LinearLayout>(Resource.Id.workoutTab);

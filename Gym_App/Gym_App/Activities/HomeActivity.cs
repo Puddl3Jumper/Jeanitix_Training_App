@@ -4,7 +4,6 @@ using Android.Graphics.Drawables;
 using Android.Views;
 using Android.Widget;
 using AndroidX.Core.Content;
-using Google.Android.Material.AppBar;
 using Gym_App.Data;
 using Gym_App.Models;
 
@@ -46,9 +45,8 @@ namespace Gym_App.Activities
             _todayExercisesContainer = FindViewById<LinearLayout>(Resource.Id.todayExercisesContainer);
             _noRecordsIcon = FindViewById<ImageView>(Resource.Id.noRecordsIcon);
             _noRecordsText = FindViewById<TextView>(Resource.Id.noRecordsText);
-            var homeToolbar = FindViewById<MaterialToolbar>(Resource.Id.homeToolbar);
 
-            var startWorkoutButton = FindViewById<Button>(Resource.Id.startWorkoutHomeButton);
+            var startWorkoutButton = FindViewById(Resource.Id.startWorkoutHomeButton);
             var homeTab = FindViewById<LinearLayout>(Resource.Id.homeTab);
             var diaryTab = FindViewById<LinearLayout>(Resource.Id.diaryTab);
             var workoutTab = FindViewById<LinearLayout>(Resource.Id.workoutTab);
@@ -284,7 +282,14 @@ namespace Gym_App.Activities
         {
             if (_weeklyProgressText != null)
             {
-                _weeklyProgressText.Text = $"You've completed {workoutsThisWeek}/{weeklyGoal} workouts this week";
+                if (workoutsThisWeek == 0)
+                {
+                    _weeklyProgressText.Text = "Let's start your first workout today!";
+                }
+                else
+                {
+                    _weeklyProgressText.Text = $"You've completed {workoutsThisWeek}/{weeklyGoal} workouts this week";
+                }
             }
 
             if (_weeklyProgressBar != null)

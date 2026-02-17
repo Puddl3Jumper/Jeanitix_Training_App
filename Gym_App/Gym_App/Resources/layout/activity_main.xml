@@ -6,16 +6,27 @@
     android:padding="20dp"
     android:background="@drawable/bg_screen">
 
+    <ImageView
+        android:id="@+id/welcomeHeroImage"
+        android:layout_width="match_parent"
+        android:layout_height="220dp"
+        android:layout_marginTop="20dp"
+        android:layout_marginBottom="20dp"
+        android:adjustViewBounds="true"
+        android:contentDescription="@string/app_name"
+        android:scaleType="centerCrop"
+        android:src="@drawable/welcome_hero" />
+
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="84dp"
+        android:layout_marginTop="12dp"
         android:layout_marginBottom="20dp"
         android:gravity="center"
-        android:text="FIXING&#10;CHANGING&#10;SOLVING"
+        android:text="TRACK&#10;LIFT&#10;PROGRESS"
         android:fontFamily="sans-serif-black"
         android:textColor="@color/color_primary"
-        android:textSize="42sp"
+        android:textSize="48sp"
         android:textStyle="bold" />
 
     <TextView
@@ -53,7 +64,7 @@
         android:layout_weight="1" />
 
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/startWorkoutButton"
+        android:id="@+id/startWorkoutMainButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/start_workout"
@@ -70,7 +81,7 @@
         android:layout_marginBottom="12dp" />
 
     <com.google.android.material.button.MaterialButton
-        android:id="@+id/continueWorkoutButton"
+        android:id="@+id/continueWorkoutMainButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/continue_workout"

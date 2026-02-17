@@ -1,7 +1,9 @@
 using System.Text.Json;
+#if ANDROID
 using Android.App;
 using Android.Content;
 using Android.Provider;
+#endif
 using Gym_App.Models;
 
 namespace Gym_App.Data
@@ -41,17 +43,20 @@ namespace Gym_App.Data
 
         private string ResolveCurrentUserKey()
         {
+#if ANDROID
             try
             {
                 var context = Application.Context;
-                var prefs = context?.GetSharedPreferences("auth_session", FileCreationMode.Private);
-                var email = prefs?.GetString("email", null);
+                var email = context == null ? null : AuthSessionStore.ReadEmail(context);
                 return NormalizeUserKey(email);
             }
             catch
             {
                 return GuestUserKey;
             }
+#else
+            return GuestUserKey;
+#endif
         }
 
         private static string NormalizeUserKey(string? key)
@@ -380,6 +385,7 @@ namespace Gym_App.Data
         {
             exportedPath = string.Empty;
 
+#if ANDROID
             try
             {
                 var context = Application.Context;
@@ -427,6 +433,9 @@ namespace Gym_App.Data
             {
                 return false;
             }
+#else
+            return false;
+#endif
         }
 
         private static string EscapeCsv(string input)

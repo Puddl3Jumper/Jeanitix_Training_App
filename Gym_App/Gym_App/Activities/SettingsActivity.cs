@@ -52,17 +52,17 @@ namespace Gym_App.Activities
                 profileTab.Click += (s, e) => StartActivity(new Intent(this, typeof(ProfileActivity)));
             }
 
-            var unitKgButton = FindViewById<Button>(Resource.Id.unitKgButton);
-            var unitLbButton = FindViewById<Button>(Resource.Id.unitLbButton);
+            var unitKgButton = FindViewById<TextView>(Resource.Id.unitKgButton);
+            var unitLbButton = FindViewById<TextView>(Resource.Id.unitLbButton);
             var weightUnitHeader = FindViewById<TextView>(Resource.Id.weightUnitHeader);
-            var weeklyGoal3Button = FindViewById<Button>(Resource.Id.weeklyGoal3Button);
-            var weeklyGoal4Button = FindViewById<Button>(Resource.Id.weeklyGoal4Button);
-            var weeklyGoal5Button = FindViewById<Button>(Resource.Id.weeklyGoal5Button);
-            var weeklyGoal6Button = FindViewById<Button>(Resource.Id.weeklyGoal6Button);
-            var themeLightButton = FindViewById<Button>(Resource.Id.themeLightButton);
-            var themeDarkButton = FindViewById<Button>(Resource.Id.themeDarkButton);
-            var themeSystemButton = FindViewById<Button>(Resource.Id.themeSystemButton);
-            var exportCsvButton = FindViewById<Button>(Resource.Id.exportCsvButton);
+            var weeklyGoal3Button = FindViewById<TextView>(Resource.Id.weeklyGoal3Button);
+            var weeklyGoal4Button = FindViewById<TextView>(Resource.Id.weeklyGoal4Button);
+            var weeklyGoal5Button = FindViewById<TextView>(Resource.Id.weeklyGoal5Button);
+            var weeklyGoal6Button = FindViewById<TextView>(Resource.Id.weeklyGoal6Button);
+            var themeLightButton = FindViewById<TextView>(Resource.Id.themeLightButton);
+            var themeDarkButton = FindViewById<TextView>(Resource.Id.themeDarkButton);
+            var themeSystemButton = FindViewById<TextView>(Resource.Id.themeSystemButton);
+            var exportCsvButton = FindViewById<TextView>(Resource.Id.exportCsvButton);
             var appVersionText = FindViewById<TextView>(Resource.Id.appVersionText);
 
             if (appVersionText != null)

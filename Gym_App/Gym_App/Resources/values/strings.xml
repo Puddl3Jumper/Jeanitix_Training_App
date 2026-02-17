@@ -17,7 +17,7 @@
     <string name="library_title">Exercise Library</string>
     <string name="library_subtitle">Browse and create your exercise catalog</string>
     <string name="add_custom_exercise">Add Custom Exercise</string>
-    <string name="login_page_title">Sign in with Google to continue</string>
+    <string name="login_page_title">Sign in to continue</string>
     <string name="login_username_hint">Username (email)</string>
     <string name="login_password_hint">Password</string>
     <string name="login_primary">Sign in</string>

@@ -1,6 +1,6 @@
 using Android.Content;
 using Android.Widget;
-using Android.Util;
+using Android.Views;
 using Gym_App.Activities;
 
 namespace Gym_App
@@ -8,8 +8,8 @@ namespace Gym_App
     [Activity(Label = "@string/app_name", MainLauncher = true)]
     public class MainActivity : Activity
     {
-        private Button? _startWorkoutButton;
-        private Button? _continueWorkoutButton;
+        private View? _startWorkoutButton;
+        private View? _continueWorkoutButton;
 
         protected override void OnCreate(Bundle? savedInstanceState)
         {
@@ -35,14 +35,22 @@ namespace Gym_App
 
                 SetContentView(Resource.Layout.activity_main);
 
-                _startWorkoutButton = FindViewById<Button>(Resource.Id.startWorkoutButton);
-                _continueWorkoutButton = FindViewById<Button>(Resource.Id.continueWorkoutButton);
+                _startWorkoutButton = FindViewById(Resource.Id.startWorkoutMainButton);
+                _continueWorkoutButton = FindViewById(Resource.Id.continueWorkoutMainButton);
 
                 if (_startWorkoutButton != null)
+                {
+                    _startWorkoutButton.Enabled = true;
+                    _startWorkoutButton.Clickable = true;
                     _startWorkoutButton.Click += StartWorkoutButton_Click;
+                }
 
                 if (_continueWorkoutButton != null)
+                {
+                    _continueWorkoutButton.Enabled = true;
+                    _continueWorkoutButton.Clickable = true;
                     _continueWorkoutButton.Click += ContinueWorkoutButton_Click;
+                }
             }
             catch (Exception ex)
             {
@@ -79,6 +87,5 @@ namespace Gym_App
             var intent = new Intent(this, typeof(LoginActivity));
             StartActivity(intent);
         }
-
     }
 }
