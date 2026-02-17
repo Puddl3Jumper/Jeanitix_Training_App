@@ -30,13 +30,90 @@
             android:layout_marginBottom="8dp">
 
             <TextView
+                android:id="@+id/weightUnitHeader"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Weight Unit"
+                android:text="Weight Unit (KG)"
                 android:textStyle="bold"
                 android:textSize="16sp"
                 android:textColor="@color/color_primary" />
 
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Weekly Goal"
+                android:textStyle="bold"
+                android:textSize="16sp"
+                android:textColor="@color/color_primary" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/bg_card"
+            android:padding="16dp"
+            android:layout_marginBottom="12dp">
+
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:layout_marginTop="8dp">
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/weeklyGoal3Button"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:text="3"
+                    android:textAllCaps="false"
+                    android:textColor="@color/color_on_primary"
+                    android:background="@drawable/bg_button_primary" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/weeklyGoal4Button"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="10dp"
+                    android:text="4"
+                    android:textAllCaps="false"
+                    android:textColor="@color/color_on_primary"
+                    android:background="@drawable/bg_button_primary" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/weeklyGoal5Button"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="10dp"
+                    android:text="5"
+                    android:textAllCaps="false"
+                    android:textColor="@color/color_on_primary"
+                    android:background="@drawable/bg_button_primary" />
+
+                <com.google.android.material.button.MaterialButton
+                    android:id="@+id/weeklyGoal6Button"
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:layout_marginStart="10dp"
+                    android:text="6"
+                    android:textAllCaps="false"
+                    android:textColor="@color/color_on_primary"
+                    android:background="@drawable/bg_button_primary" />
+
+            </LinearLayout>
         </LinearLayout>
 
         <LinearLayout

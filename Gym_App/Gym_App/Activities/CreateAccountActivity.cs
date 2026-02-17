@@ -1,5 +1,6 @@
 using Android.Content;
 using Android.Widget;
+using Gym_App.Data;
 
 namespace Gym_App.Activities
 {
@@ -44,11 +45,31 @@ namespace Gym_App.Activities
                         return;
                     }
 
+                    if (AuthCredentialStore.AccountExists(this, email))
+                    {
+                        Toast.MakeText(this, "Account already exists. Please log in or reset password.", ToastLength.Long)?.Show();
+                        return;
+                    }
+
+                    AuthCredentialStore.UpsertAccount(this, email, password);
+
                     var prefs = GetSharedPreferences("user_profile", FileCreationMode.Private);
                     var editor = prefs?.Edit();
+                    editor?.Clear();
                     editor?.PutString("full_name", fullName);
                     editor?.PutString("email", email);
+                    editor?.PutString("fitness_tag", "Strength");
+                    editor?.PutString("training_years", "1");
+                    editor?.PutString("training_stage", "Intermediate");
+                    editor?.PutString("goal", "Build strength");
+                    editor?.PutString("unit", "kg");
                     editor?.Apply();
+
+                    var authPrefs = GetSharedPreferences("auth_session", FileCreationMode.Private);
+                    authPrefs?.Edit()
+                        ?.PutBoolean("is_logged_in", true)
+                        ?.PutString("email", email)
+                        ?.Apply();
 
                     Toast.MakeText(this, "Account created", ToastLength.Short)?.Show();
                     StartActivity(new Intent(this, typeof(HomeActivity)));

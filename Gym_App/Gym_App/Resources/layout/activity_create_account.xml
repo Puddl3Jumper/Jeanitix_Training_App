@@ -102,7 +102,7 @@
             android:textAllCaps="false"
             android:textStyle="bold"
             android:textColor="@color/color_on_primary"
-            android:background="@drawable/bg_liquid_glass_primary"
+            android:background="@drawable/bg_button_primary"
             android:minHeight="62dp"
             android:gravity="center" />
 

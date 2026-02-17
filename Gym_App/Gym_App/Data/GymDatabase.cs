@@ -1,4 +1,7 @@
 using System.Text.Json;
+using Android.App;
+using Android.Content;
+using Android.Provider;
 using Gym_App.Models;
 
 namespace Gym_App.Data
@@ -12,11 +15,13 @@ namespace Gym_App.Data
         private int _nextWorkoutSessionId;
         private int _nextWorkoutExerciseId;
         private int _nextWorkoutSetId;
+        private readonly string _currentUserKey;
+        private const string GuestUserKey = "__guest__";
 
         public GymDatabase()
         {
             _dataPath = Path.Combine(
-                Environment.GetFolderPath(Environment.SpecialFolder.LocalApplicationData),
+                System.Environment.GetFolderPath(System.Environment.SpecialFolder.LocalApplicationData),
                 "GymApp");
             
             Directory.CreateDirectory(_dataPath);
@@ -27,9 +32,61 @@ namespace Gym_App.Data
             _nextWorkoutSessionId = 1;
             _nextWorkoutExerciseId = 1;
             _nextWorkoutSetId = 1;
+            _currentUserKey = ResolveCurrentUserKey();
             
             LoadData();
+            MigrateLegacySessionsToCurrentUser();
             InitializeDefaultExercises();
+        }
+
+        private string ResolveCurrentUserKey()
+        {
+            try
+            {
+                var context = Application.Context;
+                var prefs = context?.GetSharedPreferences("auth_session", FileCreationMode.Private);
+                var email = prefs?.GetString("email", null);
+                return NormalizeUserKey(email);
+            }
+            catch
+            {
+                return GuestUserKey;
+            }
+        }
+
+        private static string NormalizeUserKey(string? key)
+        {
+            return string.IsNullOrWhiteSpace(key)
+                ? GuestUserKey
+                : key.Trim().ToLowerInvariant();
+        }
+
+        private bool IsCurrentUserSession(WorkoutSession session)
+        {
+            return NormalizeUserKey(session.UserKey) == _currentUserKey;
+        }
+
+        private IEnumerable<WorkoutSession> CurrentUserSessions()
+        {
+            return _workoutSessions.Where(IsCurrentUserSession);
+        }
+
+        private void MigrateLegacySessionsToCurrentUser()
+        {
+            bool hasChanges = false;
+            foreach (var session in _workoutSessions)
+            {
+                if (string.IsNullOrWhiteSpace(session.UserKey))
+                {
+                    session.UserKey = _currentUserKey;
+                    hasChanges = true;
+                }
+            }
+
+            if (hasChanges)
+            {
+                SaveData();
+            }
         }
 
         private void InitializeDefaultExercises()
@@ -87,7 +144,8 @@ namespace Gym_App.Data
                 Id = _nextWorkoutSessionId++,
                 Name = name,
                 StartTime = DateTime.Now,
-                IsCompleted = false
+                IsCompleted = false,
+                UserKey = _currentUserKey
             };
             _workoutSessions.Add(session);
             SaveData();
@@ -96,7 +154,7 @@ namespace Gym_App.Data
 
         public void AddExerciseToWorkout(int workoutSessionId, int exerciseId, string? circuitName = null)
         {
-            var session = _workoutSessions.FirstOrDefault(s => s.Id == workoutSessionId);
+            var session = CurrentUserSessions().FirstOrDefault(s => s.Id == workoutSessionId);
             var exercise = _exercises.FirstOrDefault(e => e.Id == exerciseId);
             
             if (session != null && exercise != null)
@@ -134,7 +192,7 @@ namespace Gym_App.Data
 
         public void AddSetToExercise(int workoutExerciseId, int reps, double weight, string? notes, int loopNumber = 1, string weightUnit = "kg")
         {
-            foreach (var session in _workoutSessions)
+            foreach (var session in CurrentUserSessions())
             {
                 var workoutExercise = session.Exercises.FirstOrDefault(e => e.Id == workoutExerciseId);
                 if (workoutExercise != null)
@@ -162,7 +220,7 @@ namespace Gym_App.Data
 
         public void UpdateWorkoutSession(int workoutSessionId, string? name, DateTime startDate, string? notes)
         {
-            var session = _workoutSessions.FirstOrDefault(s => s.Id == workoutSessionId);
+            var session = CurrentUserSessions().FirstOrDefault(s => s.Id == workoutSessionId);
             if (session == null)
                 return;
 
@@ -185,7 +243,7 @@ namespace Gym_App.Data
 
         public void DeleteWorkoutSession(int workoutSessionId)
         {
-            var session = _workoutSessions.FirstOrDefault(s => s.Id == workoutSessionId);
+            var session = CurrentUserSessions().FirstOrDefault(s => s.Id == workoutSessionId);
             if (session == null)
                 return;
 
@@ -195,7 +253,7 @@ namespace Gym_App.Data
 
         public void UpdateWorkoutSet(int setId, int reps, double weight, string? notes)
         {
-            foreach (var session in _workoutSessions)
+            foreach (var session in CurrentUserSessions())
             {
                 foreach (var exercise in session.Exercises)
                 {
@@ -214,7 +272,7 @@ namespace Gym_App.Data
 
         public void DeleteWorkoutSet(int setId)
         {
-            foreach (var session in _workoutSessions)
+            foreach (var session in CurrentUserSessions())
             {
                 foreach (var exercise in session.Exercises)
                 {
@@ -236,7 +294,7 @@ namespace Gym_App.Data
 
         public List<(DateTime date, double maxWeight)> GetExerciseProgress(string exerciseName, int limit = 30)
         {
-            return _workoutSessions
+            return CurrentUserSessions()
                 .Where(s => s.IsCompleted)
                 .SelectMany(s => s.Exercises.Select(e => new { Session = s, Exercise = e }))
                 .Where(x => string.Equals(x.Exercise.Exercise?.Name, exerciseName, StringComparison.OrdinalIgnoreCase))
@@ -249,7 +307,7 @@ namespace Gym_App.Data
 
         public (double pr, double lastWeight) GetExercisePrAndLastWeight(string exerciseName)
         {
-            var entries = _workoutSessions
+            var entries = CurrentUserSessions()
                 .Where(s => s.IsCompleted)
                 .SelectMany(s => s.Exercises.Select(e => new { Session = s, Exercise = e }))
                 .Where(x => string.Equals(x.Exercise.Exercise?.Name, exerciseName, StringComparison.OrdinalIgnoreCase))
@@ -275,12 +333,24 @@ namespace Gym_App.Data
         public string ExportWorkoutsCsv()
         {
             var fileName = $"gym_export_{DateTime.Now:yyyyMMdd_HHmmss}.csv";
-            var filePath = Path.Combine(_dataPath, fileName);
+            using var buffer = new StringWriter();
+            WriteWorkoutsCsv(buffer);
+            var csvContent = buffer.ToString();
 
-            using var writer = new StreamWriter(filePath, false);
+            if (TryExportToDownloads(fileName, csvContent, out var downloadPath))
+                return downloadPath;
+
+            var fallbackPath = Path.Combine(_dataPath, fileName);
+            File.WriteAllText(fallbackPath, csvContent);
+            return fallbackPath;
+        }
+
+        private void WriteWorkoutsCsv(TextWriter writer)
+        {
             writer.WriteLine("WorkoutDate,WorkoutName,Exercise,SetNumber,Reps,Weight,Unit,SetNotes,WorkoutNotes");
 
             var sessions = _workoutSessions
+                .Where(IsCurrentUserSession)
                 .Where(s => s.IsCompleted)
                 .OrderBy(s => s.StartTime)
                 .ToList();
@@ -304,8 +374,59 @@ namespace Gym_App.Data
                     }
                 }
             }
+        }
 
-            return filePath;
+        private static bool TryExportToDownloads(string fileName, string csvContent, out string exportedPath)
+        {
+            exportedPath = string.Empty;
+
+            try
+            {
+                var context = Application.Context;
+                if (context == null)
+                    return false;
+
+                if (OperatingSystem.IsAndroidVersionAtLeast(29))
+                {
+                    var values = new ContentValues();
+                    values.Put(MediaStore.IMediaColumns.DisplayName, fileName);
+                    values.Put(MediaStore.IMediaColumns.MimeType, "text/csv");
+                    values.Put(MediaStore.IMediaColumns.RelativePath, Android.OS.Environment.DirectoryDownloads);
+
+                    var resolver = context.ContentResolver;
+                    var uri = resolver?.Insert(MediaStore.Downloads.ExternalContentUri, values);
+                    if (uri == null)
+                        return false;
+
+                    using var stream = resolver.OpenOutputStream(uri);
+                    if (stream == null)
+                    {
+                        resolver.Delete(uri, null, null);
+                        return false;
+                    }
+
+                    using var writer = new StreamWriter(stream, leaveOpen: false);
+                    writer.Write(csvContent);
+                    writer.Flush();
+
+                    exportedPath = $"Downloads/{fileName}";
+                    return true;
+                }
+
+                var downloadsDir = Android.OS.Environment.GetExternalStoragePublicDirectory(Android.OS.Environment.DirectoryDownloads);
+                if (downloadsDir == null || string.IsNullOrWhiteSpace(downloadsDir.AbsolutePath))
+                    return false;
+
+                Directory.CreateDirectory(downloadsDir.AbsolutePath);
+                var filePath = Path.Combine(downloadsDir.AbsolutePath, fileName);
+                File.WriteAllText(filePath, csvContent);
+                exportedPath = filePath;
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
         }
 
         private static string EscapeCsv(string input)
@@ -318,7 +439,7 @@ namespace Gym_App.Data
 
         public void CompleteWorkout(int workoutSessionId)
         {
-            var session = _workoutSessions.FirstOrDefault(s => s.Id == workoutSessionId);
+            var session = CurrentUserSessions().FirstOrDefault(s => s.Id == workoutSessionId);
             if (session != null)
             {
                 session.EndTime = DateTime.Now;
@@ -329,7 +450,7 @@ namespace Gym_App.Data
 
         public List<WorkoutSession> GetWorkoutHistory(int limit = 20)
         {
-            return _workoutSessions
+            return CurrentUserSessions()
                 .Where(s => s.IsCompleted)
                 .OrderByDescending(s => s.StartTime)
                 .Take(limit)
@@ -338,12 +459,12 @@ namespace Gym_App.Data
 
         public WorkoutSession? GetCurrentWorkout()
         {
-            return _workoutSessions.FirstOrDefault(s => !s.IsCompleted);
+            return CurrentUserSessions().FirstOrDefault(s => !s.IsCompleted);
         }
 
         public WorkoutSession? GetWorkoutSession(int id)
         {
-            return _workoutSessions.FirstOrDefault(s => s.Id == id);
+            return CurrentUserSessions().FirstOrDefault(s => s.Id == id);
         }
 
         private void SaveData()

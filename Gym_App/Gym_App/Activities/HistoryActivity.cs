@@ -2,6 +2,7 @@ using Android.Views;
 using Android.Widget;
 using Android.Content;
 using Android.Graphics;
+using System.Globalization;
 using Gym_App.Data;
 using Gym_App.Models;
 
@@ -10,8 +11,23 @@ namespace Gym_App.Activities
     [Activity(Label = "Workout History")]
     public class HistoryActivity : Activity
     {
+        private enum HistoryRange
+        {
+            Day,
+            Week,
+            Month
+        }
+
         private GymDatabase? _database;
         private LinearLayout? _historyContainer;
+        private TextView? _dayTab;
+        private TextView? _weekTab;
+        private TextView? _monthTab;
+        private TextView? _historyRangeText;
+        private View? _quickAddFab;
+        private int _lastScrollY;
+        private bool _isFabVisible = true;
+        private HistoryRange _selectedRange = HistoryRange.Day;
 
         protected override void OnCreate(Bundle? savedInstanceState)
         {
@@ -21,6 +37,12 @@ namespace Gym_App.Activities
 
             _database = new GymDatabase();
             _historyContainer = FindViewById<LinearLayout>(Resource.Id.historyContainer);
+            _dayTab = FindViewById<TextView>(Resource.Id.dayTab);
+            _weekTab = FindViewById<TextView>(Resource.Id.weekTab);
+            _monthTab = FindViewById<TextView>(Resource.Id.monthTab);
+            _historyRangeText = FindViewById<TextView>(Resource.Id.historyRangeText);
+            _quickAddFab = FindViewById<View>(Resource.Id.quickAddFab);
+            var historyScrollView = FindViewById<ScrollView>(Resource.Id.historyScrollView);
 
             var homeTab = FindViewById<LinearLayout>(Resource.Id.homeTab);
             var diaryTab = FindViewById<LinearLayout>(Resource.Id.diaryTab);
@@ -57,7 +79,151 @@ namespace Gym_App.Activities
                 };
             }
 
+            if (_quickAddFab != null)
+            {
+                _quickAddFab.Click += (s, e) =>
+                {
+                    StartActivity(new Intent(this, typeof(WorkoutActivity)));
+                };
+            }
+
+            if (historyScrollView != null)
+            {
+                historyScrollView.ScrollChange += (s, e) =>
+                {
+                    var delta = e.ScrollY - _lastScrollY;
+
+                    if (e.ScrollY <= 20)
+                    {
+                        ShowQuickAddFab();
+                    }
+                    else if (delta > 8)
+                    {
+                        HideQuickAddFab();
+                    }
+                    else if (delta < -8)
+                    {
+                        ShowQuickAddFab();
+                    }
+
+                    _lastScrollY = e.ScrollY;
+                };
+            }
+
+            if (_dayTab != null)
+            {
+                _dayTab.Click += (s, e) =>
+                {
+                    _selectedRange = HistoryRange.Day;
+                    UpdateHistoryRangeUi();
+                    LoadHistory();
+                };
+            }
+
+            if (_weekTab != null)
+            {
+                _weekTab.Click += (s, e) =>
+                {
+                    _selectedRange = HistoryRange.Week;
+                    UpdateHistoryRangeUi();
+                    LoadHistory();
+                };
+            }
+
+            if (_monthTab != null)
+            {
+                _monthTab.Click += (s, e) =>
+                {
+                    _selectedRange = HistoryRange.Month;
+                    UpdateHistoryRangeUi();
+                    LoadHistory();
+                };
+            }
+
+            UpdateHistoryRangeUi();
+
             LoadHistory();
+        }
+
+        private void UpdateHistoryRangeUi()
+        {
+            ApplyHistoryTabStyle(_dayTab, _selectedRange == HistoryRange.Day);
+            ApplyHistoryTabStyle(_weekTab, _selectedRange == HistoryRange.Week);
+            ApplyHistoryTabStyle(_monthTab, _selectedRange == HistoryRange.Month);
+
+            if (_historyRangeText != null)
+            {
+                _historyRangeText.Text = GetRangeDisplayText();
+            }
+        }
+
+        private void ApplyHistoryTabStyle(TextView? tab, bool isSelected)
+        {
+            if (tab == null)
+                return;
+
+            tab.SetTypeface(null, isSelected ? TypefaceStyle.Bold : TypefaceStyle.Normal);
+            tab.SetBackgroundResource(isSelected ? Resource.Drawable.bg_button_primary : Resource.Drawable.bg_log_tab_inactive);
+            tab.SetTextColor(new Android.Graphics.Color(GetColor(isSelected ? Resource.Color.color_on_primary : Resource.Color.color_text_secondary)));
+        }
+
+        private string GetRangeDisplayText()
+        {
+            var now = DateTime.Now;
+
+            return _selectedRange switch
+            {
+                HistoryRange.Day => now.ToString("MMM dd, yyyy", CultureInfo.InvariantCulture),
+                HistoryRange.Week => $"{StartOfWeek(now):MMM dd, yyyy} - {StartOfWeek(now).AddDays(6):MMM dd, yyyy}",
+                HistoryRange.Month => now.ToString("MMMM yyyy", CultureInfo.InvariantCulture),
+                _ => now.ToString("MMM dd, yyyy", CultureInfo.InvariantCulture)
+            };
+        }
+
+        private DateTime StartOfWeek(DateTime value)
+        {
+            var firstDayOfWeek = DayOfWeek.Monday;
+            var diff = (7 + (value.DayOfWeek - firstDayOfWeek)) % 7;
+            return value.Date.AddDays(-diff);
+        }
+
+        private void HideQuickAddFab()
+        {
+            if (_quickAddFab == null || !_isFabVisible)
+                return;
+
+            _quickAddFab.Animate()
+                ?.Alpha(0f)
+                ?.TranslationY(DpToPx(72))
+                ?.SetDuration(160)
+                ?.Start();
+            _isFabVisible = false;
+        }
+
+        private void ShowQuickAddFab()
+        {
+            if (_quickAddFab == null || _isFabVisible)
+                return;
+
+            _quickAddFab.Animate()
+                ?.Alpha(1f)
+                ?.TranslationY(0f)
+                ?.SetDuration(160)
+                ?.Start();
+            _isFabVisible = true;
+        }
+
+        private List<WorkoutSession> FilterHistoryByRange(List<WorkoutSession> history)
+        {
+            var now = DateTime.Now;
+
+            return _selectedRange switch
+            {
+                HistoryRange.Day => history.Where(x => x.StartTime.Date == now.Date).ToList(),
+                HistoryRange.Week => history.Where(x => x.StartTime.Date >= StartOfWeek(now) && x.StartTime.Date < StartOfWeek(now).AddDays(7)).ToList(),
+                HistoryRange.Month => history.Where(x => x.StartTime.Year == now.Year && x.StartTime.Month == now.Month).ToList(),
+                _ => history
+            };
         }
 
         private void UpdateBottomNavLabelStyles()
@@ -84,7 +250,7 @@ namespace Gym_App.Activities
 
             _historyContainer.RemoveAllViews();
 
-            var history = _database.GetWorkoutHistory();
+            var history = FilterHistoryByRange(_database.GetWorkoutHistory());
 
             if (history.Count == 0)
             {
@@ -149,12 +315,6 @@ namespace Gym_App.Activities
 
             _historyContainer.SetGravity(GravityFlags.Top);
 
-            if (history.Count == 1)
-            {
-                _historyContainer.AddView(CreateWorkoutCard(history[0], 0));
-                return;
-            }
-
             for (var index = 0; index < history.Count; index++)
             {
                 var workout = history[index];
@@ -192,6 +352,18 @@ namespace Gym_App.Activities
                 timelineRow.AddView(timelineColumn);
                 timelineRow.AddView(workoutCard);
                 _historyContainer.AddView(timelineRow);
+
+                if (index < history.Count - 1)
+                {
+                    var divider = new View(this);
+                    var dividerParams = new LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MatchParent,
+                        DpToPx(1));
+                    dividerParams.SetMargins(DpToPx(36), 0, 0, DpToPx(16));
+                    divider.LayoutParameters = dividerParams;
+                    divider.SetBackgroundColor(new Android.Graphics.Color(GetColor(Resource.Color.md_theme_outline)));
+                    _historyContainer.AddView(divider);
+                }
             }
         }
 
@@ -213,62 +385,84 @@ namespace Gym_App.Activities
             workoutCard.SetBackgroundResource(Resource.Drawable.bg_card);
             workoutCard.SetPadding(16, 16, 16, 16);
 
+            var headerRow = new LinearLayout(this)
+            {
+                Orientation = Orientation.Horizontal
+            };
+            headerRow.LayoutParameters = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MatchParent,
+                ViewGroup.LayoutParams.WrapContent);
+
+            var leftColumn = new LinearLayout(this)
+            {
+                Orientation = Orientation.Vertical
+            };
+            leftColumn.LayoutParameters = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WrapContent, 1f);
+
+            var rightColumn = new LinearLayout(this)
+            {
+                Orientation = Orientation.Vertical
+            };
+            rightColumn.LayoutParameters = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WrapContent,
+                ViewGroup.LayoutParams.WrapContent);
+            rightColumn.SetGravity(GravityFlags.End);
+
             var titleText = new TextView(this)
             {
                 Text = workout.Name,
-                TextSize = 18
+                TextSize = 17
             };
             titleText.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.color_primary)));
             titleText.SetTypeface(null, Android.Graphics.TypefaceStyle.Bold);
-            titleText.SetPadding(0, 0, 0, 8);
-            workoutCard.AddView(titleText);
 
             var dateText = new TextView(this)
             {
-                Text = workout.StartTime.ToString("dddd, MMMM dd, yyyy - hh:mm tt"),
-                TextSize = 14
+                Text = workout.StartTime.ToString("MMM dd, yyyy • HH:mm", CultureInfo.InvariantCulture),
+                TextSize = 13
             };
-            dateText.SetTextColor(new Android.Graphics.Color(Color.White));
-            dateText.SetPadding(0, 4, 0, 0);
-            workoutCard.AddView(dateText);
+            dateText.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.color_text_secondary)));
+            dateText.SetPadding(0, DpToPx(4), 0, 0);
 
             var durationText = new TextView(this)
             {
-                Text = $"Duration: {workout.Duration:hh\\:mm\\:ss}",
-                TextSize = 14
+                Text = $"Duration: {GetDurationDisplay(workout)}",
+                TextSize = 13
             };
-            durationText.SetTextColor(new Android.Graphics.Color(Color.White));
-            durationText.SetPadding(0, 4, 0, 0);
-            workoutCard.AddView(durationText);
+            durationText.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.color_text_primary)));
+            durationText.SetTypeface(null, TypefaceStyle.Bold);
 
-            var exerciseCountText = new TextView(this)
+            var metricText = new TextView(this)
             {
-                Text = $"Exercises: {workout.Exercises.Count}",
-                TextSize = 14
+                Text = GetWorkoutMetricText(workout),
+                TextSize = 13
             };
-            exerciseCountText.SetTextColor(new Android.Graphics.Color(Color.White));
-            exerciseCountText.SetPadding(0, 4, 0, 8);
-            workoutCard.AddView(exerciseCountText);
+            metricText.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.color_text_secondary)));
+            metricText.SetPadding(0, DpToPx(4), 0, 0);
+
+            leftColumn.AddView(titleText);
+            leftColumn.AddView(dateText);
+
+            rightColumn.AddView(durationText);
+            rightColumn.AddView(metricText);
+
+            headerRow.AddView(leftColumn);
+            headerRow.AddView(rightColumn);
+            workoutCard.AddView(headerRow);
 
             foreach (var exercise in workout.Exercises)
             {
-                if (exercise.Exercise != null)
-                {
-                    var maxLoop = exercise.Sets.Count == 0 ? 0 : exercise.Sets.Max(s => s.LoopNumber);
-                    var circuitText = string.IsNullOrWhiteSpace(exercise.CircuitName)
-                        ? ""
-                        : $" [Circuit {exercise.CircuitName} #{exercise.CircuitOrder}]";
-                    var loopText = maxLoop > 1 ? $", Loops: {maxLoop}" : "";
+                if (exercise.Exercise == null)
+                    continue;
 
-                    var exerciseText = new TextView(this)
-                    {
-                        Text = $"• {exercise.Exercise.Name}{circuitText}: {exercise.Sets.Count} sets{loopText}",
-                        TextSize = 14
-                    };
-                    exerciseText.SetTextColor(new Android.Graphics.Color(Color.White));
-                    exerciseText.SetPadding(16, 2, 0, 2);
-                    workoutCard.AddView(exerciseText);
-                }
+                var exerciseText = new TextView(this)
+                {
+                    Text = $"{GetExerciseIcon(exercise.Exercise.Name)}  {exercise.Exercise.Name}: {exercise.Sets.Count} {(exercise.Sets.Count == 1 ? "set" : "sets")}",
+                    TextSize = 13
+                };
+                exerciseText.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.color_text_primary)));
+                exerciseText.SetPadding(DpToPx(4), DpToPx(8), 0, 0);
+                workoutCard.AddView(exerciseText);
             }
 
             var actionsRow = new LinearLayout(this)
@@ -284,26 +478,78 @@ namespace Gym_App.Activities
             editButton.SetBackgroundResource(Resource.Drawable.bg_button_primary);
             editButton.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.color_on_primary)));
             var editParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WrapContent, 1f);
-            editParams.SetMargins(0, 0, 16, 0);
+            editParams.SetMargins(0, 0, 8, 0);
             editButton.LayoutParameters = editParams;
             editButton.Click += (s, e) => ShowEditWorkoutDialog(workout);
 
-            var deleteButton = new Button(this)
+            var moreButton = new TextView(this)
             {
-                Text = "Delete"
+                Text = "⋮",
+                TextSize = 22
             };
-            deleteButton.SetBackgroundResource(Resource.Drawable.bg_button_primary);
-            deleteButton.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.color_on_primary)));
-            var deleteParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WrapContent, 1f);
-            deleteParams.SetMargins(16, 0, 0, 0);
-            deleteButton.LayoutParameters = deleteParams;
-            deleteButton.Click += (s, e) => ConfirmDeleteWorkout(workout.Id);
+            moreButton.SetBackgroundResource(Resource.Drawable.bg_log_tab_inactive);
+            moreButton.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.color_text_secondary)));
+            moreButton.SetTypeface(null, TypefaceStyle.Bold);
+            moreButton.Gravity = GravityFlags.Center;
+            moreButton.Clickable = true;
+            moreButton.Focusable = true;
+            var moreParams = new LinearLayout.LayoutParams(DpToPx(48), ViewGroup.LayoutParams.MatchParent);
+            moreParams.SetMargins(8, 0, 0, 0);
+            moreButton.LayoutParameters = moreParams;
+            moreButton.Click += (s, e) =>
+            {
+                var popup = new PopupMenu(this, moreButton);
+                var menu = popup.Menu;
+                menu?.Add(0, 1, 0, "Delete");
+                popup.MenuItemClick += (_, args) =>
+                {
+                    if (args.Item?.ItemId == 1)
+                    {
+                        ConfirmDeleteWorkout(workout.Id);
+                    }
+                };
+                popup.Show();
+            };
 
             actionsRow.AddView(editButton);
-            actionsRow.AddView(deleteButton);
+            actionsRow.AddView(moreButton);
             workoutCard.AddView(actionsRow);
 
             return workoutCard;
+        }
+
+        private string GetDurationDisplay(WorkoutSession workout)
+        {
+            if (workout.Duration <= TimeSpan.Zero)
+                return "No duration recorded";
+
+            if (workout.Duration.TotalHours >= 1)
+                return workout.Duration.ToString("hh\\:mm\\:ss");
+
+            return workout.Duration.ToString("mm\\:ss");
+        }
+
+        private string GetWorkoutMetricText(WorkoutSession workout)
+        {
+            var totalSets = workout.Exercises.Sum(x => x.Sets.Count);
+            var primaryExercise = workout.Exercises.FirstOrDefault(x => x.Exercise != null)?.Exercise?.Name ?? "No exercise";
+            return $"{totalSets} {(totalSets == 1 ? "set" : "sets")} • {primaryExercise}";
+        }
+
+        private string GetExerciseIcon(string exerciseName)
+        {
+            var lower = exerciseName.ToLowerInvariant();
+
+            if (lower.Contains("push") || lower.Contains("bench") || lower.Contains("press"))
+                return "💪";
+
+            if (lower.Contains("squat") || lower.Contains("lunge") || lower.Contains("leg"))
+                return "🦵";
+
+            if (lower.Contains("row") || lower.Contains("pull") || lower.Contains("deadlift"))
+                return "🏋️";
+
+            return "🏃";
         }
 
         private View CreateTimelineNode()

@@ -9,6 +9,8 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gym_App", "Gym_App\Gym_App\
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Gym_App.Tests", "Gym_App\Gym_App.Tests\Gym_App.Tests.csproj", "{92344B5B-AEF0-4406-8EAC-E54EED2F5B20}"
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "FirehoseAuthServer", "FirehoseAuthServer\FirehoseAuthServer.csproj", "{42A5E9CC-9AD9-4DF7-938E-3B2602F37184}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Any CPU = Debug|Any CPU
@@ -43,6 +45,18 @@ Global
 		{92344B5B-AEF0-4406-8EAC-E54EED2F5B20}.Release|x64.Build.0 = Release|Any CPU
 		{92344B5B-AEF0-4406-8EAC-E54EED2F5B20}.Release|x86.ActiveCfg = Release|Any CPU
 		{92344B5B-AEF0-4406-8EAC-E54EED2F5B20}.Release|x86.Build.0 = Release|Any CPU
+		{42A5E9CC-9AD9-4DF7-938E-3B2602F37184}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{42A5E9CC-9AD9-4DF7-938E-3B2602F37184}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{42A5E9CC-9AD9-4DF7-938E-3B2602F37184}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{42A5E9CC-9AD9-4DF7-938E-3B2602F37184}.Debug|x64.Build.0 = Debug|Any CPU
+		{42A5E9CC-9AD9-4DF7-938E-3B2602F37184}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{42A5E9CC-9AD9-4DF7-938E-3B2602F37184}.Debug|x86.Build.0 = Debug|Any CPU
+		{42A5E9CC-9AD9-4DF7-938E-3B2602F37184}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{42A5E9CC-9AD9-4DF7-938E-3B2602F37184}.Release|Any CPU.Build.0 = Release|Any CPU
+		{42A5E9CC-9AD9-4DF7-938E-3B2602F37184}.Release|x64.ActiveCfg = Release|Any CPU
+		{42A5E9CC-9AD9-4DF7-938E-3B2602F37184}.Release|x64.Build.0 = Release|Any CPU
+		{42A5E9CC-9AD9-4DF7-938E-3B2602F37184}.Release|x86.ActiveCfg = Release|Any CPU
+		{42A5E9CC-9AD9-4DF7-938E-3B2602F37184}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

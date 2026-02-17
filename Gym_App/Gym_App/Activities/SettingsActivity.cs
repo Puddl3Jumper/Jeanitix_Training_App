@@ -53,6 +53,11 @@ namespace Gym_App.Activities
 
             var unitKgButton = FindViewById<Button>(Resource.Id.unitKgButton);
             var unitLbButton = FindViewById<Button>(Resource.Id.unitLbButton);
+            var weightUnitHeader = FindViewById<TextView>(Resource.Id.weightUnitHeader);
+            var weeklyGoal3Button = FindViewById<Button>(Resource.Id.weeklyGoal3Button);
+            var weeklyGoal4Button = FindViewById<Button>(Resource.Id.weeklyGoal4Button);
+            var weeklyGoal5Button = FindViewById<Button>(Resource.Id.weeklyGoal5Button);
+            var weeklyGoal6Button = FindViewById<Button>(Resource.Id.weeklyGoal6Button);
             var themeLightButton = FindViewById<Button>(Resource.Id.themeLightButton);
             var themeDarkButton = FindViewById<Button>(Resource.Id.themeDarkButton);
             var themeSystemButton = FindViewById<Button>(Resource.Id.themeSystemButton);
@@ -72,14 +77,22 @@ namespace Gym_App.Activities
 
             void UpdateUnitButtonState()
             {
+                if (weightUnitHeader != null)
+                {
+                    var label = currentUnit.Equals("lb", StringComparison.OrdinalIgnoreCase) ? "LB" : "KG";
+                    weightUnitHeader.Text = $"Weight Unit ({label})";
+                }
+
                 if (unitKgButton != null)
                 {
-                    unitKgButton.Alpha = currentUnit == "kg" ? 1.0f : 0.65f;
+                    unitKgButton.Alpha = 1.0f;
+                    unitKgButton.SetTypeface(null, currentUnit == "kg" ? TypefaceStyle.Bold : TypefaceStyle.Normal);
                 }
 
                 if (unitLbButton != null)
                 {
-                    unitLbButton.Alpha = currentUnit == "lb" ? 1.0f : 0.65f;
+                    unitLbButton.Alpha = 1.0f;
+                    unitLbButton.SetTypeface(null, currentUnit == "lb" ? TypefaceStyle.Bold : TypefaceStyle.Normal);
                 }
             }
 
@@ -107,22 +120,87 @@ namespace Gym_App.Activities
                 };
             }
 
+            var weeklyGoal = prefs?.GetInt("weekly_goal", 4) ?? 4;
+
+            void UpdateWeeklyGoalButtonState()
+            {
+                if (weeklyGoal3Button != null)
+                {
+                    weeklyGoal3Button.Alpha = 1.0f;
+                    weeklyGoal3Button.SetTypeface(null, weeklyGoal == 3 ? TypefaceStyle.Bold : TypefaceStyle.Normal);
+                }
+
+                if (weeklyGoal4Button != null)
+                {
+                    weeklyGoal4Button.Alpha = 1.0f;
+                    weeklyGoal4Button.SetTypeface(null, weeklyGoal == 4 ? TypefaceStyle.Bold : TypefaceStyle.Normal);
+                }
+
+                if (weeklyGoal5Button != null)
+                {
+                    weeklyGoal5Button.Alpha = 1.0f;
+                    weeklyGoal5Button.SetTypeface(null, weeklyGoal == 5 ? TypefaceStyle.Bold : TypefaceStyle.Normal);
+                }
+
+                if (weeklyGoal6Button != null)
+                {
+                    weeklyGoal6Button.Alpha = 1.0f;
+                    weeklyGoal6Button.SetTypeface(null, weeklyGoal == 6 ? TypefaceStyle.Bold : TypefaceStyle.Normal);
+                }
+            }
+
+            void ApplyWeeklyGoal(int value)
+            {
+                if (weeklyGoal == value)
+                    return;
+
+                weeklyGoal = value;
+                prefs?.Edit()?.PutInt("weekly_goal", weeklyGoal)?.Apply();
+                UpdateWeeklyGoalButtonState();
+                Toast.MakeText(this, $"Weekly goal set to {weeklyGoal}", ToastLength.Short)?.Show();
+            }
+
+            UpdateWeeklyGoalButtonState();
+
+            if (weeklyGoal3Button != null)
+            {
+                weeklyGoal3Button.Click += (s, e) => ApplyWeeklyGoal(3);
+            }
+
+            if (weeklyGoal4Button != null)
+            {
+                weeklyGoal4Button.Click += (s, e) => ApplyWeeklyGoal(4);
+            }
+
+            if (weeklyGoal5Button != null)
+            {
+                weeklyGoal5Button.Click += (s, e) => ApplyWeeklyGoal(5);
+            }
+
+            if (weeklyGoal6Button != null)
+            {
+                weeklyGoal6Button.Click += (s, e) => ApplyWeeklyGoal(6);
+            }
+
             var currentThemeMode = ThemeManager.GetSavedThemeMode(this);
             void UpdateThemeButtonState()
             {
                 if (themeLightButton != null)
                 {
-                    themeLightButton.Alpha = currentThemeMode == ThemeManager.ThemeModeLight ? 1.0f : 0.65f;
+                    themeLightButton.Alpha = 1.0f;
+                    themeLightButton.SetTypeface(null, currentThemeMode == ThemeManager.ThemeModeLight ? TypefaceStyle.Bold : TypefaceStyle.Normal);
                 }
 
                 if (themeDarkButton != null)
                 {
-                    themeDarkButton.Alpha = currentThemeMode == ThemeManager.ThemeModeDark ? 1.0f : 0.65f;
+                    themeDarkButton.Alpha = 1.0f;
+                    themeDarkButton.SetTypeface(null, currentThemeMode == ThemeManager.ThemeModeDark ? TypefaceStyle.Bold : TypefaceStyle.Normal);
                 }
 
                 if (themeSystemButton != null)
                 {
-                    themeSystemButton.Alpha = currentThemeMode == ThemeManager.ThemeModeSystem ? 1.0f : 0.65f;
+                    themeSystemButton.Alpha = 1.0f;
+                    themeSystemButton.SetTypeface(null, currentThemeMode == ThemeManager.ThemeModeSystem ? TypefaceStyle.Bold : TypefaceStyle.Normal);
                 }
             }
 

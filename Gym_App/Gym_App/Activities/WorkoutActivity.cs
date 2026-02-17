@@ -230,7 +230,7 @@ namespace Gym_App.Activities
                     Text = setDisplay,
                     TextSize = 16
                 };
-                setText.SetTextColor(new Android.Graphics.Color(Color.White));
+                setText.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.color_text_primary)));
                 setText.SetLineSpacing(0f, 1.4f);
                 setText.SetPadding(0, 0, 0, 0);
 

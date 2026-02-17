@@ -36,9 +36,12 @@
             android:gravity="center_vertical"
             android:layout_marginBottom="16dp">
             <TextView
+                android:id="@+id/dayTab"
                 android:layout_width="wrap_content"
                 android:layout_height="40dp"
                 android:minWidth="48dp"
+                android:clickable="true"
+                android:focusable="true"
                 android:gravity="center_vertical"
                 android:text="Day"
                 android:textStyle="bold"
@@ -49,30 +52,47 @@
                 android:layout_marginEnd="8dp" />
 
             <TextView
+                android:id="@+id/weekTab"
                 android:layout_width="wrap_content"
                 android:layout_height="40dp"
                 android:minWidth="48dp"
+                android:clickable="true"
+                android:focusable="true"
                 android:gravity="center_vertical"
                 android:text="Week"
-                android:textColor="@color/md_theme_onSecondary"
-                android:background="@drawable/bg_log_tab_inactive"
+                android:textColor="@color/color_on_primary"
+                android:background="@drawable/bg_button_primary"
                 android:paddingStart="14dp"
                 android:paddingEnd="14dp"
                 android:layout_marginEnd="8dp" />
 
             <TextView
+                android:id="@+id/monthTab"
                 android:layout_width="wrap_content"
                 android:layout_height="40dp"
                 android:minWidth="48dp"
+                android:clickable="true"
+                android:focusable="true"
                 android:gravity="center_vertical"
                 android:text="Month"
-                android:textColor="@color/md_theme_onSecondary"
-                android:background="@drawable/bg_log_tab_inactive"
+                android:textColor="@color/color_on_primary"
+                android:background="@drawable/bg_button_primary"
                 android:paddingStart="14dp"
                 android:paddingEnd="14dp" />
         </LinearLayout>
 
+        <TextView
+            android:id="@+id/historyRangeText"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="Feb 15, 2026"
+            android:textSize="13sp"
+            android:textColor="@color/color_text_secondary"
+            android:textStyle="bold"
+            android:layout_marginBottom="12dp" />
+
         <ScrollView
+            android:id="@+id/historyScrollView"
             android:layout_width="match_parent"
             android:layout_height="0dp"
             android:layout_weight="1"
@@ -86,6 +106,18 @@
 
         </ScrollView>
     </LinearLayout>
+
+    <com.google.android.material.floatingactionbutton.FloatingActionButton
+        android:id="@+id/quickAddFab"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_gravity="end"
+        android:layout_marginEnd="20dp"
+        android:layout_marginBottom="16dp"
+        android:contentDescription="@string/history_quick_add"
+        android:src="@android:drawable/ic_input_add"
+        app:backgroundTint="@color/color_primary"
+        app:tint="@color/color_on_primary" />
 
     <include layout="@layout/layout_bottom_bar" />
 

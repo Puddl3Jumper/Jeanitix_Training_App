@@ -142,7 +142,7 @@ namespace Gym_App.Activities
                             Text = exercise.Description,
                             TextSize = 14
                         };
-                        descText.SetTextColor(new Android.Graphics.Color(Color.White));
+                        descText.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.color_text_primary)));
                         descText.SetPadding(0, 0, 0, 0);
                         exerciseView.AddView(descText);
                     }
@@ -153,7 +153,7 @@ namespace Gym_App.Activities
                             Text = "No description",
                             TextSize = 14
                         };
-                        descText.SetTextColor(new Android.Graphics.Color(Color.White));
+                        descText.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.color_text_primary)));
                         exerciseView.AddView(descText);
                     }
 

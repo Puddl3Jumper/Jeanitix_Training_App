@@ -3,6 +3,7 @@ namespace Gym_App.Models
     public class WorkoutSession
     {
         public int Id { get; set; }
+        public string UserKey { get; set; } = string.Empty;
         public string Name { get; set; } = string.Empty;
         public DateTime StartTime { get; set; }
         public DateTime? EndTime { get; set; }

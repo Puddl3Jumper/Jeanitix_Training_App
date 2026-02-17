@@ -2,11 +2,13 @@ using Android.Content;
 using Android.Widget;
 using Gym_App.Data;
 using Gym_App.Models;
-using Android.Gms.Auth.Api.SignIn;
 using System.Globalization;
 using Android.Text;
 using Android.Graphics;
+using Android.Net;
+using Android.Content.Res;
 using System;
+using System.Linq;
 
 namespace Gym_App.Activities
 {
@@ -14,6 +16,10 @@ namespace Gym_App.Activities
     public class ProfileActivity : Activity
     {
         private GymDatabase? _database;
+
+        private const int PickAvatarRequestCode = 3101;
+        private const string ProfilePrefsName = "user_profile";
+        private const string AvatarUriKey = "avatar_uri";
 
         protected override void OnCreate(Bundle? savedInstanceState)
         {
@@ -59,16 +65,20 @@ namespace Gym_App.Activities
             }
 
             LoadProfileHeader();
+            LoadWeeklyProgressCard();
             LoadStatsOverview();
             LoadPrs();
             LoadTrainingSummary();
             SetupActions();
+            SetupHeaderActions();
+            SetupAvatarPicker();
         }
 
         protected override void OnResume()
         {
             base.OnResume();
             LoadProfileHeader();
+            LoadWeeklyProgressCard();
             LoadStatsOverview();
         }
 
@@ -91,16 +101,21 @@ namespace Gym_App.Activities
 
         private void LoadProfileHeader()
         {
+            var greetingValue = FindViewById<TextView>(Resource.Id.profileGreeting);
             var nameValue = FindViewById<TextView>(Resource.Id.profileName);
             var bioValue = FindViewById<TextView>(Resource.Id.profileBio);
-            var editButton = FindViewById<Button>(Resource.Id.editProfileButton);
+            var photoView = FindViewById<ImageView>(Resource.Id.profilePhoto);
 
-            var prefs = GetSharedPreferences("user_profile", FileCreationMode.Private);
+            var prefs = GetSharedPreferences(ProfilePrefsName, FileCreationMode.Private);
             var fullName = prefs?.GetString("full_name", string.Empty) ?? string.Empty;
             var fitnessTag = prefs?.GetString("fitness_tag", "Strength") ?? "Strength";
             var trainingYears = prefs?.GetString("training_years", "1") ?? "1";
             var trainingStage = prefs?.GetString("training_stage", "Intermediate") ?? "Intermediate";
             var goal = prefs?.GetString("goal", "Build strength") ?? "Build strength";
+            var avatarUriString = prefs?.GetString(AvatarUriKey, string.Empty) ?? string.Empty;
+
+            if (greetingValue != null)
+                greetingValue.Text = GetGreetingText();
 
             if (nameValue != null)
                 nameValue.Text = string.IsNullOrWhiteSpace(fullName) ? "Nickname not set" : fullName;
@@ -108,16 +123,161 @@ namespace Gym_App.Activities
             if (bioValue != null)
                 bioValue.Text = $"{goal} · {fitnessTag} · {trainingYears}y {trainingStage}";
 
-            if (editButton != null)
+            if (photoView != null)
+                ApplyAvatarToView(photoView, avatarUriString);
+        }
+
+        private void SetupAvatarPicker()
+        {
+            var photoView = FindViewById<ImageView>(Resource.Id.profilePhoto);
+            if (photoView == null)
+                return;
+
+            photoView.Click += (s, e) => LaunchAvatarPicker();
+        }
+
+        private void LaunchAvatarPicker()
+        {
+            try
             {
-                editButton.Click -= OnEditProfileClick;
-                editButton.Click += OnEditProfileClick;
+                var intent = new Intent(Intent.ActionOpenDocument);
+                intent.AddCategory(Intent.CategoryOpenable);
+                intent.SetType("image/*");
+                intent.AddFlags(ActivityFlags.GrantReadUriPermission);
+                intent.AddFlags(ActivityFlags.GrantPersistableUriPermission);
+                StartActivityForResult(intent, PickAvatarRequestCode);
+            }
+            catch (Exception)
+            {
+                Toast.MakeText(this, "Unable to open photo picker", ToastLength.Short)?.Show();
+            }
+        }
+
+        protected override void OnActivityResult(int requestCode, Result resultCode, Intent? data)
+        {
+            base.OnActivityResult(requestCode, resultCode, data);
+
+            if (requestCode != PickAvatarRequestCode)
+                return;
+
+            if (resultCode != Result.Ok)
+                return;
+
+            var uri = data?.Data;
+            if (uri == null)
+                return;
+
+            try
+            {
+                ContentResolver?.TakePersistableUriPermission(uri, ActivityFlags.GrantReadUriPermission);
+            }
+            catch
+            {
+                // Some pickers/providers may not allow persistable permissions; still try to use the URI.
+            }
+
+            var prefs = GetSharedPreferences(ProfilePrefsName, FileCreationMode.Private);
+            prefs?.Edit()?.PutString(AvatarUriKey, uri.ToString())?.Apply();
+
+            var photoView = FindViewById<ImageView>(Resource.Id.profilePhoto);
+            if (photoView != null)
+                ApplyAvatarToView(photoView, uri.ToString());
+        }
+
+        private void ApplyAvatarToView(ImageView photoView, string avatarUriString)
+        {
+            if (string.IsNullOrWhiteSpace(avatarUriString))
+            {
+                photoView.SetImageResource(Resource.Drawable.ic_nav_profile);
+                photoView.SetScaleType(ImageView.ScaleType.CenterInside);
+                photoView.ImageTintList = ColorStateList.ValueOf(Color.White);
+                return;
+            }
+
+            try
+            {
+                var uri = Android.Net.Uri.Parse(avatarUriString);
+                if (uri == null)
+                    throw new InvalidOperationException("Invalid avatar uri");
+
+                photoView.ImageTintList = null;
+                photoView.ClearColorFilter();
+                photoView.SetScaleType(ImageView.ScaleType.CenterCrop);
+                photoView.SetImageURI(uri);
+            }
+            catch
+            {
+                photoView.SetImageResource(Resource.Drawable.ic_nav_profile);
+                photoView.SetScaleType(ImageView.ScaleType.CenterInside);
+                photoView.ImageTintList = ColorStateList.ValueOf(Color.White);
+
+                var prefs = GetSharedPreferences(ProfilePrefsName, FileCreationMode.Private);
+                prefs?.Edit()?.Remove(AvatarUriKey)?.Apply();
             }
         }
 
         private void OnEditProfileClick(object? sender, EventArgs e)
         {
             StartActivity(new Intent(this, typeof(EditProfileActivity)));
+        }
+
+        private void SetupHeaderActions()
+        {
+            var headerArea = FindViewById<LinearLayout>(Resource.Id.profileHeaderArea);
+            var notificationsButton = FindViewById<ImageButton>(Resource.Id.notificationsButton);
+
+            if (headerArea != null)
+            {
+                headerArea.Click += OnEditProfileClick;
+            }
+
+            if (notificationsButton != null)
+            {
+                notificationsButton.Click += (s, e) => StartActivity(new Intent(this, typeof(SettingsActivity)));
+            }
+        }
+
+        private void LoadWeeklyProgressCard()
+        {
+            if (_database == null)
+                return;
+
+            var headline = FindViewById<TextView>(Resource.Id.weeklyProgressHeadline);
+            var detail = FindViewById<TextView>(Resource.Id.weeklyProgressText);
+            var bar = FindViewById<ProgressBar>(Resource.Id.weeklyProgressBar);
+
+            if (headline == null || detail == null || bar == null)
+                return;
+
+            var prefs = GetSharedPreferences("user_profile", FileCreationMode.Private);
+            var weeklyGoal = prefs?.GetInt("weekly_goal", 4) ?? 4;
+            if (weeklyGoal <= 0)
+                weeklyGoal = 4;
+
+            var workouts = _database.GetWorkoutHistory(5000);
+
+            DateTime today = DateTime.Today;
+            DateTime weekStart = today.AddDays(-(int)today.DayOfWeek + (int)DayOfWeek.Monday);
+            if (weekStart > today)
+                weekStart = weekStart.AddDays(-7);
+
+            int workoutsThisWeek = workouts.Count(w => w.StartTime.Date >= weekStart && w.StartTime.Date <= today);
+            var percent = (int)Math.Round((workoutsThisWeek / (double)weeklyGoal) * 100.0);
+            percent = Math.Max(0, Math.Min(percent, 100));
+
+            headline.Text = $"You've done {workoutsThisWeek} workouts this week!";
+            detail.Text = $"{percent}% of your weekly goal is completed.";
+            bar.Progress = percent;
+        }
+
+        private static string GetGreetingText()
+        {
+            var hour = DateTime.Now.Hour;
+            if (hour < 12)
+                return "Good morning,";
+            if (hour < 18)
+                return "Good afternoon,";
+            return "Good evening,";
         }
 
         private void LoadStatsOverview()
@@ -279,15 +439,6 @@ namespace Gym_App.Activities
             {
                 logoutButton.Click += (s, e) =>
                 {
-                    try
-                    {
-                        var gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DefaultSignIn).Build();
-                        GoogleSignIn.GetClient(this, gso).SignOut();
-                    }
-                    catch
-                    {
-                    }
-
                     var authPrefs = GetSharedPreferences("auth_session", FileCreationMode.Private);
                     authPrefs?.Edit()?.Clear()?.Apply();
 

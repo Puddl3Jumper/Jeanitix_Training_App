@@ -13,18 +13,15 @@
     <string name="finish_workout">Finish Workout</string>
     <string name="history_title">Workout History</string>
     <string name="history_subtitle">Review completed sessions and progress</string>
+    <string name="history_quick_add">Quick add workout</string>
     <string name="library_title">Exercise Library</string>
     <string name="library_subtitle">Browse and create your exercise catalog</string>
     <string name="add_custom_exercise">Add Custom Exercise</string>
-    <string name="login_page_title">Log in to your Jeanetix Fitness account</string>
-    <string name="login_email">Email</string>
-    <string name="login_password">Password</string>
-    <string name="login_button">Log In</string>
-    <string name="login_forgot_password">Forgot Password?</string>
-    <string name="login_social_label">Or continue with</string>
+    <string name="login_page_title">Sign in with Google to continue</string>
+    <string name="login_username_hint">Username (email)</string>
+    <string name="login_password_hint">Password</string>
+    <string name="login_primary">Sign in</string>
     <string name="login_google">Continue with Google</string>
-    <string name="login_facebook">Continue with Facebook</string>
-    <string name="login_instagram">Continue with Instagram</string>
     <string name="launch_copyright">© 2026 Fitness Diary</string>
     <string name="home_greeting">Hi, User</string>
     <string name="home_today_workout">Today\'s Workout</string>
@@ -37,6 +34,10 @@
     <string name="home_onboarding_title">Quick start</string>
     <string name="home_onboarding_message">Tap \'Start &amp; Select Workout\' to begin tracking your session. Use Quick Log for fast entries and History to review progress.</string>
     <string name="home_onboarding_cta">Got it</string>
+    <string name="oauth_client_id">gym-app-mobile</string>
+    <string name="oauth_authority_url">http://10.0.2.2:5076</string>
+    <string name="oauth_redirect_url">com.leiyu.GymJournal://oauth2redirect</string>
+    <string name="oauth_scope">openid profile email</string>
     <string name="settings_release_placeholder">Release</string>
     <string name="settings_release_text">Version v1.0.0.0-Beta</string>
 </resources>

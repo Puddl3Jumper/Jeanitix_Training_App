@@ -107,11 +107,11 @@
                 android:layout_height="wrap_content"
                 android:orientation="horizontal">
 
-                <TextView android:layout_width="wrap_content" android:layout_height="40dp" android:gravity="center_vertical" android:text="Chest" android:textColor="#000000" android:background="@drawable/bg_body_tag_active" android:paddingStart="14dp" android:paddingEnd="14dp" android:layout_marginEnd="8dp"/>
-                <TextView android:layout_width="wrap_content" android:layout_height="40dp" android:gravity="center_vertical" android:text="Back" android:textColor="#FFFFFF" android:background="@drawable/bg_body_tag_inactive" android:paddingStart="14dp" android:paddingEnd="14dp" android:layout_marginEnd="8dp"/>
-                <TextView android:layout_width="wrap_content" android:layout_height="40dp" android:gravity="center_vertical" android:text="Shoulder" android:textColor="#FFFFFF" android:background="@drawable/bg_body_tag_inactive" android:paddingStart="14dp" android:paddingEnd="14dp" android:layout_marginEnd="8dp"/>
-                <TextView android:layout_width="wrap_content" android:layout_height="40dp" android:gravity="center_vertical" android:text="Arm" android:textColor="#FFFFFF" android:background="@drawable/bg_body_tag_inactive" android:paddingStart="14dp" android:paddingEnd="14dp" android:layout_marginEnd="8dp"/>
-                <TextView android:layout_width="wrap_content" android:layout_height="40dp" android:gravity="center_vertical" android:text="Leg" android:textColor="#FFFFFF" android:background="@drawable/bg_body_tag_inactive" android:paddingStart="14dp" android:paddingEnd="14dp" android:layout_marginEnd="8dp"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="40dp" android:gravity="center_vertical" android:text="Chest" android:textColor="@color/color_on_primary" android:background="@drawable/bg_body_tag_active" android:paddingStart="14dp" android:paddingEnd="14dp" android:layout_marginEnd="8dp"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="40dp" android:gravity="center_vertical" android:text="Back" android:textColor="@color/color_text_primary" android:background="@drawable/bg_body_tag_inactive" android:paddingStart="14dp" android:paddingEnd="14dp" android:layout_marginEnd="8dp"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="40dp" android:gravity="center_vertical" android:text="Shoulder" android:textColor="@color/color_text_primary" android:background="@drawable/bg_body_tag_inactive" android:paddingStart="14dp" android:paddingEnd="14dp" android:layout_marginEnd="8dp"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="40dp" android:gravity="center_vertical" android:text="Arm" android:textColor="@color/color_text_primary" android:background="@drawable/bg_body_tag_inactive" android:paddingStart="14dp" android:paddingEnd="14dp" android:layout_marginEnd="8dp"/>
+                <TextView android:layout_width="wrap_content" android:layout_height="40dp" android:gravity="center_vertical" android:text="Leg" android:textColor="@color/color_text_primary" android:background="@drawable/bg_body_tag_inactive" android:paddingStart="14dp" android:paddingEnd="14dp" android:layout_marginEnd="8dp"/>
             </LinearLayout>
         </HorizontalScrollView>
 
@@ -158,7 +158,7 @@
             android:textStyle="bold"
             android:lineSpacingMultiplier="1.4"
             android:textColor="@color/color_on_primary"
-            android:background="@drawable/bg_button_success"
+            android:background="@drawable/bg_button_primary"
             android:paddingVertical="12dp" />
 
     </LinearLayout>

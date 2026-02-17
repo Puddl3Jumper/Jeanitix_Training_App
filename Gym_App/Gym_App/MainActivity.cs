@@ -33,17 +33,6 @@ namespace Gym_App
                     return;
                 }
 
-                var authPrefs = GetSharedPreferences("auth_session", FileCreationMode.Private);
-                var autoEnterHomeForTesting = authPrefs?.GetBoolean("auto_home_test", true) ?? true;
-                if (autoEnterHomeForTesting)
-                {
-                    var autoHomeIntent = new Intent(this, typeof(HomeActivity));
-                    autoHomeIntent.SetFlags(ActivityFlags.NewTask | ActivityFlags.ClearTask);
-                    StartActivity(autoHomeIntent);
-                    Finish();
-                    return;
-                }
-
                 SetContentView(Resource.Layout.activity_main);
 
                 _startWorkoutButton = FindViewById<Button>(Resource.Id.startWorkoutButton);

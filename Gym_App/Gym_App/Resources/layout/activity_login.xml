@@ -41,18 +41,18 @@
             android:textSize="15sp"
             android:textColor="@color/color_text_secondary"
             android:layout_marginTop="8dp"
-            android:layout_marginBottom="36dp" />
+            android:layout_marginBottom="24dp" />
 
         <com.google.android.material.textfield.TextInputLayout
             style="@style/Widget.GymApp.TextInputLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="16dp"
-            android:hint="Phone or Email"
+            android:layout_marginBottom="12dp"
+            android:hint="@string/login_username_hint"
             app:boxBackgroundMode="filled">
 
             <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/emailInput"
+                android:id="@+id/loginUsernameInput"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="textEmailAddress"
@@ -64,12 +64,12 @@
             style="@style/Widget.GymApp.TextInputLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="26dp"
-            android:hint="@string/login_password"
+            android:layout_marginBottom="16dp"
+            android:hint="@string/login_password_hint"
             app:boxBackgroundMode="filled">
 
             <com.google.android.material.textfield.TextInputEditText
-                android:id="@+id/passwordInput"
+                android:id="@+id/loginPasswordInput"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:inputType="textPassword"
@@ -78,36 +78,15 @@
         </com.google.android.material.textfield.TextInputLayout>
 
         <com.google.android.material.button.MaterialButton
-            android:id="@+id/loginButton"
+            android:id="@+id/primaryLoginButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="@string/login_button"
+            android:text="@string/login_primary"
             android:textAllCaps="false"
             android:textStyle="bold"
             android:textColor="@color/color_on_primary"
-            android:background="@drawable/bg_liquid_glass_primary"
-            android:minHeight="62dp"
-            android:gravity="center" />
-
-        <TextView
-            android:id="@+id/forgotPasswordText"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:text="@string/login_forgot_password"
-            android:textSize="14sp"
-            android:textStyle="bold"
-            android:textColor="@color/color_text_secondary"
-            android:layout_gravity="center_horizontal"
-            android:layout_marginTop="14dp"
-            android:layout_marginBottom="26dp" />
-
-        <TextView
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/login_social_label"
-            android:textSize="14sp"
-            android:textColor="@color/color_text_secondary"
-            android:gravity="center"
+            android:background="@drawable/bg_button_primary"
+            android:minHeight="56dp"
             android:layout_marginBottom="12dp" />
 
         <com.google.android.material.button.MaterialButton
@@ -116,30 +95,8 @@
             android:layout_height="wrap_content"
             android:text="@string/login_google"
             android:textAllCaps="false"
-            android:textColor="@color/color_text_primary"
-            android:background="@drawable/bg_liquid_glass_secondary"
-            android:minHeight="56dp"
-            android:layout_marginBottom="10dp" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/facebookLoginButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/login_facebook"
-            android:textAllCaps="false"
-            android:textColor="@color/color_text_primary"
-            android:background="@drawable/bg_liquid_glass_secondary"
-            android:minHeight="56dp"
-            android:layout_marginBottom="10dp" />
-
-        <com.google.android.material.button.MaterialButton
-            android:id="@+id/instagramLoginButton"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:text="@string/login_instagram"
-            android:textAllCaps="false"
-            android:textColor="@color/color_text_primary"
-            android:background="@drawable/bg_liquid_glass_secondary"
+            android:textColor="@color/color_on_primary"
+            android:background="@drawable/bg_button_primary"
             android:minHeight="56dp" />
 
     </LinearLayout>

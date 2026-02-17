@@ -15,12 +15,70 @@
         android:paddingEnd="20dp"
         android:paddingTop="20dp">
 
-        <com.google.android.material.appbar.MaterialToolbar
+        <LinearLayout
+            android:id="@+id/profileHeaderArea"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            android:backgroundTint="@android:color/white"
-            app:titleTextColor="@android:color/black" />
+            android:orientation="horizontal"
+            android:gravity="center_vertical"
+            android:layout_marginBottom="12dp">
+
+            <ImageView
+                android:id="@+id/profilePhoto"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:src="@drawable/ic_nav_profile"
+                android:contentDescription="avatar"
+                android:background="@drawable/bg_avatar_circle"
+                android:clipToOutline="true"
+                android:scaleType="centerInside"
+                android:clickable="true"
+                android:focusable="true"
+                android:tint="@android:color/white" />
+
+            <LinearLayout
+                android:layout_width="0dp"
+                android:layout_height="wrap_content"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:layout_marginStart="12dp">
+
+                <TextView
+                    android:id="@+id/profileGreeting"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Good morning,"
+                    android:textSize="16sp"
+                    android:textColor="@color/color_text_secondary" />
+
+                <TextView
+                    android:id="@+id/profileName"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Your Name"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    android:textColor="@android:color/white" />
+
+                <TextView
+                    android:id="@+id/profileBio"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:visibility="gone"
+                    android:text="Goal-focused strength training"
+                    android:textSize="13sp"
+                    android:textColor="@android:color/white" />
+            </LinearLayout>
+
+            <ImageButton
+                android:id="@+id/notificationsButton"
+                android:layout_width="40dp"
+                android:layout_height="40dp"
+                android:background="@android:color/transparent"
+                android:contentDescription="notifications"
+                android:src="@drawable/ic_notifications"
+                android:tint="@android:color/white" />
+        </LinearLayout>
 
         <ScrollView
             android:layout_width="match_parent"
@@ -42,58 +100,34 @@
                     android:padding="16dp"
                     android:layout_marginBottom="12dp">
 
-                    <LinearLayout
+                    <TextView
+                        android:id="@+id/weeklyProgressHeadline"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
+                        android:text="You've done 0 workouts this week!"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@android:color/white" />
 
-                        <ImageView
-                            android:id="@+id/profilePhoto"
-                            android:layout_width="64dp"
-                            android:layout_height="64dp"
-                            android:src="@mipmap/appicon"
-                            android:contentDescription="avatar" />
+                    <TextView
+                        android:id="@+id/weeklyProgressText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="6dp"
+                        android:text="0% of your weekly goal is completed."
+                        android:textSize="13sp"
+                        android:textColor="@color/color_text_secondary" />
 
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="vertical"
-                            android:layout_marginStart="12dp">
-
-                            <TextView
-                                android:id="@+id/profileName"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:text="Your Name"
-                                android:textSize="20sp"
-                                android:textStyle="bold"
-                                android:textColor="@android:color/white" />
-
-                            <TextView
-                                android:id="@+id/profileBio"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:layout_marginTop="2dp"
-                                android:text="Goal-focused strength training"
-                                android:textSize="13sp"
-                                android:textColor="@android:color/white" />
-
-                            <Button
-                                android:id="@+id/editProfileButton"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="Edit Profile"
-                                android:textAllCaps="false"
-                                android:textColor="@android:color/black"
-                                android:background="@drawable/bg_button_primary"
-                                android:layout_marginTop="8dp"
-                                android:paddingStart="14dp"
-                                android:paddingEnd="14dp"
-                                android:minHeight="36dp" />
-                        </LinearLayout>
-                    </LinearLayout>
+                    <ProgressBar
+                        android:id="@+id/weeklyProgressBar"
+                        style="?android:attr/progressBarStyleHorizontal"
+                        android:layout_width="match_parent"
+                        android:layout_height="10dp"
+                        android:layout_marginTop="12dp"
+                        android:indeterminate="false"
+                        android:max="100"
+                        android:progress="0"
+                        android:progressDrawable="@drawable/bg_weekly_progress" />
                 </LinearLayout>
 
                 <LinearLayout
