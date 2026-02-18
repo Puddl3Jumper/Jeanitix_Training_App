@@ -10,6 +10,7 @@
     <ApplicationDisplayVersion>1.1.0</ApplicationDisplayVersion>
     <AndroidManifest>AndroidManifest.xml</AndroidManifest>
     <AndroidEnableMultiDex>true</AndroidEnableMultiDex>
+    <AndroidUseAapt2Daemon>false</AndroidUseAapt2Daemon>
     <AndroidUseIntermediateDesignerFile>true</AndroidUseIntermediateDesignerFile>
     <TrimMode>copy</TrimMode>
     <Platforms>AnyCPU;ARM64</Platforms>
