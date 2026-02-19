@@ -49,4 +49,6 @@
   <color name="bottom_nav_active">@color/md_theme_primary</color>
   <color name="bottom_nav_active_tint">@color/md_theme_primary</color>
   <color name="bottom_nav_inactive">#FF9A9A9A</color>
+  
+  <color name="icon_background">#1E1E23</color>
 </resources>
