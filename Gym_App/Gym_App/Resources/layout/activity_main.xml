@@ -4,24 +4,25 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:padding="20dp"
+    android:paddingBottom="44dp"
     android:background="@drawable/bg_screen">
 
     <ImageView
         android:id="@+id/welcomeHeroImage"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:maxHeight="360dp"
-        android:layout_marginTop="20dp"
-        android:layout_marginBottom="20dp"
+        android:maxHeight="260dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
         android:adjustViewBounds="true"
         android:contentDescription="@string/app_name"
         android:scaleType="fitCenter"
-        android:src="@drawable/welcome_hero" />
+        android:src="@drawable/welcome_hero_source" />
 
     <TextView
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
+        android:layout_marginTop="6dp"
         android:layout_marginBottom="20dp"
         android:gravity="center"
         android:text="TRACK&#10;LIFT&#10;PROGRESS"

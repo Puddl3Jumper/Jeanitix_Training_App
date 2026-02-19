@@ -1,8 +1,0 @@
-<svg viewBox="0 0 256 256" xmlns="http://www.w3.org/2000/svg">
-  <!-- Top weight -->
-  <circle cx="128" cy="80" r="30" fill="#FFC800"/>
-  <!-- Bottom weight -->
-  <circle cx="128" cy="176" r="30" fill="#FFC800"/>
-  <!-- Center bar -->
-  <rect x="122" y="100" width="12" height="56" fill="#FFC800" rx="6"/>
-</svg>
