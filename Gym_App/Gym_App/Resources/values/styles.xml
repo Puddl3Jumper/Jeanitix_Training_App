@@ -18,7 +18,7 @@
     <item name="android:colorBackground">@color/md_theme_background</item>
     <item name="android:windowBackground">@color/md_theme_background</item>
     <item name="android:statusBarColor">@android:color/transparent</item>
-    <item name="android:navigationBarColor">@color/md_theme_surface</item>
+    <item name="android:navigationBarColor">@color/bottom_nav_bg</item>
     <item name="materialButtonStyle">@style/Widget.GymApp.Button</item>
   </style>
 
@@ -40,7 +40,7 @@
     <item name="android:colorBackground">@color/md_theme_light_background</item>
     <item name="android:windowBackground">@color/md_theme_light_background</item>
     <item name="android:statusBarColor">@android:color/transparent</item>
-    <item name="android:navigationBarColor">@color/md_theme_light_surface</item>
+    <item name="android:navigationBarColor">@color/bottom_nav_bg</item>
     <item name="materialButtonStyle">@style/Widget.GymApp.Button</item>
   </style>
 

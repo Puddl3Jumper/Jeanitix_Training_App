@@ -1,4 +1,6 @@
 using Android.Content;
+using Android.Text;
+using Android.Text.Style;
 using Android.Widget;
 using Android.Graphics;
 using Gym_App.Data;
@@ -68,13 +70,34 @@ namespace Gym_App.Activities
             if (appVersionText != null)
             {
                 var (versionName, versionCode) = ReleaseInfo.GetAppVersion(this);
-                appVersionText.Text = GetString(
+                var versionLine = GetString(
                     Resource.String.settings_release_text,
                     new Java.Lang.Object[]
                     {
                         new Java.Lang.String(versionName),
                         Long.ValueOf(versionCode)
                     });
+
+                var spannable = new SpannableString(versionLine);
+
+                // Bold the version number section: "v1.x.x (xxxx)"
+                var marker = $"v{versionName}";
+                var start = versionLine.IndexOf(marker, StringComparison.Ordinal);
+                if (start < 0)
+                {
+                    start = versionLine.IndexOf(versionName, StringComparison.Ordinal);
+                }
+
+                if (start >= 0)
+                {
+                    spannable.SetSpan(
+                        new StyleSpan(TypefaceStyle.Bold),
+                        start,
+                        versionLine.Length,
+                        SpanTypes.ExclusiveExclusive);
+                }
+
+                appVersionText.SetText(spannable, TextView.BufferType.Spannable);
             }
 
             var currentUnit = prefs?.GetString("unit", "kg") ?? "kg";

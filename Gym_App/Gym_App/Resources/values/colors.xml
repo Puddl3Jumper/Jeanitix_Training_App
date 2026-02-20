@@ -1,37 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <color name="md_theme_primary">#FFC107</color>
-  <color name="md_theme_primary_pressed">#FFC107</color>
+  <color name="md_theme_primary">#F59E0B</color>
+  <color name="md_theme_primary_pressed">#F59E0B</color>
   <color name="md_theme_onPrimary">#000000</color>
-  <color name="md_theme_primaryContainer">#3A2A00</color>
-  <color name="md_theme_onPrimaryContainer">#FFE3A3</color>
-  <color name="md_theme_secondary">#333333</color>
-  <color name="md_theme_onSecondary">#F5F5F5</color>
-  <color name="md_theme_secondaryContainer">#333333</color>
-  <color name="md_theme_onSecondaryContainer">#F5F5F5</color>
-  <color name="md_theme_background">#1A1A1A</color>
-  <color name="md_theme_background_deep">#000000</color>
-  <color name="md_theme_onBackground">#F5F5F5</color>
-  <color name="md_theme_surface">#121212</color>
-  <color name="md_theme_onSurface">#F5F5F5</color>
-  <color name="md_theme_surfaceVariant">#333333</color>
-  <color name="md_theme_onSurfaceVariant">#CCCCCC</color>
-  <color name="md_theme_outline">#4A4A4A</color>
+  <color name="md_theme_primaryContainer">#432800</color>
+  <color name="md_theme_onPrimaryContainer">#FFDFB3</color>
+  <color name="md_theme_secondary">#49454F</color>
+  <color name="md_theme_onSecondary">#FFFFFF</color>
+  <color name="md_theme_secondaryContainer">#49454F</color>
+  <color name="md_theme_onSecondaryContainer">#FFFFFF</color>
+  <color name="md_theme_background">#1E1E1E</color>
+  <color name="md_theme_background_deep">#1E1E1E</color>
+  <color name="md_theme_onBackground">#FFFFFF</color>
+  <color name="md_theme_surface">#1E1E1E</color>
+  <color name="md_theme_onSurface">#FFFFFF</color>
+  <color name="md_theme_surfaceVariant">#49454F</color>
+  <color name="md_theme_onSurfaceVariant">#9E9E9E</color>
+  <color name="md_theme_outline">#49454F</color>
 
-  <color name="md_theme_light_primary">#FFC107</color>
+  <color name="md_theme_light_primary">#F59E0B</color>
   <color name="md_theme_light_onPrimary">#000000</color>
-  <color name="md_theme_light_primaryContainer">#FFE0A6</color>
-  <color name="md_theme_light_onPrimaryContainer">#3B2600</color>
-  <color name="md_theme_light_secondary">#E5E5E5</color>
-  <color name="md_theme_light_onSecondary">#1A1A1A</color>
+  <color name="md_theme_light_primaryContainer">#FFDFB3</color>
+  <color name="md_theme_light_onPrimaryContainer">#432800</color>
+  <color name="md_theme_light_secondary">#E6E6E6</color>
+  <color name="md_theme_light_onSecondary">#1E1E1E</color>
   <color name="md_theme_light_secondaryContainer">#F0F0F0</color>
-  <color name="md_theme_light_onSecondaryContainer">#1A1A1A</color>
-  <color name="md_theme_light_background">#F7F7F7</color>
-  <color name="md_theme_light_onBackground">#111111</color>
+  <color name="md_theme_light_onSecondaryContainer">#1E1E1E</color>
+  <color name="md_theme_light_background">#FFFFFF</color>
+  <color name="md_theme_light_onBackground">#1E1E1E</color>
   <color name="md_theme_light_surface">#FFFFFF</color>
-  <color name="md_theme_light_onSurface">#111111</color>
+  <color name="md_theme_light_onSurface">#1E1E1E</color>
   <color name="md_theme_light_surfaceVariant">#E6E6E6</color>
-  <color name="md_theme_light_onSurfaceVariant">#555555</color>
+  <color name="md_theme_light_onSurfaceVariant">#9E9E9E</color>
   <color name="md_theme_light_outline">#BDBDBD</color>
 
   <color name="color_surface">@color/md_theme_surface</color>
@@ -44,11 +44,14 @@
   <color name="color_success">@color/md_theme_primary</color>
   <color name="color_divider">@color/md_theme_outline</color>
 
-  <color name="bottom_nav_bg">#FF0B0B0B</color>
-  <color name="bottom_nav_border">#FF1F1F1F</color>
+  <color name="bottom_nav_bg">@color/md_theme_surface</color>
+  <color name="bottom_nav_border">@color/md_theme_surfaceVariant</color>
   <color name="bottom_nav_active">@color/md_theme_primary</color>
   <color name="bottom_nav_active_tint">@color/md_theme_primary</color>
-  <color name="bottom_nav_inactive">#FF9A9A9A</color>
+  <color name="bottom_nav_inactive">#FF9E9E9E</color>
+
+  <!-- Selected state: primary + 20% alpha -->
+  <color name="bottom_nav_selected_bg">#33F59E0B</color>
   
-  <color name="icon_background">#1E1E23</color>
+  <color name="icon_background">#1E1E1E</color>
 </resources>
