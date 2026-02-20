@@ -4,6 +4,7 @@ using Android.Content;
 using Android.Graphics;
 using Gym_App.Data;
 using Gym_App.Models;
+using Google.Android.Material.Dialog;
 
 namespace Gym_App.Activities
 {
@@ -165,7 +166,7 @@ namespace Gym_App.Activities
 
         private void AddCustomExerciseButton_Click(object? sender, EventArgs e)
         {
-            var dialog = new AlertDialog.Builder(this);
+            var dialog = new MaterialAlertDialogBuilder(this);
             dialog.SetTitle("Add Custom Exercise");
 
             var layout = new LinearLayout(this) { Orientation = Orientation.Vertical };

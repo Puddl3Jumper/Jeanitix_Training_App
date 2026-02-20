@@ -5,6 +5,7 @@ using Android.Graphics;
 using Android.Graphics.Drawables;
 using Gym_App.Data;
 using Gym_App.Models;
+using Google.Android.Material.Dialog;
 
 namespace Gym_App.Activities
 {
@@ -294,7 +295,7 @@ namespace Gym_App.Activities
 
         private void ShowAddSetDialog(WorkoutExercise workoutExercise)
         {
-            var dialog = new AlertDialog.Builder(this);
+            var dialog = new MaterialAlertDialogBuilder(this);
             dialog.SetTitle("Add Set");
 
             var layout = new LinearLayout(this) { Orientation = Orientation.Vertical };
@@ -376,20 +377,21 @@ namespace Gym_App.Activities
                 return;
 
             var currentDate = _currentWorkout.StartTime;
-            var datePicker = new DatePickerDialog(
-                this,
-                (s, e) =>
+            var datePicker = new DatePicker(this);
+            datePicker.UpdateDate(currentDate.Year, currentDate.Month - 1, currentDate.Day);
+
+            new MaterialAlertDialogBuilder(this)
+                .SetTitle("Select Date")
+                .SetView(datePicker)
+                .SetPositiveButton("OK", (s, e) =>
                 {
-                    var selectedDate = new DateTime(e.Year, e.Month + 1, e.DayOfMonth);
+                    var selectedDate = new DateTime(datePicker.Year, datePicker.Month + 1, datePicker.DayOfMonth);
                     _database.UpdateWorkoutSession(_currentWorkout.Id, _currentWorkout.Name, selectedDate, _currentWorkout.Notes);
                     _currentWorkout = _database.GetWorkoutSession(_currentWorkout.Id);
                     UpdateUI();
-                },
-                currentDate.Year,
-                currentDate.Month - 1,
-                currentDate.Day);
-
-            datePicker.Show();
+                })
+                .SetNegativeButton("Cancel", (s, e) => { })
+                .Show();
         }
 
         private void AddExerciseButton_Click(object? sender, EventArgs e)
@@ -435,7 +437,7 @@ namespace Gym_App.Activities
             var adapter = new YellowListAdapter(this, options);
             listView.Adapter = adapter;
 
-            var dialog = new AlertDialog.Builder(this).Create();
+            var dialog = new MaterialAlertDialogBuilder(this).Create();
             dialog.SetTitle(title);
             dialog.SetView(listView);
 
@@ -446,17 +448,6 @@ namespace Gym_App.Activities
             };
 
             dialog.Show();
-            dialog.Window?.SetBackgroundDrawable(new ColorDrawable(new Color(GetColor(Resource.Color.color_surface_alt))));
-
-            int titleId = Resources.GetIdentifier("alertTitle", "id", "android");
-            if (titleId > 0)
-            {
-                var titleView = dialog.FindViewById<TextView>(titleId);
-                if (titleView != null)
-                {
-                    titleView.SetTextColor(new Color(GetColor(Resource.Color.color_primary)));
-                }
-            }
         }
 
         private sealed class YellowListAdapter : ArrayAdapter<string>
@@ -486,7 +477,7 @@ namespace Gym_App.Activities
 
         private void ShowCircuitNameDialog(Exercise selectedExercise)
         {
-            var dialog = new AlertDialog.Builder(this);
+            var dialog = new MaterialAlertDialogBuilder(this);
             dialog.SetTitle("Circuit Name");
 
             var layout = new LinearLayout(this) { Orientation = Orientation.Vertical };
@@ -536,7 +527,7 @@ namespace Gym_App.Activities
                 return;
             }
 
-            var dialog = new AlertDialog.Builder(this);
+            var dialog = new MaterialAlertDialogBuilder(this);
             dialog.SetTitle("Finish Workout");
             dialog.SetMessage("Are you sure you want to finish this workout?");
             dialog.SetPositiveButton("Yes", (s, e) =>

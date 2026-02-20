@@ -58,11 +58,20 @@ namespace Gym_App.Activities
                             try
                             {
                                 session = await auth.UpdateProfileDisplayNameAsync(session.IdToken, fullName, CancellationToken.None);
+                                if (string.IsNullOrWhiteSpace(session.Email))
+                                {
+                                    session = session with { Email = email };
+                                }
                             }
                             catch (Exception updateEx)
                             {
                                 Android.Util.Log.Warn("FirebaseAuth", $"Profile update failed after sign-up: {updateEx}");
                             }
+                        }
+
+                        if (string.IsNullOrWhiteSpace(session.Email))
+                        {
+                            session = session with { Email = email };
                         }
 
                         AuthSessionStore.Save(this, session);

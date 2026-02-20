@@ -6,6 +6,7 @@ using Android.Widget;
 using AndroidX.Core.Content;
 using Gym_App.Data;
 using Gym_App.Models;
+using Google.Android.Material.Dialog;
 
 namespace Gym_App.Activities
 {
@@ -658,7 +659,7 @@ namespace Gym_App.Activities
             if (hasSeenOnboarding)
                 return;
 
-            var dialog = new AlertDialog.Builder(this)
+            var dialog = new MaterialAlertDialogBuilder(this)
                 .SetTitle(GetString(Resource.String.home_onboarding_title))
                 .SetMessage(GetString(Resource.String.home_onboarding_message))
                 .SetPositiveButton(GetString(Resource.String.home_onboarding_cta), (s, e) => { })
@@ -696,7 +697,7 @@ namespace Gym_App.Activities
 
             var names = exercises.Select(e => e.Name).ToArray();
 
-            var picker = new AlertDialog.Builder(this);
+            var picker = new MaterialAlertDialogBuilder(this);
             picker.SetTitle("Select Exercise");
             picker.SetItems(names, (s, args) =>
             {
@@ -711,7 +712,7 @@ namespace Gym_App.Activities
             if (_database == null)
                 return;
 
-            var dialog = new AlertDialog.Builder(this);
+            var dialog = new MaterialAlertDialogBuilder(this);
             dialog.SetTitle($"Log {exercise.Name}");
 
             var layout = new LinearLayout(this) { Orientation = Orientation.Vertical };

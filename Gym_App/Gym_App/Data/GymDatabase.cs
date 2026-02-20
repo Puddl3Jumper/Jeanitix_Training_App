@@ -37,6 +37,7 @@ namespace Gym_App.Data
             _currentUserKey = ResolveCurrentUserKey();
             
             LoadData();
+            MigrateGuestSessionsToCurrentUser();
             MigrateLegacySessionsToCurrentUser();
             InitializeDefaultExercises();
         }
@@ -82,6 +83,27 @@ namespace Gym_App.Data
             foreach (var session in _workoutSessions)
             {
                 if (string.IsNullOrWhiteSpace(session.UserKey))
+                {
+                    session.UserKey = _currentUserKey;
+                    hasChanges = true;
+                }
+            }
+
+            if (hasChanges)
+            {
+                SaveData();
+            }
+        }
+
+        private void MigrateGuestSessionsToCurrentUser()
+        {
+            if (_currentUserKey == GuestUserKey)
+                return;
+
+            bool hasChanges = false;
+            foreach (var session in _workoutSessions)
+            {
+                if (NormalizeUserKey(session.UserKey) == GuestUserKey)
                 {
                     session.UserKey = _currentUserKey;
                     hasChanges = true;

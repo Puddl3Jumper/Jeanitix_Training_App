@@ -138,14 +138,18 @@ namespace Gym_App.Activities
 
                 var auth = new FirebaseAuthService(config);
                 var session = await auth.SignInWithGoogleIdTokenAsync(googleIdToken, redirectUrl.AbsoluteUri, CancellationToken.None);
-                AuthSessionStore.Save(this, session);
-
                 var email =
                     session.Email ??
                     loginResult.User?.FindFirst("email")?.Value ??
                     loginResult.User?.FindFirst(ClaimTypes.Email)?.Value ??
                     loginResult.User?.Identity?.Name ??
                     string.Empty;
+
+                var stitched = string.IsNullOrWhiteSpace(session.Email) && !string.IsNullOrWhiteSpace(email)
+                    ? session with { Email = email }
+                    : session;
+
+                AuthSessionStore.Save(this, stitched);
 
                 Log.Info(LogTag, $"Firebase sign-in success. email='{email}'");
                 Toast.MakeText(this, "Signed in", ToastLength.Short)?.Show();

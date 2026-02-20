@@ -45,14 +45,28 @@ public static class AuthSessionStore
     public static void Save(Context context, FirebaseAuthSession session)
     {
         var prefs = context.GetSharedPreferences(SessionPrefsName, FileCreationMode.Private);
-        prefs?.Edit()
-            ?.PutString(KeyRefreshToken, session.RefreshToken)
-            ?.PutString(KeyIdToken, session.IdToken)
-            ?.PutString(KeyEmail, session.Email)
-            ?.PutString(KeyLocalId, session.LocalId)
-            ?.PutString(KeyDisplayName, session.DisplayName)
-            ?.PutString(KeyExpiresAtUtc, session.ExpiresAtUtc.ToUnixTimeSeconds().ToString())
-            ?.Apply();
+        if (prefs == null)
+            return;
+
+        var editor = prefs.Edit();
+        if (editor == null)
+            return;
+
+        var existingEmail = prefs.GetString(KeyEmail, null);
+        var existingLocalId = prefs.GetString(KeyLocalId, null);
+        var existingDisplayName = prefs.GetString(KeyDisplayName, null);
+
+        var emailToStore = string.IsNullOrWhiteSpace(session.Email) ? existingEmail : session.Email;
+        var localIdToStore = string.IsNullOrWhiteSpace(session.LocalId) ? existingLocalId : session.LocalId;
+        var displayNameToStore = string.IsNullOrWhiteSpace(session.DisplayName) ? existingDisplayName : session.DisplayName;
+
+        editor.PutString(KeyRefreshToken, session.RefreshToken);
+        editor.PutString(KeyIdToken, session.IdToken);
+        editor.PutString(KeyExpiresAtUtc, session.ExpiresAtUtc.ToUnixTimeSeconds().ToString());
+        editor.PutString(KeyEmail, emailToStore);
+        editor.PutString(KeyLocalId, localIdToStore);
+        editor.PutString(KeyDisplayName, displayNameToStore);
+        editor.Apply();
     }
 
     public static void Clear(Context context)

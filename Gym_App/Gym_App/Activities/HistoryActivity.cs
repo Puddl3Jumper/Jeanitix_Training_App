@@ -5,6 +5,7 @@ using Android.Graphics;
 using System.Globalization;
 using Gym_App.Data;
 using Gym_App.Models;
+using Google.Android.Material.Dialog;
 
 namespace Gym_App.Activities
 {
@@ -600,12 +601,19 @@ namespace Gym_App.Activities
             DateTime selectedDate = workout.StartTime.Date;
             dateInput.Click += (s, e) =>
             {
-                var picker = new DatePickerDialog(this, (sender, args) =>
-                {
-                    selectedDate = new DateTime(args.Year, args.Month + 1, args.DayOfMonth);
-                    dateInput.Text = selectedDate.ToString("yyyy-MM-dd");
-                }, selectedDate.Year, selectedDate.Month - 1, selectedDate.Day);
-                picker.Show();
+                var datePicker = new DatePicker(this);
+                datePicker.UpdateDate(selectedDate.Year, selectedDate.Month - 1, selectedDate.Day);
+
+                new MaterialAlertDialogBuilder(this)
+                    .SetTitle("Select Date")
+                    .SetView(datePicker)
+                    .SetPositiveButton("OK", (sender, args) =>
+                    {
+                        selectedDate = new DateTime(datePicker.Year, datePicker.Month + 1, datePicker.DayOfMonth);
+                        dateInput.Text = selectedDate.ToString("yyyy-MM-dd");
+                    })
+                    .SetNegativeButton("Cancel", (sender, args) => { })
+                    .Show();
             };
 
             var notesInput = new EditText(this)
@@ -618,7 +626,7 @@ namespace Gym_App.Activities
             layout.AddView(dateInput);
             layout.AddView(notesInput);
 
-            var dialog = new AlertDialog.Builder(this);
+            var dialog = new MaterialAlertDialogBuilder(this);
             dialog.SetTitle("Edit Workout");
             dialog.SetView(layout);
             dialog.SetPositiveButton("Save", (s, e) =>
@@ -636,7 +644,7 @@ namespace Gym_App.Activities
             if (_database == null)
                 return;
 
-            var dialog = new AlertDialog.Builder(this);
+            var dialog = new MaterialAlertDialogBuilder(this);
             dialog.SetTitle("Delete Workout");
             dialog.SetMessage("This will permanently delete this workout.");
             dialog.SetPositiveButton("Delete", (s, e) =>

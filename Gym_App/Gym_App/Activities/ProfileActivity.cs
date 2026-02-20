@@ -10,6 +10,7 @@ using Android.Content.Res;
 using System;
 using System.Linq;
 using Android.Views;
+using Google.Android.Material.Dialog;
 
 namespace Gym_App.Activities
 {
@@ -560,7 +561,7 @@ namespace Gym_App.Activities
             };
             input.InputType = InputTypes.ClassNumber | InputTypes.NumberFlagDecimal;
 
-            var dialog = new AlertDialog.Builder(this);
+            var dialog = new MaterialAlertDialogBuilder(this);
             dialog.SetTitle("Log Weight");
             dialog.SetView(input);
             dialog.SetPositiveButton("Save", (s, e) =>
