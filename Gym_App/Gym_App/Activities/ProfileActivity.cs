@@ -202,7 +202,7 @@ namespace Gym_App.Activities
                 greetingValue.Text = GetGreetingText();
 
             if (nameValue != null)
-                nameValue.Text = string.IsNullOrWhiteSpace(fullName) ? "Nickname not set" : fullName;
+                nameValue.Text = string.IsNullOrWhiteSpace(fullName) ? "Nickname not set" : FormatDisplayName(fullName);
 
             if (bioValue != null)
                 bioValue.Text = $"{goal} · {fitnessTag} · {trainingYears}y {trainingStage}";
@@ -364,6 +364,15 @@ namespace Gym_App.Activities
             if (hour < 18)
                 return "Good afternoon,";
             return "Good evening,";
+        }
+
+        private static string FormatDisplayName(string fullName)
+        {
+            var trimmed = (fullName ?? string.Empty).Trim();
+            if (trimmed.Length == 0)
+                return string.Empty;
+
+            return trimmed.EndsWith("!", StringComparison.Ordinal) ? trimmed : $"{trimmed} !";
         }
 
         private void LoadStatsOverview()
