@@ -54,9 +54,7 @@ namespace Gym_App.Activities
                 profileTab.Click += (s, e) => StartActivity(new Intent(this, typeof(ProfileActivity)));
             }
 
-            var unitKgButton = FindViewById<TextView>(Resource.Id.unitKgButton);
-            var unitLbButton = FindViewById<TextView>(Resource.Id.unitLbButton);
-            var weightUnitHeader = FindViewById<TextView>(Resource.Id.weightUnitHeader);
+            // Weight unit selector removed from UI for now.
             var weeklyGoal3Button = FindViewById<TextView>(Resource.Id.weeklyGoal3Button);
             var weeklyGoal4Button = FindViewById<TextView>(Resource.Id.weeklyGoal4Button);
             var weeklyGoal5Button = FindViewById<TextView>(Resource.Id.weeklyGoal5Button);
@@ -64,6 +62,10 @@ namespace Gym_App.Activities
             var themeLightButton = FindViewById<TextView>(Resource.Id.themeLightButton);
             var themeDarkButton = FindViewById<TextView>(Resource.Id.themeDarkButton);
             var themeSystemButton = FindViewById<TextView>(Resource.Id.themeSystemButton);
+            var fontSansButton = FindViewById<TextView>(Resource.Id.fontSansButton);
+            var fontSerifButton = FindViewById<TextView>(Resource.Id.fontSerifButton);
+            var fontMonoButton = FindViewById<TextView>(Resource.Id.fontMonoButton);
+            var logoutButton = FindViewById<TextView>(Resource.Id.logoutButton);
             var exportCsvButton = FindViewById<TextView>(Resource.Id.exportCsvButton);
             var appVersionText = FindViewById<TextView>(Resource.Id.appVersionText);
 
@@ -100,84 +102,25 @@ namespace Gym_App.Activities
                 appVersionText.SetText(spannable, TextView.BufferType.Spannable);
             }
 
-            var currentUnit = prefs?.GetString("unit", "kg") ?? "kg";
-            if (currentUnit == "lbs")
-            {
-                currentUnit = "lb";
-            }
-
-            void UpdateUnitButtonState()
-            {
-                if (weightUnitHeader != null)
-                {
-                    var label = currentUnit.Equals("lb", StringComparison.OrdinalIgnoreCase) ? "LB" : "KG";
-                    weightUnitHeader.Text = $"Weight Unit ({label})";
-                }
-
-                if (unitKgButton != null)
-                {
-                    unitKgButton.Alpha = 1.0f;
-                    unitKgButton.SetTypeface(null, currentUnit == "kg" ? TypefaceStyle.Bold : TypefaceStyle.Normal);
-                }
-
-                if (unitLbButton != null)
-                {
-                    unitLbButton.Alpha = 1.0f;
-                    unitLbButton.SetTypeface(null, currentUnit == "lb" ? TypefaceStyle.Bold : TypefaceStyle.Normal);
-                }
-            }
-
-            UpdateUnitButtonState();
-
-            if (unitKgButton != null)
-            {
-                unitKgButton.Click += (s, e) =>
-                {
-                    currentUnit = "kg";
-                    prefs?.Edit()?.PutString("unit", currentUnit)?.Apply();
-                    UpdateUnitButtonState();
-                    Toast.MakeText(this, "Unit changed to kg", ToastLength.Short)?.Show();
-                };
-            }
-
-            if (unitLbButton != null)
-            {
-                unitLbButton.Click += (s, e) =>
-                {
-                    currentUnit = "lb";
-                    prefs?.Edit()?.PutString("unit", currentUnit)?.Apply();
-                    UpdateUnitButtonState();
-                    Toast.MakeText(this, "Unit changed to lb", ToastLength.Short)?.Show();
-                };
-            }
-
             var weeklyGoal = prefs?.GetInt("weekly_goal", 4) ?? 4;
 
             void UpdateWeeklyGoalButtonState()
             {
-                if (weeklyGoal3Button != null)
+                void ApplyGoalStyle(TextView? button, bool isSelected)
                 {
-                    weeklyGoal3Button.Alpha = 1.0f;
-                    weeklyGoal3Button.SetTypeface(null, weeklyGoal == 3 ? TypefaceStyle.Bold : TypefaceStyle.Normal);
+                    if (button == null)
+                        return;
+
+                    button.Alpha = 1.0f;
+                    button.SetTypeface(null, TypefaceStyle.Bold);
+                    button.SetBackgroundResource(isSelected ? Resource.Drawable.bg_log_tab_active : Resource.Drawable.bg_log_tab_inactive);
+                    button.SetTextColor(new Color(GetColor(isSelected ? Resource.Color.color_on_primary : Resource.Color.color_text_secondary)));
                 }
 
-                if (weeklyGoal4Button != null)
-                {
-                    weeklyGoal4Button.Alpha = 1.0f;
-                    weeklyGoal4Button.SetTypeface(null, weeklyGoal == 4 ? TypefaceStyle.Bold : TypefaceStyle.Normal);
-                }
-
-                if (weeklyGoal5Button != null)
-                {
-                    weeklyGoal5Button.Alpha = 1.0f;
-                    weeklyGoal5Button.SetTypeface(null, weeklyGoal == 5 ? TypefaceStyle.Bold : TypefaceStyle.Normal);
-                }
-
-                if (weeklyGoal6Button != null)
-                {
-                    weeklyGoal6Button.Alpha = 1.0f;
-                    weeklyGoal6Button.SetTypeface(null, weeklyGoal == 6 ? TypefaceStyle.Bold : TypefaceStyle.Normal);
-                }
+                ApplyGoalStyle(weeklyGoal3Button, weeklyGoal == 3);
+                ApplyGoalStyle(weeklyGoal4Button, weeklyGoal == 4);
+                ApplyGoalStyle(weeklyGoal5Button, weeklyGoal == 5);
+                ApplyGoalStyle(weeklyGoal6Button, weeklyGoal == 6);
             }
 
             void ApplyWeeklyGoal(int value)
@@ -216,23 +159,20 @@ namespace Gym_App.Activities
             var currentThemeMode = ThemeManager.GetSavedThemeMode(this);
             void UpdateThemeButtonState()
             {
-                if (themeLightButton != null)
+                void ApplyThemeStyle(TextView? button, bool isSelected)
                 {
-                    themeLightButton.Alpha = 1.0f;
-                    themeLightButton.SetTypeface(null, currentThemeMode == ThemeManager.ThemeModeLight ? TypefaceStyle.Bold : TypefaceStyle.Normal);
+                    if (button == null)
+                        return;
+
+                    button.Alpha = 1.0f;
+                    button.SetTypeface(null, TypefaceStyle.Bold);
+                    button.SetBackgroundResource(isSelected ? Resource.Drawable.bg_log_tab_active : Resource.Drawable.bg_log_tab_inactive);
+                    button.SetTextColor(new Color(GetColor(isSelected ? Resource.Color.color_on_primary : Resource.Color.color_text_secondary)));
                 }
 
-                if (themeDarkButton != null)
-                {
-                    themeDarkButton.Alpha = 1.0f;
-                    themeDarkButton.SetTypeface(null, currentThemeMode == ThemeManager.ThemeModeDark ? TypefaceStyle.Bold : TypefaceStyle.Normal);
-                }
-
-                if (themeSystemButton != null)
-                {
-                    themeSystemButton.Alpha = 1.0f;
-                    themeSystemButton.SetTypeface(null, currentThemeMode == ThemeManager.ThemeModeSystem ? TypefaceStyle.Bold : TypefaceStyle.Normal);
-                }
+                ApplyThemeStyle(themeLightButton, currentThemeMode == ThemeManager.ThemeModeLight);
+                ApplyThemeStyle(themeDarkButton, currentThemeMode == ThemeManager.ThemeModeDark);
+                ApplyThemeStyle(themeSystemButton, currentThemeMode == ThemeManager.ThemeModeSystem);
             }
 
             void ApplyThemeMode(string mode)
@@ -263,6 +203,53 @@ namespace Gym_App.Activities
                 themeSystemButton.Click += (s, e) => ApplyThemeMode(ThemeManager.ThemeModeSystem);
             }
 
+            var currentFontMode = ThemeManager.GetSavedFontMode(this);
+            void UpdateFontButtonState()
+            {
+                void ApplyFontStyle(TextView? button, bool isSelected)
+                {
+                    if (button == null)
+                        return;
+
+                    button.Alpha = 1.0f;
+                    button.SetTypeface(null, TypefaceStyle.Bold);
+                    button.SetBackgroundResource(isSelected ? Resource.Drawable.bg_log_tab_active : Resource.Drawable.bg_log_tab_inactive);
+                    button.SetTextColor(new Color(GetColor(isSelected ? Resource.Color.color_on_primary : Resource.Color.color_text_secondary)));
+                }
+
+                ApplyFontStyle(fontSansButton, currentFontMode == ThemeManager.FontModeSans);
+                ApplyFontStyle(fontSerifButton, currentFontMode == ThemeManager.FontModeSerif);
+                ApplyFontStyle(fontMonoButton, currentFontMode == ThemeManager.FontModeMono);
+            }
+
+            void ApplyFontMode(string mode)
+            {
+                if (currentFontMode == mode)
+                    return;
+
+                currentFontMode = mode;
+                ThemeManager.SaveFontMode(this, mode);
+                Toast.MakeText(this, "Font preference saved", ToastLength.Short)?.Show();
+                Recreate();
+            }
+
+            UpdateFontButtonState();
+
+            if (fontSansButton != null)
+            {
+                fontSansButton.Click += (s, e) => ApplyFontMode(ThemeManager.FontModeSans);
+            }
+
+            if (fontSerifButton != null)
+            {
+                fontSerifButton.Click += (s, e) => ApplyFontMode(ThemeManager.FontModeSerif);
+            }
+
+            if (fontMonoButton != null)
+            {
+                fontMonoButton.Click += (s, e) => ApplyFontMode(ThemeManager.FontModeMono);
+            }
+
             if (exportCsvButton != null)
             {
                 exportCsvButton.Click += (s, e) =>
@@ -272,6 +259,19 @@ namespace Gym_App.Activities
 
                     var csvPath = _database.ExportWorkoutsCsv();
                     Toast.MakeText(this, $"CSV exported: {csvPath}", ToastLength.Long)?.Show();
+                };
+            }
+
+            if (logoutButton != null)
+            {
+                logoutButton.Click += (s, e) =>
+                {
+                    AuthSessionStore.Clear(this);
+
+                    var intent = new Intent(this, typeof(LoginActivity));
+                    intent.SetFlags(ActivityFlags.NewTask | ActivityFlags.ClearTask);
+                    StartActivity(intent);
+                    Finish();
                 };
             }
         }

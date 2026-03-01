@@ -14,81 +14,178 @@
         android:orientation="vertical"
         android:paddingStart="20dp"
         android:paddingEnd="20dp"
-        android:paddingTop="32dp">
+        android:paddingTop="16dp">
+
+        <com.google.android.material.appbar.MaterialToolbar
+            style="@style/Widget.GymApp.TopAppBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            app:title="Profile" />
 
         <LinearLayout
             android:id="@+id/profileHeaderArea"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:orientation="horizontal"
-            android:gravity="center_vertical"
-            android:layout_marginBottom="12dp">
+            android:orientation="vertical"
+            android:gravity="center_horizontal"
+            android:layout_marginBottom="14dp">
 
             <ImageView
                 android:id="@+id/profilePhoto"
-                android:layout_width="60dp"
-                android:layout_height="60dp"
+                android:layout_width="108dp"
+                android:layout_height="108dp"
                 android:src="@drawable/ic_nav_profile"
                 android:contentDescription="avatar"
                 android:background="@drawable/bg_avatar_circle"
                 android:clipToOutline="true"
-                android:scaleType="centerInside"
+                android:scaleType="centerCrop"
                 android:clickable="true"
                 android:focusable="true"
                 android:tint="@android:color/white" />
 
-            <LinearLayout
-                android:layout_width="0dp"
+            <TextView
+                android:id="@+id/profileGreeting"
+                android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:layout_weight="1"
-                android:orientation="horizontal"
-                android:gravity="center_vertical"
-                android:layout_marginStart="12dp">
+                android:layout_marginTop="10dp"
+                android:gravity="center"
+                android:text="Good morning, Matt !"
+                android:textSize="16sp"
+                android:textStyle="bold"
+                android:textColor="@color/color_text_secondary"
+                android:singleLine="true"
+                android:ellipsize="end"
+                android:includeFontPadding="false" />
 
-                <TextView
-                    android:id="@+id/profileGreeting"
-                    android:layout_width="wrap_content"
-                    android:layout_height="wrap_content"
-                    android:text="Good morning,"
-                    android:textSize="16sp"
-                    android:textColor="@color/color_text_secondary"
-                    android:singleLine="true"
-                    android:includeFontPadding="false" />
+            <TextView
+                android:id="@+id/profileName"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:layout_marginTop="8dp"
+                android:gravity="center"
+                android:text="Your Name"
+                android:textSize="32sp"
+                android:textStyle="bold"
+                android:textColor="@color/color_text_primary"
+                android:visibility="gone"
+                android:singleLine="true"
+                android:ellipsize="end"
+                android:includeFontPadding="false" />
 
-                <TextView
-                    android:id="@+id/profileName"
-                    android:layout_width="0dp"
-                    android:layout_height="wrap_content"
-                    android:layout_weight="1"
-                    android:layout_marginStart="6dp"
-                    android:text="Your Name"
-                    android:textSize="22sp"
-                    android:textStyle="bold"
-                    android:textColor="@android:color/white"
-                    android:singleLine="true"
-                    android:ellipsize="end"
-                    android:includeFontPadding="false" />
+            <TextView
+                android:id="@+id/profileBio"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:visibility="gone"
+                android:text="Goal-focused strength training"
+                android:textSize="13sp"
+                android:textColor="@color/color_text_secondary" />
 
-                <TextView
-                    android:id="@+id/profileBio"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:visibility="gone"
-                    android:text="Goal-focused strength training"
-                    android:textSize="13sp"
-                    android:textColor="@android:color/white" />
-            </LinearLayout>
-            
             <ImageButton
                 android:id="@+id/editProfileButton"
-                android:layout_width="40dp"
-                android:layout_height="40dp"
-                android:layout_marginStart="8dp"
+                android:layout_width="1dp"
+                android:layout_height="1dp"
+                android:visibility="gone"
                 android:background="@android:color/transparent"
                 android:contentDescription="Edit profile"
                 android:src="@drawable/ic_edit"
                 android:tint="@android:color/white" />
 
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="horizontal"
+            android:gravity="center"
+            android:layout_marginBottom="12dp">
+
+            <LinearLayout
+                android:id="@+id/setPhotoAction"
+                android:layout_width="0dp"
+                android:layout_height="72dp"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="@drawable/bg_card"
+                android:clickable="true"
+                android:focusable="true"
+                android:padding="10dp"
+                android:layout_marginEnd="10dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="📷"
+                    android:textSize="18sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Set Photo"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/color_text_primary"
+                    android:layout_marginTop="4dp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/editInfoAction"
+                android:layout_width="0dp"
+                android:layout_height="72dp"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="@drawable/bg_card"
+                android:clickable="true"
+                android:focusable="true"
+                android:padding="10dp"
+                android:layout_marginEnd="10dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="✏️"
+                    android:textSize="18sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Edit Info"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/color_text_primary"
+                    android:layout_marginTop="4dp" />
+            </LinearLayout>
+
+            <LinearLayout
+                android:id="@+id/openSettingsAction"
+                android:layout_width="0dp"
+                android:layout_height="72dp"
+                android:layout_weight="1"
+                android:orientation="vertical"
+                android:gravity="center"
+                android:background="@drawable/bg_card"
+                android:clickable="true"
+                android:focusable="true"
+                android:padding="10dp">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="⚙️"
+                    android:textSize="18sp" />
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="Settings"
+                    android:textSize="13sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/color_text_primary"
+                    android:layout_marginTop="4dp" />
+            </LinearLayout>
         </LinearLayout>
 
         <ScrollView
@@ -168,7 +265,7 @@
                         <TextView
                             android:id="@+id/keyMetricsTabStats"
                             android:layout_width="0dp"
-                            android:layout_height="32dp"
+                            android:layout_height="@dimen/gym_primary_button_height"
                             android:layout_weight="1"
                             android:gravity="center"
                             android:text="Stats"
@@ -180,7 +277,7 @@
                         <TextView
                             android:id="@+id/keyMetricsTabPrs"
                             android:layout_width="0dp"
-                            android:layout_height="32dp"
+                            android:layout_height="@dimen/gym_primary_button_height"
                             android:layout_weight="1"
                             android:layout_marginStart="8dp"
                             android:gravity="center"
@@ -507,52 +604,6 @@
                         android:background="@drawable/bg_button_primary"
                         android:textColor="@color/color_on_primary"
                         android:layout_marginTop="8dp" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:layout_marginBottom="8dp">
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Account"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/color_primary" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:background="@drawable/bg_card"
-                    android:padding="16dp">
-
-                    <Button
-                        android:id="@+id/settingsButton"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Settings"
-                        android:textAllCaps="false"
-                        android:drawableStart="@android:drawable/ic_menu_manage"
-                        android:drawablePadding="8dp"
-                        android:background="@drawable/bg_button_primary"
-                        android:textColor="@color/color_on_primary"
-                        android:layout_marginBottom="8dp" />
-
-                    <Button
-                        android:id="@+id/logoutButton"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Logout"
-                        android:textAllCaps="false"
-                        android:drawableStart="@android:drawable/ic_lock_power_off"
-                        android:drawablePadding="8dp"
-                        android:background="@drawable/bg_button_primary"
-                        android:textColor="@color/color_on_primary" />
                 </LinearLayout>
 
             </LinearLayout>

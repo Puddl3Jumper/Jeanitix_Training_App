@@ -348,7 +348,7 @@ namespace Gym_App.Activities
                     timelineColumn.AddView(line);
                 }
 
-                var workoutCard = CreateWorkoutCard(workout, 16);
+                var workoutCard = CreateWorkoutCard(workout, 16, index + 1);
 
                 timelineRow.AddView(timelineColumn);
                 timelineRow.AddView(workoutCard);
@@ -368,12 +368,14 @@ namespace Gym_App.Activities
             }
         }
 
-        private LinearLayout CreateWorkoutCard(WorkoutSession workout, int bottomMarginDp)
+        private LinearLayout CreateWorkoutCard(WorkoutSession workout, int bottomMarginDp, int sessionNumber)
         {
             var workoutCard = new LinearLayout(this)
             {
                 Orientation = Orientation.Vertical
             };
+            workoutCard.SetClipToPadding(false);
+            workoutCard.SetClipChildren(false);
 
             var layoutParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MatchParent,
@@ -384,7 +386,7 @@ namespace Gym_App.Activities
             }
             workoutCard.LayoutParameters = layoutParams;
             workoutCard.SetBackgroundResource(Resource.Drawable.bg_card);
-            workoutCard.SetPadding(16, 16, 16, 16);
+            workoutCard.SetPadding(DpToPx(20), DpToPx(18), DpToPx(20), DpToPx(18));
 
             var headerRow = new LinearLayout(this)
             {
@@ -393,6 +395,7 @@ namespace Gym_App.Activities
             headerRow.LayoutParameters = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MatchParent,
                 ViewGroup.LayoutParams.WrapContent);
+            headerRow.SetGravity(GravityFlags.CenterVertical);
 
             var leftColumn = new LinearLayout(this)
             {
@@ -411,41 +414,30 @@ namespace Gym_App.Activities
 
             var titleText = new TextView(this)
             {
-                Text = workout.Name,
-                TextSize = 17
+                Text = $"Session {sessionNumber}",
+                TextSize = 18
             };
             titleText.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.color_primary)));
             titleText.SetTypeface(null, Android.Graphics.TypefaceStyle.Bold);
 
-            var dateText = new TextView(this)
-            {
-                Text = workout.StartTime.ToString("MMM dd, yyyy • HH:mm", CultureInfo.InvariantCulture),
-                TextSize = 13
-            };
-            dateText.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.color_text_secondary)));
-            dateText.SetPadding(0, DpToPx(4), 0, 0);
-
             var durationText = new TextView(this)
             {
-                Text = $"Duration: {GetDurationDisplay(workout)}",
-                TextSize = 13
+                Text = GetDurationDisplay(workout),
+                TextSize = 14
             };
             durationText.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.color_text_primary)));
             durationText.SetTypeface(null, TypefaceStyle.Bold);
+            durationText.SetBackgroundResource(Resource.Drawable.bg_log_tab_inactive);
+            durationText.SetPadding(DpToPx(14), DpToPx(6), DpToPx(14), DpToPx(6));
 
-            var metricText = new TextView(this)
-            {
-                Text = GetWorkoutMetricText(workout),
-                TextSize = 13
-            };
-            metricText.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.color_text_secondary)));
-            metricText.SetPadding(0, DpToPx(4), 0, 0);
+            var durationLp = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.WrapContent,
+                ViewGroup.LayoutParams.WrapContent);
+            durationLp.SetMargins(0, 0, 0, 0);
+            durationText.LayoutParameters = durationLp;
 
             leftColumn.AddView(titleText);
-            leftColumn.AddView(dateText);
-
             rightColumn.AddView(durationText);
-            rightColumn.AddView(metricText);
 
             headerRow.AddView(leftColumn);
             headerRow.AddView(rightColumn);
@@ -456,32 +448,53 @@ namespace Gym_App.Activities
                 if (exercise.Exercise == null)
                     continue;
 
-                var exerciseText = new TextView(this)
+                var exerciseName = exercise.Exercise.Name;
+                var setCount = exercise.Sets.Count;
+                var totalReps = exercise.Sets.Sum(s => s.Reps);
+                var maxWeight = setCount == 0 ? 0 : exercise.Sets.Max(s => s.Weight);
+                var unit = exercise.Sets.FirstOrDefault()?.WeightUnit ?? "kg";
+
+                var exerciseNameText = new TextView(this)
                 {
-                    Text = $"{GetExerciseIcon(exercise.Exercise.Name)}  {exercise.Exercise.Name}: {exercise.Sets.Count} {(exercise.Sets.Count == 1 ? "set" : "sets")}",
-                    TextSize = 13
+                    Text = $"{GetExerciseIcon(exerciseName)}  {exerciseName}",
+                    TextSize = 16
                 };
-                exerciseText.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.color_text_primary)));
-                exerciseText.SetPadding(DpToPx(4), DpToPx(8), 0, 0);
-                workoutCard.AddView(exerciseText);
+                exerciseNameText.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.color_text_primary)));
+                exerciseNameText.SetTypeface(null, TypefaceStyle.Bold);
+                exerciseNameText.SetPadding(DpToPx(4), DpToPx(10), 0, 0);
+                workoutCard.AddView(exerciseNameText);
+
+                var repInfoText = new TextView(this)
+                {
+                    Text = $"{setCount} set{(setCount == 1 ? string.Empty : "s")} · {totalReps} reps · {maxWeight:0.#} {unit}",
+                    TextSize = 15
+                };
+                repInfoText.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.color_text_secondary)));
+                repInfoText.SetTypeface(null, TypefaceStyle.Bold);
+                repInfoText.SetPadding(DpToPx(24), DpToPx(4), 0, 0);
+                workoutCard.AddView(repInfoText);
             }
 
             var actionsRow = new LinearLayout(this)
             {
                 Orientation = Orientation.Horizontal
             };
-            actionsRow.SetPadding(0, 12, 0, 0);
+            actionsRow.SetClipToPadding(false);
+            actionsRow.SetClipChildren(false);
+            actionsRow.SetPadding(0, DpToPx(12), 0, DpToPx(12));
 
-            var editButton = new Button(this)
+            var pillHeightPx = Resources.GetDimensionPixelSize(Resource.Dimension.gym_primary_button_height);
+
+            var editButton = LayoutInflater
+                .From(this)
+                .Inflate(Resource.Layout.layout_edit_button, actionsRow, false) as Button;
+            if (editButton != null)
+            editButton.Click += (s, e) =>
             {
-                Text = "Edit"
+                var intent = new Intent(this, typeof(WorkoutActivity));
+                intent.PutExtra("workoutId", workout.Id);
+                StartActivity(intent);
             };
-            editButton.SetBackgroundResource(Resource.Drawable.bg_button_primary);
-            editButton.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.color_on_primary)));
-            var editParams = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WrapContent, 1f);
-            editParams.SetMargins(0, 0, 8, 0);
-            editButton.LayoutParameters = editParams;
-            editButton.Click += (s, e) => ShowEditWorkoutDialog(workout);
 
             var moreButton = new TextView(this)
             {
@@ -494,8 +507,12 @@ namespace Gym_App.Activities
             moreButton.Gravity = GravityFlags.Center;
             moreButton.Clickable = true;
             moreButton.Focusable = true;
-            var moreParams = new LinearLayout.LayoutParams(DpToPx(48), ViewGroup.LayoutParams.MatchParent);
-            moreParams.SetMargins(8, 0, 0, 0);
+            moreButton.SetPadding(0, 0, 0, 0);
+            moreButton.SetIncludeFontPadding(false);
+            var moreParams = new LinearLayout.LayoutParams(DpToPx(52), ViewGroup.LayoutParams.WrapContent);
+            moreParams.Width = pillHeightPx;
+            moreParams.Height = pillHeightPx;
+            moreParams.SetMargins(DpToPx(10), 0, 0, DpToPx(2));
             moreButton.LayoutParameters = moreParams;
             moreButton.Click += (s, e) =>
             {
@@ -512,7 +529,11 @@ namespace Gym_App.Activities
                 popup.Show();
             };
 
-            actionsRow.AddView(editButton);
+            if (editButton != null)
+            {
+                editButton.Enabled = workout.Id > 0;
+                actionsRow.AddView(editButton);
+            }
             actionsRow.AddView(moreButton);
             workoutCard.AddView(actionsRow);
 

@@ -23,6 +23,16 @@
     <item name="materialButtonStyle">@style/Widget.GymApp.Button</item>
   </style>
 
+  <style name="Theme.GymApp.Serif" parent="Theme.GymApp">
+    <item name="android:fontFamily">serif</item>
+    <item name="fontFamily">serif</item>
+  </style>
+
+  <style name="Theme.GymApp.Mono" parent="Theme.GymApp">
+    <item name="android:fontFamily">monospace</item>
+    <item name="fontFamily">monospace</item>
+  </style>
+
   <style name="Theme.GymApp.Light" parent="Theme.Material3.Light.NoActionBar">
     <item name="colorPrimary">@color/md_theme_light_primary</item>
     <item name="colorOnPrimary">@color/md_theme_light_onPrimary</item>
@@ -46,18 +56,36 @@
     <item name="materialButtonStyle">@style/Widget.GymApp.Button</item>
   </style>
 
+  <style name="Theme.GymApp.Light.Serif" parent="Theme.GymApp.Light">
+    <item name="android:fontFamily">serif</item>
+    <item name="fontFamily">serif</item>
+  </style>
+
+  <style name="Theme.GymApp.Light.Mono" parent="Theme.GymApp.Light">
+    <item name="android:fontFamily">monospace</item>
+    <item name="fontFamily">monospace</item>
+  </style>
+
   <style name="ThemeOverlay.GymApp.MaterialAlertDialog" parent="ThemeOverlay.Material3.MaterialAlertDialog" />
 
   <style name="Widget.GymApp.Button" parent="Widget.Material3.Button">
     <item name="android:insetLeft">0dp</item>
     <item name="android:insetRight">0dp</item>
-    <item name="android:minHeight">52dp</item>
-    <item name="cornerRadius">16dp</item>
+    <item name="android:insetTop">0dp</item>
+    <item name="android:insetBottom">0dp</item>
+    <item name="android:minHeight">@dimen/gym_primary_button_height</item>
+    <item name="cornerRadius">@dimen/gym_pill_corner_radius</item>
+    <item name="android:background">@drawable/bg_button_primary</item>
+    <item name="android:textColor">@android:color/black</item>
+    <item name="android:elevation">4dp</item>
+    <item name="android:stateListAnimator">@animator/edit_button_elevation</item>
   </style>
 
   <style name="Widget.GymApp.TextInputLayout" parent="Widget.Material3.TextInputLayout.FilledBox">
     <item name="boxBackgroundColor">@color/md_theme_surfaceVariant</item>
     <item name="boxStrokeColor">@color/md_theme_outline</item>
+    <item name="boxStrokeWidth">0dp</item>
+    <item name="boxStrokeWidthFocused">0dp</item>
     <item name="hintTextColor">@color/md_theme_onSurfaceVariant</item>
     <item name="boxCornerRadiusTopStart">16dp</item>
     <item name="boxCornerRadiusTopEnd">16dp</item>
@@ -68,5 +96,15 @@
   <style name="TextAppearance.GymApp.Toolbar.Small" parent="TextAppearance.Material3.TitleLarge">
     <item name="android:textSize">16sp</item>
     <item name="android:textColor">@color/color_text_secondary</item>
+  </style>
+
+  <style name="TextAppearance.GymApp.TopAppBarTitle" parent="TextAppearance.Material3.TitleLarge">
+    <item name="android:textStyle">bold</item>
+  </style>
+
+  <style name="Widget.GymApp.TopAppBar" parent="Widget.Material3.Toolbar">
+    <item name="android:backgroundTint">?attr/colorSurfaceVariant</item>
+    <item name="titleTextAppearance">@style/TextAppearance.GymApp.TopAppBarTitle</item>
+    <item name="titleTextColor">?attr/colorOnSurface</item>
   </style>
 </resources>

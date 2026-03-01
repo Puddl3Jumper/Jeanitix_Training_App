@@ -7,11 +7,10 @@
     android:background="@drawable/bg_screen">
 
     <com.google.android.material.appbar.MaterialToolbar
+        style="@style/Widget.GymApp.TopAppBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:backgroundTint="@color/md_theme_surfaceVariant"
-        app:title="Login"
-        app:titleTextColor="@color/color_text_primary" />
+        app:title="Login" />
 
     <ScrollView
         android:layout_width="match_parent"

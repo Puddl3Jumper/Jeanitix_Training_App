@@ -14,6 +14,7 @@
 
   <ItemGroup>
     <Compile Include="..\Gym_App\Data\GymDatabase.cs" Link="Data\GymDatabase.cs" />
+    <Compile Include="..\Gym_App\Data\WorkoutCloudSyncService.cs" Link="Data\WorkoutCloudSyncService.cs" />
     <Compile Include="..\Gym_App\Models\Exercise.cs" Link="Models\Exercise.cs" />
     <Compile Include="..\Gym_App\Models\WorkoutExercise.cs" Link="Models\WorkoutExercise.cs" />
     <Compile Include="..\Gym_App\Models\WorkoutSession.cs" Link="Models\WorkoutSession.cs" />

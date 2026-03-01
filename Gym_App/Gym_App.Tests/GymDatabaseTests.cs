@@ -107,6 +107,28 @@ public class GymDatabaseTests
     }
 
     [Fact]
+    public void UpdateWorkoutSet_UpdatesRepsWeightAndNotes()
+    {
+        RunInIsolatedDataHome(database =>
+        {
+            var workout = database.CreateWorkoutSession("Edit Set Day");
+            var exercise = database.GetAllExercises().First(e => e.Name == "Push-ups");
+            database.AddExerciseToWorkout(workout.Id, exercise.Id);
+
+            var workoutExercise = database.GetWorkoutSession(workout.Id)!.Exercises.Single();
+            database.AddSetToExercise(workoutExercise.Id, reps: 16, weight: 0, notes: "initial");
+            var set = database.GetWorkoutSession(workout.Id)!.Exercises.Single().Sets.Single();
+
+            database.UpdateWorkoutSet(set.Id, reps: 20, weight: 0, notes: "updated");
+
+            var updated = database.GetWorkoutSession(workout.Id)!.Exercises.Single().Sets.Single();
+            Assert.Equal(20, updated.Reps);
+            Assert.Equal(0, updated.Weight);
+            Assert.Equal("updated", updated.Notes);
+        });
+    }
+
+    [Fact]
     public void ProgressAndPr_ReturnExpectedValues()
     {
         RunInIsolatedDataHome(database =>
@@ -134,7 +156,66 @@ public class GymDatabaseTests
         });
     }
 
+    [Fact]
+    public void WorkoutCloudSyncPayload_IncludesExercisesAndSets_AndRoundTrips()
+    {
+        var payload = RunInIsolatedDataHome(database =>
+        {
+            var workout = database.CreateWorkoutSession("Push Day");
+            var exercise = database.GetAllExercises().First(e => e.Name == "Bench Press");
+
+            database.AddExerciseToWorkout(workout.Id, exercise.Id);
+            var workoutExercise = database.GetWorkoutSession(workout.Id)!.Exercises.Single();
+
+            database.AddSetToExercise(workoutExercise.Id, reps: 8, weight: 80, notes: "Top set", loopNumber: 1, weightUnit: "kg");
+            database.CompleteWorkout(workout.Id);
+
+            var exported = database.ExportWorkoutSyncPayload();
+
+            var session = Assert.Single(exported.WorkoutSessions);
+            Assert.True(session.IsCompleted);
+            var exportedExercise = Assert.Single(session.Exercises);
+            var exportedSet = Assert.Single(exportedExercise.Sets);
+
+            Assert.Equal(8, exportedSet.Reps);
+            Assert.Equal(80, exportedSet.Weight);
+            Assert.Equal("kg", exportedSet.WeightUnit);
+            Assert.Equal("Top set", exportedSet.Notes);
+            Assert.Equal("Bench Press", exportedExercise.Exercise?.Name);
+
+            return exported;
+        });
+
+        RunInIsolatedDataHome(database =>
+        {
+            var applied = database.TryApplyRemoteWorkoutSync(payload);
+            Assert.True(applied);
+
+            var history = database.GetWorkoutHistory(limit: 10);
+            var saved = Assert.Single(history);
+            Assert.Single(saved.Exercises);
+            Assert.Single(saved.Exercises[0].Sets);
+
+            var set = saved.Exercises[0].Sets[0];
+            Assert.Equal(8, set.Reps);
+            Assert.Equal(80, set.Weight);
+            Assert.Equal("kg", set.WeightUnit);
+            Assert.Equal("Top set", set.Notes);
+            Assert.Equal("Bench Press", saved.Exercises[0].Exercise?.Name);
+        });
+    }
+
+
     private static void RunInIsolatedDataHome(Action<GymDatabase> action)
+    {
+        RunInIsolatedDataHome(database =>
+        {
+            action(database);
+            return 0;
+        });
+    }
+
+    private static T RunInIsolatedDataHome<T>(Func<GymDatabase, T> action)
     {
         var originalHome = Environment.GetEnvironmentVariable("HOME");
         var originalXdg = Environment.GetEnvironmentVariable("XDG_DATA_HOME");
@@ -149,7 +230,7 @@ public class GymDatabaseTests
 
             var database = new GymDatabase();
             ResetDatabaseState(database);
-            action(database);
+            return action(database);
         }
         finally
         {

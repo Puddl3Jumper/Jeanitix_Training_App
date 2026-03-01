@@ -7,11 +7,10 @@
     android:background="@drawable/bg_screen">
 
     <com.google.android.material.appbar.MaterialToolbar
+        style="@style/Widget.GymApp.TopAppBar"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:backgroundTint="@color/md_theme_surfaceVariant"
-        app:title="Create Account"
-        app:titleTextColor="@color/color_text_primary" />
+        app:title="Create Account" />
 
     <ScrollView
         android:layout_width="match_parent"
@@ -103,7 +102,8 @@
             android:textStyle="bold"
             android:textColor="@color/color_on_primary"
             android:background="@drawable/bg_button_primary"
-            android:minHeight="62dp"
+            android:minHeight="@dimen/gym_primary_button_height"
+            android:stateListAnimator="@animator/edit_button_elevation"
             android:gravity="center" />
 
     </LinearLayout>

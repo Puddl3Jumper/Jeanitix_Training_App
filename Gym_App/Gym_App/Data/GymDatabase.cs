@@ -20,6 +20,8 @@ namespace Gym_App.Data
         private readonly string _currentUserKey;
         private const string GuestUserKey = "__guest__";
 
+        internal bool IsGuestUser => _currentUserKey == GuestUserKey;
+
         public GymDatabase()
         {
             _dataPath = Path.Combine(
@@ -40,6 +42,107 @@ namespace Gym_App.Data
             MigrateGuestSessionsToCurrentUser();
             MigrateLegacySessionsToCurrentUser();
             InitializeDefaultExercises();
+
+#if ANDROID
+            WorkoutCloudSyncService.TryScheduleInitialPull(this);
+#endif
+        }
+
+        internal WorkoutCloudSyncService.WorkoutSyncPayload ExportWorkoutSyncPayload()
+        {
+            var payload = new WorkoutCloudSyncService.WorkoutSyncPayload
+            {
+                UpdatedAtUnixSeconds = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+                WorkoutSessions = CurrentUserSessions().Select(CloneWorkoutSessionForSync).ToList(),
+                NextWorkoutSessionId = _nextWorkoutSessionId,
+                NextWorkoutExerciseId = _nextWorkoutExerciseId,
+                NextWorkoutSetId = _nextWorkoutSetId
+            };
+
+            return payload;
+        }
+
+        internal bool TryApplyRemoteWorkoutSync(WorkoutCloudSyncService.WorkoutSyncPayload payload)
+        {
+            if (payload == null)
+                return false;
+
+            // Replace only the current user's sessions; keep other users/guest data intact.
+            var incoming = payload.WorkoutSessions ?? new List<WorkoutSession>();
+            foreach (var session in incoming)
+            {
+                session.UserKey = _currentUserKey;
+                foreach (var workoutExercise in session.Exercises ?? new List<WorkoutExercise>())
+                {
+                    if (workoutExercise.Exercise == null)
+                    {
+                        workoutExercise.Exercise = _exercises.FirstOrDefault(e => e.Id == workoutExercise.ExerciseId);
+                    }
+                }
+            }
+
+            _workoutSessions = _workoutSessions
+                .Where(s => !IsCurrentUserSession(s))
+                .Concat(incoming)
+                .ToList();
+
+            // Recompute next IDs to avoid collisions.
+            _nextWorkoutSessionId = Math.Max(payload.NextWorkoutSessionId, (_workoutSessions.Count == 0 ? 1 : _workoutSessions.Max(s => s.Id) + 1));
+
+            var maxWorkoutExerciseId = _workoutSessions
+                .SelectMany(s => s.Exercises ?? new List<WorkoutExercise>())
+                .Select(e => e.Id)
+                .DefaultIfEmpty(0)
+                .Max();
+            _nextWorkoutExerciseId = Math.Max(payload.NextWorkoutExerciseId, maxWorkoutExerciseId + 1);
+
+            var maxWorkoutSetId = _workoutSessions
+                .SelectMany(s => s.Exercises ?? new List<WorkoutExercise>())
+                .SelectMany(e => e.Sets ?? new List<WorkoutSet>())
+                .Select(s => s.Id)
+                .DefaultIfEmpty(0)
+                .Max();
+            _nextWorkoutSetId = Math.Max(payload.NextWorkoutSetId, maxWorkoutSetId + 1);
+
+            SaveData(triggerCloudSync: false);
+            return true;
+        }
+
+        private static WorkoutSession CloneWorkoutSessionForSync(WorkoutSession session)
+        {
+            // Keep payload small and deterministic; avoid computed properties.
+            return new WorkoutSession
+            {
+                Id = session.Id,
+                UserKey = session.UserKey,
+                Name = session.Name,
+                StartTime = session.StartTime,
+                EndTime = session.EndTime,
+                Notes = session.Notes,
+                IsCompleted = session.IsCompleted,
+                Exercises = (session.Exercises ?? new List<WorkoutExercise>()).Select(e => new WorkoutExercise
+                {
+                    Id = e.Id,
+                    WorkoutSessionId = e.WorkoutSessionId,
+                    ExerciseId = e.ExerciseId,
+                    Exercise = e.Exercise,
+                    OrderIndex = e.OrderIndex,
+                    CircuitName = e.CircuitName,
+                    CircuitOrder = e.CircuitOrder,
+                    Sets = (e.Sets ?? new List<WorkoutSet>()).Select(s => new WorkoutSet
+                    {
+                        Id = s.Id,
+                        WorkoutExerciseId = s.WorkoutExerciseId,
+                        SetNumber = s.SetNumber,
+                        LoopNumber = s.LoopNumber,
+                        Reps = s.Reps,
+                        Weight = s.Weight,
+                        WeightUnit = s.WeightUnit,
+                        Completed = s.Completed,
+                        Notes = s.Notes
+                    }).ToList()
+                }).ToList()
+            };
         }
 
         private string ResolveCurrentUserKey()
@@ -138,7 +241,7 @@ namespace Gym_App.Data
                     new Exercise { Id = _nextExerciseId++, Name = "Lateral Raises", MuscleGroup = "Shoulders", Description = "Dumbbell lateral raises", IsCustom = false },
                     
                     new Exercise { Id = _nextExerciseId++, Name = "Bicep Curls", MuscleGroup = "Arms", Description = "Dumbbell or barbell curls", IsCustom = false },
-                    new Exercise { Id = _nextExerciseId++, Name = "Tricep Dips", MuscleGroup = "Arms", Description = "Bodyweight or weighted dips", IsCustom = false },
+                    new Exercise { Id = _nextExerciseId++, Name = "Triceps Dips", MuscleGroup = "Arms", Description = "Bodyweight or weighted dips", IsCustom = false },
                     
                     new Exercise { Id = _nextExerciseId++, Name = "Plank", MuscleGroup = "Core", Description = "Front plank hold", IsCustom = false },
                     new Exercise { Id = _nextExerciseId++, Name = "Crunches", MuscleGroup = "Core", Description = "Standard abdominal crunches", IsCustom = false },
@@ -498,7 +601,7 @@ namespace Gym_App.Data
             return CurrentUserSessions().FirstOrDefault(s => s.Id == id);
         }
 
-        private void SaveData()
+        private void SaveData(bool triggerCloudSync = true)
         {
             try
             {
@@ -514,6 +617,13 @@ namespace Gym_App.Data
 
                 var json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
                 File.WriteAllText(Path.Combine(_dataPath, "gym_data.json"), json);
+
+#if ANDROID
+                if (triggerCloudSync && !IsGuestUser)
+                {
+                    WorkoutCloudSyncService.NotifyLocalWorkoutsChanged(this);
+                }
+#endif
             }
             catch (Exception ex)
             {

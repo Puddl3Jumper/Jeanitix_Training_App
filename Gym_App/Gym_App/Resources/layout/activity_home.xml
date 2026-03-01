@@ -4,7 +4,6 @@
     android:layout_width="match_parent"
     android:layout_height="match_parent"
     android:orientation="vertical"
-    android:fontFamily="sans-serif"
     android:background="@drawable/bg_screen"
     android:fitsSystemWindows="true">
 
@@ -18,86 +17,146 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:padding="24dp">
-
-            <TextView
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="@string/home_today_workout"
-                android:textSize="24sp"
-                android:textStyle="bold"
-                android:textColor="@color/color_primary"
-                android:layout_marginTop="16dp"
-                android:layout_marginBottom="16dp" />
+            android:paddingStart="24dp"
+            android:paddingEnd="24dp"
+            android:paddingTop="16dp"
+            android:paddingBottom="24dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:orientation="vertical"
-                android:background="@drawable/bg_card"
-                android:elevation="2dp"
-                android:padding="20dp">
+                android:background="@drawable/bg_card_today_outer"
+                android:elevation="4dp"
+                android:paddingStart="16dp"
+                android:paddingEnd="16dp"
+                android:paddingTop="24dp"
+                android:paddingBottom="24dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/home_today_workout"
+                    android:textSize="20sp"
+                    android:fontFamily="sans-serif"
+                    android:textFontWeight="900"
+                    android:textColor="@color/md_theme_onSurface"
+                    android:layout_marginBottom="16dp" />
 
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="horizontal"
-                    android:layout_marginTop="14dp">
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_exercise_section"
+                    android:paddingStart="16dp"
+                    android:paddingEnd="16dp"
+                    android:paddingTop="12dp"
+                    android:paddingBottom="12dp"
+                    android:layout_marginBottom="12dp">
 
                     <LinearLayout
-                        android:layout_width="0dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical"
-                        android:gravity="center">
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Duration" android:textColor="@color/color_text_secondary" android:textSize="13sp" android:textStyle="bold" />
-                        <TextView android:id="@+id/statDurationText" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="00:00" android:textColor="@color/color_text_primary" android:textSize="24sp" android:textStyle="bold" />
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical">
+
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_fitness_center"
+                            android:tint="@color/color_text_primary"
+                            android:contentDescription="@string/home_today_workout" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:layout_marginStart="8dp">
+
+                            <TextView
+                                android:id="@+id/upperBodyLabelText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Upper Body"
+                                android:textColor="@color/md_theme_onSurfaceVariant"
+                                android:textSize="16sp"
+                                android:fontFamily="sans-serif"
+                                android:textFontWeight="600" />
+
+                            <TextView
+                                android:id="@+id/upperBodyPlanText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:textColor="@color/color_primary"
+                                android:textSize="14sp"
+                                android:fontFamily="sans-serif"
+                                android:textFontWeight="400"
+                                android:text="Biceps/Triceps" />
+                        </LinearLayout>
                     </LinearLayout>
 
                     <LinearLayout
-                        android:layout_width="0dp"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical"
-                        android:gravity="center">
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Sets" android:textColor="@color/color_text_secondary" android:textSize="13sp" android:textStyle="bold" />
-                        <TextView android:id="@+id/statSetsText" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0" android:textColor="@color/color_text_primary" android:textSize="24sp" android:textStyle="bold" />
-                    </LinearLayout>
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginTop="12dp">
 
-                    <LinearLayout
-                        android:layout_width="0dp"
-                        android:layout_height="wrap_content"
-                        android:layout_weight="1"
-                        android:orientation="vertical"
-                        android:gravity="center">
-                        <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Calories" android:textColor="@color/color_text_secondary" android:textSize="13sp" android:textStyle="bold" />
-                        <TextView android:id="@+id/statCaloriesText" android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="0 kcal" android:textColor="@color/color_text_primary" android:textSize="24sp" android:textStyle="bold" />
+                        <ImageView
+                            android:layout_width="20dp"
+                            android:layout_height="20dp"
+                            android:src="@drawable/ic_accessibility_new"
+                            android:tint="@color/color_text_primary"
+                            android:contentDescription="@string/home_today_workout" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical"
+                            android:layout_marginStart="8dp">
+
+                            <TextView
+                                android:id="@+id/lowerBodyLabelText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="Lower Body"
+                                android:textColor="@color/md_theme_onSurfaceVariant"
+                                android:textSize="16sp"
+                                android:fontFamily="sans-serif"
+                                android:textFontWeight="600" />
+
+                            <TextView
+                                android:id="@+id/lowerBodyPlanText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:layout_marginTop="2dp"
+                                android:textColor="@color/color_primary"
+                                android:textSize="14sp"
+                                android:fontFamily="sans-serif"
+                                android:textFontWeight="400"
+                                android:text="Abs" />
+                        </LinearLayout>
                     </LinearLayout>
                 </LinearLayout>
 
-                <TextView
-                    android:id="@+id/contextualStatsText"
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:layout_marginTop="10dp"
-                    android:text="Last session: --"
-                    android:textColor="@color/color_text_secondary"
-                    android:textSize="13sp" />
-
-                <com.google.android.material.button.MaterialButton
+                <Button
                     android:id="@+id/startWorkoutHomeButton"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:minHeight="60dp"
+                    android:minHeight="@dimen/gym_primary_button_height"
                     android:text="@string/home_start_workout"
                     android:tooltipText="@string/home_start_workout_tooltip"
                     android:textAllCaps="false"
-                    android:textStyle="bold"
-                    android:textSize="18sp"
-                    android:textColor="@color/color_on_primary"
+                    android:textSize="16sp"
+                    android:textColor="@android:color/white"
                     android:background="@drawable/bg_button_primary"
-                    android:elevation="6dp"
-                    android:layout_marginTop="18dp" />
+                    android:stateListAnimator="@animator/edit_button_elevation"
+                    android:elevation="2dp"
+                    android:fontFamily="sans-serif-medium"
+                    android:layout_marginTop="14dp" />
             </LinearLayout>
 
             <LinearLayout
@@ -112,36 +171,52 @@
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:text="Weekly Progress"
+                    android:text="This week"
                     android:textColor="@color/color_text_primary"
                     android:textStyle="bold"
-                    android:textSize="15sp" />
+                    android:textSize="15sp"
+                    android:layout_marginBottom="10dp" />
 
-                <TextView
-                    android:id="@+id/weeklyProgressText"
+                <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="4dp"
-                    android:text="You've completed 0/4 workouts this week"
-                    android:textColor="@color/color_text_secondary"
-                    android:textSize="13sp" />
+                    android:orientation="horizontal"
+                    android:gravity="center_vertical"
+                    android:layout_marginBottom="6dp">
 
-                <ProgressBar
-                    android:id="@+id/weeklyProgressBar"
-                    style="?android:attr/progressBarStyleHorizontal"
+                    <TextView
+                        android:id="@+id/weeklyAvgValueText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:text="0"
+                        android:textColor="@color/color_text_primary"
+                        android:textStyle="bold"
+                        android:textSize="44sp" />
+
+                    <TextView
+                        android:id="@+id/weeklyAvgLabelText"
+                        android:layout_width="wrap_content"
+                        android:layout_height="wrap_content"
+                        android:layout_marginStart="10dp"
+                        android:text="mins per day (avg)"
+                        android:textColor="@color/color_text_primary"
+                        android:textSize="14sp" />
+
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/weeklyGoalSummaryText"
                     android:layout_width="match_parent"
-                    android:layout_height="4dp"
-                    android:layout_marginTop="10dp"
-                    android:indeterminate="false"
-                    android:max="100"
-                    android:progress="0"
-                    android:progressDrawable="@drawable/bg_weekly_progress" />
+                    android:layout_height="wrap_content"
+                    android:text="You hit your goal on 0 days, and trained a total of 0h"
+                    android:textColor="@color/color_text_secondary"
+                    android:textSize="13sp"
+                    android:layout_marginBottom="10dp" />
 
                 <LinearLayout
                     android:id="@+id/weeklyProgressChart"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:layout_marginTop="12dp"
                     android:orientation="horizontal" />
             </LinearLayout>
 
@@ -175,72 +250,123 @@
             <LinearLayout
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:orientation="horizontal"
+                android:orientation="vertical"
+                android:background="@drawable/bg_card"
+                android:elevation="2dp"
+                android:padding="16dp"
                 android:layout_marginTop="16dp">
 
-                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center">
-                    <ImageView
-                        android:id="@+id/quickLogButton"
-                        android:layout_width="52dp"
-                        android:layout_height="52dp"
-                        android:minWidth="48dp"
-                        android:minHeight="48dp"
-                        android:padding="10dp"
-                        android:background="@drawable/bg_glass_icon"
-                        android:src="@drawable/ic_quick_log_outline"
-                        android:tint="@color/color_text_primary"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:contentDescription="Quick Log" />
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Quick Log" android:textColor="@color/color_text_secondary" android:textSize="12sp" android:layout_marginTop="6dp" />
-                </LinearLayout>
-                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center">
-                    <ImageView
-                        android:id="@+id/historyButton"
-                        android:layout_width="52dp"
-                        android:layout_height="52dp"
-                        android:minWidth="48dp"
-                        android:minHeight="48dp"
-                        android:padding="10dp"
-                        android:background="@drawable/bg_glass_icon"
-                        android:src="@drawable/ic_history_outline"
-                        android:tint="@color/color_text_primary"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:contentDescription="History" />
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="History" android:textColor="@color/color_text_secondary" android:textSize="12sp" android:layout_marginTop="6dp" />
-                </LinearLayout>
-                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center">
-                    <ImageView
-                        android:id="@+id/plansButton"
-                        android:layout_width="52dp"
-                        android:layout_height="52dp"
-                        android:minWidth="48dp"
-                        android:minHeight="48dp"
-                        android:padding="10dp"
-                        android:background="@drawable/bg_glass_icon"
-                        android:src="@drawable/ic_plans_outline"
-                        android:tint="@color/color_text_primary"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:contentDescription="Plans" />
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Plans" android:textColor="@color/color_text_secondary" android:textSize="12sp" android:layout_marginTop="6dp" />
-                </LinearLayout>
-                <LinearLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:orientation="vertical" android:gravity="center">
-                    <ImageView
-                        android:id="@+id/bodyStatsButton"
-                        android:layout_width="52dp"
-                        android:layout_height="52dp"
-                        android:minWidth="48dp"
-                        android:minHeight="48dp"
-                        android:padding="10dp"
-                        android:background="@drawable/bg_glass_icon"
-                        android:src="@drawable/ic_body_stats_outline"
-                        android:tint="@color/color_text_primary"
-                        android:clickable="true"
-                        android:focusable="true"
-                        android:contentDescription="Body Stats" />
-                    <TextView android:layout_width="wrap_content" android:layout_height="wrap_content" android:text="Body Stats" android:textColor="@color/color_text_secondary" android:textSize="12sp" android:layout_marginTop="6dp" />
+                <LinearLayout
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:orientation="horizontal"
+                    android:weightSum="4"
+                    android:baselineAligned="false">
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center">
+                        <ImageView
+                            android:id="@+id/quickLogButton"
+                            android:layout_width="@dimen/gym_quick_action_box_size"
+                            android:layout_height="@dimen/gym_quick_action_box_size"
+                            android:padding="@dimen/gym_quick_action_box_padding"
+                            android:scaleType="centerInside"
+                            android:src="@drawable/ic_quick_log_outline"
+                            android:tint="@color/color_text_primary"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:contentDescription="Quick Log" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Quick Log"
+                            android:textColor="@color/color_text_secondary"
+                            android:textSize="12sp"
+                            android:layout_marginTop="6dp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center">
+                        <ImageView
+                            android:id="@+id/historyButton"
+                            android:layout_width="@dimen/gym_quick_action_box_size"
+                            android:layout_height="@dimen/gym_quick_action_box_size"
+                            android:padding="@dimen/gym_quick_action_box_padding"
+                            android:scaleType="centerInside"
+                            android:src="@drawable/ic_history_outline"
+                            android:tint="@color/color_text_primary"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:contentDescription="History" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="History"
+                            android:textColor="@color/color_text_secondary"
+                            android:textSize="12sp"
+                            android:layout_marginTop="6dp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center">
+                        <ImageView
+                            android:id="@+id/plansButton"
+                            android:layout_width="@dimen/gym_quick_action_box_size"
+                            android:layout_height="@dimen/gym_quick_action_box_size"
+                            android:padding="@dimen/gym_quick_action_box_padding"
+                            android:scaleType="centerInside"
+                            android:src="@drawable/ic_plans_outline"
+                            android:tint="@color/color_text_primary"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:contentDescription="Plans" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Plans"
+                            android:textColor="@color/color_text_secondary"
+                            android:textSize="12sp"
+                            android:layout_marginTop="6dp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="0dp"
+                        android:layout_height="wrap_content"
+                        android:layout_weight="1"
+                        android:orientation="vertical"
+                        android:gravity="center">
+                        <ImageView
+                            android:id="@+id/bodyStatsButton"
+                            android:layout_width="@dimen/gym_quick_action_box_size"
+                            android:layout_height="@dimen/gym_quick_action_box_size"
+                            android:padding="@dimen/gym_quick_action_box_padding"
+                            android:scaleType="centerInside"
+                            android:src="@drawable/ic_body_stats_outline"
+                            android:tint="@color/color_text_primary"
+                            android:clickable="true"
+                            android:focusable="true"
+                            android:contentDescription="Body Stats" />
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="Body Stats"
+                            android:textColor="@color/color_text_secondary"
+                            android:textSize="12sp"
+                            android:layout_marginTop="6dp" />
+                    </LinearLayout>
+
                 </LinearLayout>
             </LinearLayout>
 

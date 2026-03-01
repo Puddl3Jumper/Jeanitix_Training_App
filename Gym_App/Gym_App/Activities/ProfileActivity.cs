@@ -200,7 +200,7 @@ namespace Gym_App.Activities
             var avatarUriString = prefs?.GetString(AvatarUriKey, string.Empty) ?? string.Empty;
 
             if (greetingValue != null)
-                greetingValue.Text = GetGreetingText();
+                greetingValue.Text = BuildGreetingLine(fullName);
 
             if (nameValue != null)
                 nameValue.Text = string.IsNullOrWhiteSpace(fullName) ? "Nickname not set" : FormatDisplayName(fullName);
@@ -310,6 +310,9 @@ namespace Gym_App.Activities
         {
             var headerArea = FindViewById<LinearLayout>(Resource.Id.profileHeaderArea);
             var editButton = FindViewById<ImageButton>(Resource.Id.editProfileButton);
+            var setPhotoAction = FindViewById<View>(Resource.Id.setPhotoAction);
+            var editInfoAction = FindViewById<View>(Resource.Id.editInfoAction);
+            var openSettingsAction = FindViewById<View>(Resource.Id.openSettingsAction);
 
             if (headerArea != null)
             {
@@ -319,6 +322,21 @@ namespace Gym_App.Activities
             if (editButton != null)
             {
                 editButton.Click += OnEditProfileClick;
+            }
+
+            if (setPhotoAction != null)
+            {
+                setPhotoAction.Click += (_, __) => LaunchAvatarPicker();
+            }
+
+            if (editInfoAction != null)
+            {
+                editInfoAction.Click += OnEditProfileClick;
+            }
+
+            if (openSettingsAction != null)
+            {
+                openSettingsAction.Click += (_, __) => StartActivity(new Intent(this, typeof(SettingsActivity)));
             }
         }
 
@@ -365,6 +383,23 @@ namespace Gym_App.Activities
             if (hour < 18)
                 return "Good afternoon,";
             return "Good evening,";
+        }
+
+        private static string BuildGreetingLine(string fullName)
+        {
+            var greeting = GetGreetingText();
+
+            var name = (fullName ?? string.Empty).Trim();
+            if (name.Length == 0)
+                return $"{greeting} User !";
+
+            // Prefer first name for the greeting line.
+            var first = name.Split(new[] { ' ' }, StringSplitOptions.RemoveEmptyEntries).FirstOrDefault() ?? name;
+            first = first.Trim();
+            if (first.Length == 0)
+                first = "User";
+
+            return $"{greeting} {FormatDisplayName(first)}";
         }
 
         private static string FormatDisplayName(string fullName)
@@ -499,8 +534,6 @@ namespace Gym_App.Activities
             var logWeightButton = FindViewById(Resource.Id.quickLogWeightButton);
             var viewHistoryButton = FindViewById(Resource.Id.quickViewHistoryButton);
             var viewProgressButton = FindViewById(Resource.Id.quickViewProgressButton);
-            var settingsButton = FindViewById(Resource.Id.settingsButton);
-            var logoutButton = FindViewById(Resource.Id.logoutButton);
 
             if (startWorkoutButton != null)
             {
@@ -529,27 +562,6 @@ namespace Gym_App.Activities
             if (logWeightButton != null)
             {
                 logWeightButton.Click += (s, e) => ShowLogWeightDialog();
-            }
-
-            if (settingsButton != null)
-            {
-                settingsButton.Click += (s, e) =>
-                {
-                    StartActivity(new Intent(this, typeof(SettingsActivity)));
-                };
-            }
-
-            if (logoutButton != null)
-            {
-                logoutButton.Click += (s, e) =>
-                {
-                    AuthSessionStore.Clear(this);
-
-                    var intent = new Intent(this, typeof(LoginActivity));
-                    intent.SetFlags(ActivityFlags.NewTask | ActivityFlags.ClearTask);
-                    StartActivity(intent);
-                    Finish();
-                };
             }
         }
 

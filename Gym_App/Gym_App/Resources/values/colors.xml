@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <color name="md_theme_primary">#F59E0B</color>
-  <color name="md_theme_primary_pressed">#F59E0B</color>
+  <color name="md_theme_primary">#F4511E</color>
+  <color name="md_theme_primary_pressed">#E64A19</color>
   <color name="md_theme_onPrimary">#000000</color>
   <color name="md_theme_primaryContainer">#432800</color>
   <color name="md_theme_onPrimaryContainer">#FFDFB3</color>
@@ -13,12 +13,14 @@
   <color name="md_theme_background_deep">#1E1E1E</color>
   <color name="md_theme_onBackground">#FFFFFF</color>
   <color name="md_theme_surface">#1E1E1E</color>
+  <color name="md_theme_surface_container_low">#1E1E24</color>
+  <color name="md_theme_surface_card_outer">#23232B</color>
   <color name="md_theme_onSurface">#FFFFFF</color>
   <color name="md_theme_surfaceVariant">#49454F</color>
-  <color name="md_theme_onSurfaceVariant">#9E9E9E</color>
+  <color name="md_theme_onSurfaceVariant">#E0E0E0</color>
   <color name="md_theme_outline">#49454F</color>
 
-  <color name="md_theme_light_primary">#F59E0B</color>
+  <color name="md_theme_light_primary">#F4511E</color>
   <color name="md_theme_light_onPrimary">#000000</color>
   <color name="md_theme_light_primaryContainer">#FFDFB3</color>
   <color name="md_theme_light_onPrimaryContainer">#432800</color>
@@ -31,10 +33,12 @@
   <color name="md_theme_light_surface">#FFFFFF</color>
   <color name="md_theme_light_onSurface">#1E1E1E</color>
   <color name="md_theme_light_surfaceVariant">#E6E6E6</color>
-  <color name="md_theme_light_onSurfaceVariant">#9E9E9E</color>
+  <color name="md_theme_light_onSurfaceVariant">#E0E0E0</color>
   <color name="md_theme_light_outline">#BDBDBD</color>
 
   <color name="color_surface">@color/md_theme_surface</color>
+  <color name="color_surface_container_low">@color/md_theme_surface_container_low</color>
+  <color name="color_surface_card_outer">@color/md_theme_surface_card_outer</color>
   <color name="color_surface_alt">@color/md_theme_surfaceVariant</color>
   <color name="color_primary">@color/md_theme_primary</color>
   <color name="color_primary_tint">@color/md_theme_outline</color>
@@ -51,7 +55,22 @@
   <color name="bottom_nav_inactive">#FF9E9E9E</color>
 
   <!-- Selected state: primary + 20% alpha -->
-  <color name="bottom_nav_selected_bg">#33F59E0B</color>
+  <color name="bottom_nav_selected_bg">#33F4511E</color>
   
   <color name="icon_background">#1E1E1E</color>
+  <!-- Specific brand-orange for the EDIT pill button (kept local to that control). -->
+  <color name="edit_button_orange">#FF9800</color>
+  <color name="edit_button_orange_pressed">#F57C00</color>
+
+  <!-- EDIT pill: keep extra colors for earlier experiments (unused now), safe to leave. -->
+  <color name="edit_button_grad_start">#FFB74D</color>
+  <color name="edit_button_grad_end">#FF9800</color>
+  <color name="edit_button_grad_start_pressed">#FFA726</color>
+  <color name="edit_button_grad_end_pressed">#F57C00</color>
+  <color name="edit_button_highlight">#26FFFFFF</color>
+  <color name="edit_button_shade">#14000000</color>
+  <color name="edit_button_shadow">#66000000</color>
+
+  <color name="home_cta_orange">#FF5722</color>
+  <color name="home_cta_orange_pressed">#E64A19</color>
 </resources>

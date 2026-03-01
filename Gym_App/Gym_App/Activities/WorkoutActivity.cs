@@ -3,6 +3,8 @@ using Android.Widget;
 using Android.Content;
 using Android.Graphics;
 using Android.Graphics.Drawables;
+using Android.Text;
+using Android.Text.Style;
 using Gym_App.Data;
 using Gym_App.Models;
 using Google.Android.Material.Dialog;
@@ -14,7 +16,6 @@ namespace Gym_App.Activities
     {
         private GymDatabase? _database;
         private WorkoutSession? _currentWorkout;
-        private TextView? _workoutNameText;
         private TextView? _workoutTimeText;
         private TextView? _workoutDateText;
         private LinearLayout? _exercisesContainer;
@@ -28,7 +29,6 @@ namespace Gym_App.Activities
 
             _database = new GymDatabase();
             
-            _workoutNameText = FindViewById<TextView>(Resource.Id.workoutNameText);
             _workoutTimeText = FindViewById<TextView>(Resource.Id.workoutTimeText);
             _workoutDateText = FindViewById<TextView>(Resource.Id.workoutDateText);
             _exercisesContainer = FindViewById<LinearLayout>(Resource.Id.exercisesContainer);
@@ -137,10 +137,9 @@ namespace Gym_App.Activities
 
         private void UpdateUI()
         {
-            if (_currentWorkout == null || _workoutNameText == null || _exercisesContainer == null)
+            if (_currentWorkout == null || _exercisesContainer == null)
                 return;
 
-            _workoutNameText.Text = _currentWorkout.Name;
             if (_workoutDateText != null)
             {
                 _workoutDateText.Text = $"{_currentWorkout.StartTime:yyyy-MM-dd}";
@@ -216,24 +215,18 @@ namespace Gym_App.Activities
             for (int index = 0; index < workoutExercise.Sets.Count; index++)
             {
                 var set = workoutExercise.Sets[index];
-                string setDisplay = !string.IsNullOrWhiteSpace(workoutExercise.CircuitName)
-                    ? $"Set {set.SetNumber} · Loop {set.LoopNumber}: {set.Reps} reps @ {set.Weight} {set.WeightUnit}"
-                    : $"Set {set.SetNumber}: {set.Reps} reps @ {set.Weight} {set.WeightUnit}";
-
-                if (!string.IsNullOrWhiteSpace(set.Notes))
-                {
-                    setDisplay += $" · Note: {set.Notes}";
-                }
-                setDisplay += "  ✏️  🗑️";
-
                 var setText = new TextView(this)
                 {
-                    Text = setDisplay,
                     TextSize = 16
                 };
+                setText.SetText(BuildStyledSetLine(workoutExercise, set), TextView.BufferType.Spannable);
                 setText.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.color_text_primary)));
                 setText.SetLineSpacing(0f, 1.4f);
                 setText.SetPadding(0, 0, 0, 0);
+
+                    var setId = set.Id;
+                    setText.Click += (_, __) => ShowEditSetDialog(setId);
+                    setText.LongClick += (_, __) => ConfirmDeleteSet(setId);
 
                 var setLayoutParams = new LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.MatchParent,
@@ -291,6 +284,44 @@ namespace Gym_App.Activities
 
             sectionContainer.AddView(exerciseCard);
             _exercisesContainer.AddView(sectionContainer);
+        }
+
+        private ISpannable BuildStyledSetLine(WorkoutExercise workoutExercise, WorkoutSet set)
+        {
+            var setLabel = $"Set {set.SetNumber}";
+            var repsPart = $"{set.Reps} reps";
+            var weightPart = $"{set.Weight} {set.WeightUnit}";
+
+            string core = !string.IsNullOrWhiteSpace(workoutExercise.CircuitName)
+                ? $"{setLabel} · Loop {set.LoopNumber} · {repsPart} · {weightPart}"
+                : $"{setLabel} · {repsPart} · {weightPart}";
+
+            if (!string.IsNullOrWhiteSpace(set.Notes))
+            {
+                core += $" · Note: {set.Notes}";
+            }
+
+            core += "  ✏️  🗑️";
+
+            var spannable = new SpannableString(core);
+
+            void BoldSubstring(string value)
+            {
+                if (string.IsNullOrEmpty(value))
+                    return;
+
+                var start = core.IndexOf(value, StringComparison.Ordinal);
+                if (start < 0)
+                    return;
+
+                spannable.SetSpan(new StyleSpan(TypefaceStyle.Bold), start, start + value.Length, SpanTypes.ExclusiveExclusive);
+            }
+
+            BoldSubstring(setLabel);
+            BoldSubstring(repsPart);
+            BoldSubstring(weightPart);
+
+            return spannable;
         }
 
         private void ShowAddSetDialog(WorkoutExercise workoutExercise)
@@ -389,6 +420,91 @@ namespace Gym_App.Activities
                     _database.UpdateWorkoutSession(_currentWorkout.Id, _currentWorkout.Name, selectedDate, _currentWorkout.Notes);
                     _currentWorkout = _database.GetWorkoutSession(_currentWorkout.Id);
                     UpdateUI();
+                })
+                .SetNegativeButton("Cancel", (s, e) => { })
+                .Show();
+        }
+
+        private void ShowEditSetDialog(int setId)
+        {
+            if (_database == null || _currentWorkout == null)
+                return;
+
+            var targetSet = _currentWorkout.Exercises
+                .SelectMany(e => e.Sets)
+                .FirstOrDefault(s => s.Id == setId);
+
+            if (targetSet == null)
+                return;
+
+            var layout = new LinearLayout(this) { Orientation = Orientation.Vertical };
+            layout.SetPadding(DpToPx(20), DpToPx(12), DpToPx(20), DpToPx(4));
+
+            var repsInput = new EditText(this)
+            {
+                Hint = "Reps",
+                InputType = InputTypes.ClassNumber,
+                Text = targetSet.Reps.ToString()
+            };
+
+            var weightInput = new EditText(this)
+            {
+                Hint = $"Weight ({targetSet.WeightUnit})",
+                InputType = InputTypes.ClassNumber | InputTypes.NumberFlagDecimal,
+                Text = targetSet.Weight.ToString(System.Globalization.CultureInfo.InvariantCulture)
+            };
+
+            var notesInput = new EditText(this)
+            {
+                Hint = "Notes (optional)",
+                Text = targetSet.Notes ?? string.Empty
+            };
+
+            layout.AddView(repsInput);
+            layout.AddView(weightInput);
+            layout.AddView(notesInput);
+
+            new MaterialAlertDialogBuilder(this)
+                .SetTitle($"Edit Set {targetSet.SetNumber}")
+                .SetView(layout)
+                .SetPositiveButton("Save", (s, e) =>
+                {
+                    if (!int.TryParse(repsInput.Text?.Trim(), out var reps) || reps <= 0)
+                    {
+                        Toast.MakeText(this, "Enter valid reps", ToastLength.Short)?.Show();
+                        return;
+                    }
+
+                    var weightText = weightInput.Text?.Trim() ?? string.Empty;
+                    if (!double.TryParse(weightText, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out var weight) || weight < 0)
+                    {
+                        Toast.MakeText(this, "Enter valid weight", ToastLength.Short)?.Show();
+                        return;
+                    }
+
+                    _database.UpdateWorkoutSet(setId, reps, weight, notesInput.Text);
+                    _currentWorkout = _database.GetWorkoutSession(_currentWorkout.Id);
+                    UpdateUI();
+                    Toast.MakeText(this, "Set updated", ToastLength.Short)?.Show();
+                })
+                .SetNegativeButton("Cancel", (s, e) => { })
+                .Show();
+        }
+
+        private void ConfirmDeleteSet(int setId)
+        {
+            if (_database == null || _currentWorkout == null)
+                return;
+
+            new MaterialAlertDialogBuilder(this)
+                .SetTitle("Delete set")
+                .SetMessage("This will remove the set from the workout.")
+                .SetPositiveButton("Delete", (s, e) =>
+                {
+                    _database.DeleteWorkoutSet(setId);
+                    _currentWorkout = _database.GetWorkoutSession(_currentWorkout.Id);
+                    UpdateUI();
+                    Toast.MakeText(this, "Set deleted", ToastLength.Short)?.Show();
                 })
                 .SetNegativeButton("Cancel", (s, e) => { })
                 .Show();

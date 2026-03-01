@@ -17,7 +17,7 @@
         android:adjustViewBounds="true"
         android:contentDescription="@string/app_name"
         android:scaleType="fitCenter"
-        android:src="@drawable/welcome_hero_source" />
+        android:src="@drawable/welcome_hero" />
 
     <TextView
         android:layout_width="match_parent"
@@ -26,7 +26,6 @@
         android:layout_marginBottom="20dp"
         android:gravity="center"
         android:text="TRACK&#10;LIFT&#10;PROGRESS"
-        android:fontFamily="sans-serif-black"
         android:textColor="@color/color_primary"
         android:textSize="48sp"
         android:textStyle="bold" />
@@ -36,7 +35,6 @@
         android:layout_height="wrap_content"
         android:text="@string/main_subtitle"
         android:textSize="15sp"
-        android:fontFamily="serif"
         android:textStyle="italic"
         android:textColor="@color/color_text_secondary"
         android:gravity="center"
@@ -65,36 +63,44 @@
         android:layout_height="0dp"
         android:layout_weight="1" />
 
-    <com.google.android.material.button.MaterialButton
+    <Button
         android:id="@+id/startWorkoutMainButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/start_workout"
         android:textSize="20sp"
         android:textAllCaps="false"
-        android:textColor="@color/color_on_primary"
+        android:textColor="@android:color/black"
         android:background="@drawable/bg_button_primary"
+        android:stateListAnimator="@animator/edit_button_elevation"
+        android:elevation="4dp"
+        android:fontFamily="sans-serif"
         android:drawableStart="@android:drawable/ic_media_play"
+        android:drawableTint="@android:color/black"
         android:drawablePadding="10dp"
         android:gravity="center_vertical|center"
-        android:minHeight="62dp"
+        android:minHeight="@dimen/gym_primary_button_height"
         android:paddingStart="18dp"
         android:paddingEnd="18dp"
         android:layout_marginBottom="12dp" />
 
-    <com.google.android.material.button.MaterialButton
+    <Button
         android:id="@+id/continueWorkoutMainButton"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:text="@string/continue_workout"
         android:textSize="18sp"
         android:textAllCaps="false"
-        android:textColor="@color/color_on_primary"
+        android:textColor="@android:color/black"
         android:background="@drawable/bg_button_primary"
+        android:stateListAnimator="@animator/edit_button_elevation"
+        android:elevation="4dp"
+        android:fontFamily="sans-serif"
         android:drawableStart="@android:drawable/ic_menu_myplaces"
+        android:drawableTint="@android:color/black"
         android:drawablePadding="10dp"
         android:gravity="center_vertical|center"
-        android:minHeight="62dp"
+        android:minHeight="@dimen/gym_primary_button_height"
         android:paddingStart="18dp"
         android:paddingEnd="18dp"
         android:layout_marginBottom="8dp" />

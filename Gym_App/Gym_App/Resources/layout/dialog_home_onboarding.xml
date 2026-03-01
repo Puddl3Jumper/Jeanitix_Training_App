@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="wrap_content"
+    android:orientation="vertical"
+    android:background="@drawable/bg_card"
+    android:paddingStart="24dp"
+    android:paddingTop="22dp"
+    android:paddingEnd="24dp"
+    android:paddingBottom="20dp">
+
+    <TextView
+        android:id="@+id/onboardingOverlineText"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="@string/home_onboarding_overline"
+        android:textColor="@color/color_primary"
+        android:textStyle="bold"
+        android:textSize="12sp"
+        android:letterSpacing="0.08" />
+
+    <TextView
+        android:id="@+id/onboardingTitleText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
+        android:text="@string/home_onboarding_title"
+        android:textColor="@color/color_text_primary"
+        android:textStyle="bold"
+        android:textSize="30sp"
+        android:lineSpacingExtra="2dp" />
+
+    <TextView
+        android:id="@+id/onboardingMessageText"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="10dp"
+        android:text="@string/home_onboarding_message"
+        android:textColor="@color/color_text_secondary"
+        android:textSize="18sp"
+        android:lineSpacingExtra="6dp" />
+
+    <Button
+        android:id="@+id/onboardingCtaButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginTop="20dp"
+        android:minHeight="@dimen/gym_primary_button_height"
+        android:text="@string/home_onboarding_cta"
+        android:textAllCaps="false"
+        android:textStyle="bold"
+        android:textColor="@android:color/black"
+        android:background="@drawable/bg_button_primary"
+        android:stateListAnimator="@animator/edit_button_elevation"
+        android:elevation="4dp"
+        android:fontFamily="sans-serif" />
+
+</LinearLayout>

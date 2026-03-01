@@ -1,6 +1,7 @@
 using Android.Content;
 using Android.Widget;
 using Gym_App.Data;
+using System.Threading;
 
 namespace Gym_App.Activities
 {
@@ -52,12 +53,16 @@ namespace Gym_App.Activities
                         var config = FirebaseProjectConfig.LoadFromGoogleServicesJson(this);
                         var auth = new FirebaseAuthService(config);
 
-                        var session = await auth.SignUpWithEmailPasswordAsync(email, password, CancellationToken.None);
+                        // Avoid long hangs when network/Firebase is unavailable.
+                        using var signUpTimeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+
+                        var session = await auth.SignUpWithEmailPasswordAsync(email, password, signUpTimeoutCts.Token);
                         if (!string.IsNullOrWhiteSpace(fullName))
                         {
                             try
                             {
-                                session = await auth.UpdateProfileDisplayNameAsync(session.IdToken, fullName, CancellationToken.None);
+                                using var profileTimeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(8));
+                                session = await auth.UpdateProfileDisplayNameAsync(session.IdToken, fullName, profileTimeoutCts.Token);
                                 if (string.IsNullOrWhiteSpace(session.Email))
                                 {
                                     session = session with { Email = email };
@@ -75,6 +80,27 @@ namespace Gym_App.Activities
                         }
 
                         AuthSessionStore.Save(this, session);
+                        IncrementTrainingLoginCount();
+
+                        // Pull workouts in background (best-effort) so UI navigation is never blocked.
+                        _ = Task.Run(async () =>
+                        {
+                            try
+                            {
+                                using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+                                var database = new GymDatabase();
+                                await WorkoutCloudSyncService.TryPullAndApplyAsync(database, timeoutCts.Token).ConfigureAwait(false);
+                            }
+                            catch
+                            {
+                                // Best-effort only.
+                            }
+                        });
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        Toast.MakeText(this, "Create account timed out. Please check network and try again.", ToastLength.Long)?.Show();
+                        return;
                     }
                     catch (Exception ex)
                     {
@@ -104,6 +130,14 @@ namespace Gym_App.Activities
                     Finish();
                 };
             }
+        }
+
+        // Keep training plan cycle aligned with successful sign-ins/sign-ups.
+        private void IncrementTrainingLoginCount()
+        {
+            var prefs = GetSharedPreferences("training_plan", FileCreationMode.Private);
+            var currentCount = prefs?.GetInt("login_count", 0) ?? 0;
+            prefs?.Edit()?.PutInt("login_count", currentCount + 1)?.Apply();
         }
     }
 }

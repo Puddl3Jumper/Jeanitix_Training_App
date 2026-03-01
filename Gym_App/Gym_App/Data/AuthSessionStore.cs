@@ -42,6 +42,12 @@ public static class AuthSessionStore
         return prefs?.GetString(KeyEmail, null);
     }
 
+    public static string? ReadLocalId(Context context)
+    {
+        var prefs = context.GetSharedPreferences(SessionPrefsName, FileCreationMode.Private);
+        return prefs?.GetString(KeyLocalId, null);
+    }
+
     public static void Save(Context context, FirebaseAuthSession session)
     {
         var prefs = context.GetSharedPreferences(SessionPrefsName, FileCreationMode.Private);

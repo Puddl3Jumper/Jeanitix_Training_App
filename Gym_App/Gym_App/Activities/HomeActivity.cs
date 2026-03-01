@@ -1,6 +1,8 @@
 using Android.Content;
 using Android.Graphics;
 using Android.Graphics.Drawables;
+using Android.Text;
+using Android.Text.Style;
 using Android.Views;
 using Android.Widget;
 using AndroidX.Core.Content;
@@ -15,17 +17,19 @@ namespace Gym_App.Activities
     {
         private static bool _hasShownWelcomePromptThisLaunch;
         private GymDatabase? _database;
-        private TextView? _statDurationText;
-        private TextView? _statSetsText;
-        private TextView? _statCaloriesText;
-        private TextView? _contextualStatsText;
-        private TextView? _weeklyProgressText;
-        private ProgressBar? _weeklyProgressBar;
+        private TextView? _upperBodyLabelText;
+        private TextView? _upperBodyPlanText;
+        private TextView? _lowerBodyLabelText;
+        private TextView? _lowerBodyPlanText;
         private LinearLayout? _weeklyProgressChart;
+        private TextView? _weeklyAvgValueText;
+        private TextView? _weeklyAvgLabelText;
+        private TextView? _weeklyGoalSummaryText;
         private TextView? _insightText;
         private LinearLayout? _todayExercisesContainer;
         private ImageView? _noRecordsIcon;
         private TextView? _noRecordsText;
+        private readonly SemaphoreSlim _cloudPullLock = new(1, 1);
 
         protected override void OnCreate(Bundle? savedInstanceState)
         {
@@ -35,13 +39,14 @@ namespace Gym_App.Activities
 
             _database = new GymDatabase();
 
-            _statDurationText = FindViewById<TextView>(Resource.Id.statDurationText);
-            _statSetsText = FindViewById<TextView>(Resource.Id.statSetsText);
-            _statCaloriesText = FindViewById<TextView>(Resource.Id.statCaloriesText);
-            _contextualStatsText = FindViewById<TextView>(Resource.Id.contextualStatsText);
-            _weeklyProgressText = FindViewById<TextView>(Resource.Id.weeklyProgressText);
-            _weeklyProgressBar = FindViewById<ProgressBar>(Resource.Id.weeklyProgressBar);
+            _upperBodyLabelText = FindViewById<TextView>(Resource.Id.upperBodyLabelText);
+            _upperBodyPlanText = FindViewById<TextView>(Resource.Id.upperBodyPlanText);
+            _lowerBodyLabelText = FindViewById<TextView>(Resource.Id.lowerBodyLabelText);
+            _lowerBodyPlanText = FindViewById<TextView>(Resource.Id.lowerBodyPlanText);
             _weeklyProgressChart = FindViewById<LinearLayout>(Resource.Id.weeklyProgressChart);
+            _weeklyAvgValueText = FindViewById<TextView>(Resource.Id.weeklyAvgValueText);
+            _weeklyAvgLabelText = FindViewById<TextView>(Resource.Id.weeklyAvgLabelText);
+            _weeklyGoalSummaryText = FindViewById<TextView>(Resource.Id.weeklyGoalSummaryText);
             _insightText = FindViewById<TextView>(Resource.Id.insightText);
             _todayExercisesContainer = FindViewById<LinearLayout>(Resource.Id.todayExercisesContainer);
             _noRecordsIcon = FindViewById<ImageView>(Resource.Id.noRecordsIcon);
@@ -65,6 +70,7 @@ namespace Gym_App.Activities
                 _hasShownWelcomePromptThisLaunch = true;
             }
             ShowFirstTimeOnboarding();
+            RenderTodayTrainingPlan();
 
             if (homeTab != null) homeTab.Selected = true;
             if (diaryTab != null) diaryTab.Selected = false;
@@ -138,7 +144,82 @@ namespace Gym_App.Activities
         protected override void OnResume()
         {
             base.OnResume();
+            RenderTodayTrainingPlan();
             LoadTodayRecords();
+            _ = TryPullWorkoutsAndRefreshAsync();
+        }
+
+        private void RenderTodayTrainingPlan()
+        {
+            if (_upperBodyLabelText == null || _upperBodyPlanText == null || _lowerBodyLabelText == null || _lowerBodyPlanText == null)
+                return;
+
+            var prefs = GetSharedPreferences("training_plan", FileCreationMode.Private);
+            var loginCount = prefs?.GetInt("login_count", 0) ?? 0;
+            var trainingDay = ((loginCount <= 0 ? 0 : loginCount - 1) % 3) + 1;
+
+            string upperBodyValue;
+            string lowerBodyLabel;
+            string lowerBodyValue;
+
+            switch (trainingDay)
+            {
+                case 1:
+                    upperBodyValue = "Biceps/Triceps";
+                    lowerBodyLabel = "Lower Body";
+                    lowerBodyValue = "Abs";
+                    break;
+                case 2:
+                    upperBodyValue = "Chest/Delt";
+                    lowerBodyLabel = "Lower Body";
+                    lowerBodyValue = "Leg";
+                    break;
+                default:
+                    upperBodyValue = "Back/Shoulder";
+                    lowerBodyLabel = "Cardio";
+                    lowerBodyValue = "Cardio";
+                    break;
+            }
+
+            _upperBodyLabelText.Text = "Upper Body";
+            _upperBodyPlanText.Text = upperBodyValue;
+            _lowerBodyLabelText.Text = lowerBodyLabel;
+            _lowerBodyPlanText.Text = lowerBodyValue;
+        }
+
+        private async Task TryPullWorkoutsAndRefreshAsync()
+        {
+            if (_database == null)
+                return;
+
+            if (!await _cloudPullLock.WaitAsync(0).ConfigureAwait(false))
+                return;
+
+            try
+            {
+                using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+                await WorkoutCloudSyncService.TryPullAndApplyAsync(_database, timeoutCts.Token).ConfigureAwait(false);
+            }
+            catch
+            {
+                // Best-effort only.
+            }
+            finally
+            {
+                _cloudPullLock.Release();
+            }
+
+            RunOnUiThread(() =>
+            {
+                try
+                {
+                    LoadTodayRecords();
+                }
+                catch
+                {
+                    // Ignore UI refresh failures.
+                }
+            });
         }
 
         private void LoadTodayRecords()
@@ -167,28 +248,12 @@ namespace Gym_App.Activities
                 insightSessions.Add(currentWorkout);
             }
 
-            int totalSets = 0;
-            double calories = 0;
-            TimeSpan totalDuration = TimeSpan.Zero;
-
-            foreach (var session in completedToday)
-            {
-                totalDuration += session.Duration;
-                foreach (var exercise in session.Exercises)
-                {
-                    totalSets += exercise.Sets.Count;
-                    calories += exercise.Sets.Sum(set => set.Reps * set.Weight * 0.1);
-                }
-            }
-
             int weeklyGoal = GetWeeklyGoal();
-            int workoutsThisWeek = CountWorkoutsThisWeek(insightSessions);
+            // Weekly chart/summary should reflect what's in the Log tab (completed sessions only).
+            int workoutsThisWeek = CountWorkoutsThisWeek(history);
             UpdateProgressWidget(workoutsThisWeek, weeklyGoal);
-            UpdateWeeklyProgressChart(insightSessions);
-            UpdateTopStats(totalDuration, totalSets, calories, insightSessions);
+            UpdateWeeklyProgressChart(history);
             UpdateInsightText(insightSessions, workoutsThisWeek);
-
-            _todayExercisesContainer.RemoveAllViews();
 
             var exerciseRecords = completedToday
                 .SelectMany(session => session.Exercises)
@@ -206,98 +271,64 @@ namespace Gym_App.Activities
                 if (record.Exercise == null)
                     continue;
 
-                var item = new TextView(this)
+                var row = new LinearLayout(this)
                 {
-                    Text = $"• {record.Exercise.Name}  ({record.Sets.Count} sets)",
+                    Orientation = Orientation.Horizontal
+                };
+                row.SetGravity(GravityFlags.CenterVertical);
+                row.LayoutParameters = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MatchParent,
+                    ViewGroup.LayoutParams.WrapContent);
+                row.SetPadding(0, DpToPx(6), 0, DpToPx(6));
+
+                var nameView = new TextView(this)
+                {
+                    Text = record.Exercise.Name,
                     TextSize = 14
                 };
-                item.SetTextColor(new Android.Graphics.Color(ContextCompat.GetColor(this, Resource.Color.color_text_primary)));
-                item.SetPadding(0, 4, 0, 4);
-                _todayExercisesContainer.AddView(item);
-            }
-        }
+                nameView.LayoutParameters = new LinearLayout.LayoutParams(
+                    0,
+                    ViewGroup.LayoutParams.WrapContent,
+                    1f);
 
-        private void UpdateTopStats(TimeSpan todayDuration, int todaySets, double todayCalories, List<WorkoutSession> history)
-        {
-            bool hasTodayData = todayDuration > TimeSpan.Zero || todaySets > 0 || todayCalories > 0;
+                var setCount = record.Sets.Count;
+                var totalReps = record.Sets.Sum(s => s.Reps);
+                var maxWeight = record.Sets.Count == 0 ? 0 : record.Sets.Max(s => s.Weight);
+                var unit = record.Sets.FirstOrDefault()?.WeightUnit ?? "kg";
 
-            if (hasTodayData)
-            {
-                if (_statDurationText != null)
-                    _statDurationText.Text = $"{todayDuration.Hours:D2}:{todayDuration.Minutes:D2}";
-                if (_statSetsText != null)
-                    _statSetsText.Text = todaySets.ToString();
-                if (_statCaloriesText != null)
-                    _statCaloriesText.Text = $"{Math.Round(todayCalories)} kcal";
+                var resultText = setCount == 0
+                    ? "0 sets"
+                    : $"{setCount} set{(setCount == 1 ? string.Empty : "s")} · {totalReps} reps · {maxWeight:0.#} {unit}";
 
-                var weekStart = GetWeekStart(DateTime.Today);
-                var weekSessions = history.Where(s => s.StartTime.Date >= weekStart).ToList();
-                if (weekSessions.Count > 0)
+                var resultSpannable = new SpannableString(resultText);
+                resultSpannable.SetSpan(
+                    new StyleSpan(TypefaceStyle.Bold),
+                    0,
+                    resultText.Length,
+                    SpanTypes.ExclusiveExclusive);
+
+                var countView = new TextView(this)
                 {
-                    int avgDurationMin = (int)Math.Round(weekSessions.Average(s => s.Duration.TotalMinutes));
-                    int avgSets = (int)Math.Round(weekSessions.Average(GetSessionSetCount));
-                    int avgCalories = (int)Math.Round(weekSessions.Average(GetSessionCalories));
-                    if (_contextualStatsText != null)
-                    {
-                        _contextualStatsText.Text = $"Weekly avg: {avgDurationMin} mins · {avgSets} sets · {avgCalories} kcal";
-                    }
-                }
-                else if (_contextualStatsText != null)
-                {
-                    _contextualStatsText.Text = "Great start today — keep it going.";
-                }
+                    TextSize = 13
+                };
+                countView.SetText(resultSpannable, TextView.BufferType.Spannable);
+                countView.SetTextColor(Android.Graphics.Color.White);
+                countView.SetSingleLine(true);
+                countView.Ellipsize = TextUtils.TruncateAt.End;
+                countView.Gravity = GravityFlags.End;
+                countView.LayoutParameters = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.WrapContent,
+                    ViewGroup.LayoutParams.WrapContent);
 
-                return;
+                row.AddView(nameView);
+                row.AddView(countView);
+                _todayExercisesContainer.AddView(row);
             }
-
-            var lastSession = history.OrderByDescending(s => s.StartTime).FirstOrDefault();
-            if (lastSession != null)
-            {
-                int lastDurationMin = (int)Math.Round(lastSession.Duration.TotalMinutes);
-                int lastSets = GetSessionSetCount(lastSession);
-                int lastCalories = (int)Math.Round(GetSessionCalories(lastSession));
-
-                if (_statDurationText != null)
-                    _statDurationText.Text = $"{lastDurationMin / 60:D2}:{lastDurationMin % 60:D2}";
-                if (_statSetsText != null)
-                    _statSetsText.Text = lastSets.ToString();
-                if (_statCaloriesText != null)
-                    _statCaloriesText.Text = $"{lastCalories} kcal";
-                if (_contextualStatsText != null)
-                    _contextualStatsText.Text = $"Last session: {lastDurationMin} mins · {lastSets} sets · {lastCalories} kcal";
-
-                return;
-            }
-
-            if (_statDurationText != null)
-                _statDurationText.Text = "00:00";
-            if (_statSetsText != null)
-                _statSetsText.Text = "0";
-            if (_statCaloriesText != null)
-                _statCaloriesText.Text = "0 kcal";
-            if (_contextualStatsText != null)
-                _contextualStatsText.Text = "No previous workouts yet — start your first session.";
         }
 
         private void UpdateProgressWidget(int workoutsThisWeek, int weeklyGoal)
         {
-            if (_weeklyProgressText != null)
-            {
-                if (workoutsThisWeek == 0)
-                {
-                    _weeklyProgressText.Text = "Let's start your first workout today!";
-                }
-                else
-                {
-                    _weeklyProgressText.Text = $"You've completed {workoutsThisWeek}/{weeklyGoal} workouts this week";
-                }
-            }
-
-            if (_weeklyProgressBar != null)
-            {
-                int progress = weeklyGoal <= 0 ? 0 : (int)Math.Round((double)workoutsThisWeek / weeklyGoal * 100);
-                _weeklyProgressBar.Progress = Math.Max(0, Math.Min(progress, 100));
-            }
+            // Weekly Progress card now uses duration-based chart + summary (see UpdateWeeklyProgressChart).
         }
 
         private void UpdateWeeklyProgressChart(List<WorkoutSession> sessions)
@@ -309,61 +340,146 @@ namespace Gym_App.Activities
 
             var weekStart = GetWeekStart(DateTime.Today);
             var labels = new[] { "M", "T", "W", "T", "F", "S", "S" };
-            var dailyCounts = new int[7];
-            int maxCount = 1;
+            var dailyMinutes = new double[7];
 
             for (int i = 0; i < 7; i++)
             {
                 var day = weekStart.AddDays(i).Date;
-                dailyCounts[i] = sessions
+                dailyMinutes[i] = sessions
                     .Where(session => session.StartTime.Date == day)
                     .Where(session => session.Exercises.Any(exercise => exercise.Sets.Count > 0))
-                    .Select(session => session.Id)
-                    .Distinct()
-                    .Count();
+                    .Select(session => session.Duration)
+                    .Where(duration => duration > TimeSpan.Zero)
+                    .Sum(duration => duration.TotalMinutes);
 
-                if (dailyCounts[i] > maxCount)
-                    maxCount = dailyCounts[i];
+                if (dailyMinutes[i] < 0)
+                    dailyMinutes[i] = 0;
+
+                dailyMinutes[i] = Math.Min(120d, dailyMinutes[i]);
             }
 
-            int barMaxHeight = DpToPx(56);
-            int barWidth = DpToPx(12);
+            const double axisMaxMinutes = 120d;
+            const double goalMinutes = 60d;
+
+            var totalMinutes = dailyMinutes.Sum();
+            var avgMinutes = totalMinutes / 7d;
+            if (_weeklyAvgValueText != null)
+            {
+                _weeklyAvgValueText.Text = Math.Round(avgMinutes).ToString("0", System.Globalization.CultureInfo.InvariantCulture);
+            }
+            if (_weeklyAvgLabelText != null)
+            {
+                _weeklyAvgLabelText.Text = "mins per day (avg)";
+            }
+
+            var goalDays = dailyMinutes.Count(m => m >= goalMinutes);
+            if (_weeklyGoalSummaryText != null)
+            {
+                var totalHours = totalMinutes / 60d;
+                _weeklyGoalSummaryText.Text = $"You hit your goal on {goalDays} day{(goalDays == 1 ? string.Empty : "s")}, and trained a total of {totalHours:0.#}h";
+            }
+
+            int chartHeight = DpToPx(108);
+            int barWidth = DpToPx(26);
+            int barMaxHeight = chartHeight;
+
+            var outerRow = new LinearLayout(this)
+            {
+                Orientation = Orientation.Horizontal
+            };
+            outerRow.LayoutParameters = new LinearLayout.LayoutParams(
+                ViewGroup.LayoutParams.MatchParent,
+                ViewGroup.LayoutParams.WrapContent);
+
+            var barsAndLabels = new LinearLayout(this)
+            {
+                Orientation = Orientation.Vertical
+            };
+            barsAndLabels.LayoutParameters = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WrapContent, 1f);
+
+            var chartFrame = new FrameLayout(this);
+            chartFrame.LayoutParameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, barMaxHeight);
+
+            var barsRow = new LinearLayout(this)
+            {
+                Orientation = Orientation.Horizontal
+            };
+            var barsRowLp = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.MatchParent);
+            barsRow.LayoutParameters = barsRowLp;
+            barsRow.BaselineAligned = false;
+
+            var labelsRow = new LinearLayout(this)
+            {
+                Orientation = Orientation.Horizontal
+            };
+            labelsRow.LayoutParameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent);
+            labelsRow.BaselineAligned = false;
 
             for (int i = 0; i < 7; i++)
             {
-                var column = new LinearLayout(this)
+                var barSlot = new FrameLayout(this);
+                barSlot.LayoutParameters = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.MatchParent, 1f);
+
+                var ratio = axisMaxMinutes <= 0 ? 0 : (dailyMinutes[i] / axisMaxMinutes);
+                ratio = Math.Max(0d, Math.Min(1d, ratio));
+                int barHeight = ratio <= 0
+                    ? DpToPx(6)
+                    : Math.Max(DpToPx(14), (int)Math.Round(barMaxHeight * ratio));
+
+                var bar = new View(this);
+                var barLp = new FrameLayout.LayoutParams(barWidth, barHeight);
+                barLp.Gravity = GravityFlags.Bottom | GravityFlags.CenterHorizontal;
+                bar.LayoutParameters = barLp;
+
+                var barDrawable = new GradientDrawable();
+                var minutes = dailyMinutes[i];
+                var barColorRes = minutes <= 0
+                    ? Resource.Color.md_theme_surfaceVariant
+                    : minutes < 45d
+                        ? Resource.Color.color_primary
+                        : minutes > 60d
+                            ? Resource.Color.md_theme_onPrimaryContainer
+                            : Resource.Color.color_primary;
+                barDrawable.SetColor(new Color(ContextCompat.GetColor(this, barColorRes)));
+                barDrawable.SetCornerRadius(barWidth / 2f);
+                bar.Background = barDrawable;
+                barSlot.AddView(bar);
+
+                if (dailyMinutes[i] >= goalMinutes)
                 {
-                    Orientation = Orientation.Vertical
-                };
-                column.SetGravity(GravityFlags.CenterHorizontal);
-                column.LayoutParameters = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WrapContent, 1f);
+                    var badgeSize = DpToPx(22);
+                    var badge = new FrameLayout(this);
+                    var badgeLp = new FrameLayout.LayoutParams(badgeSize, badgeSize);
+                    badgeLp.Gravity = GravityFlags.Top | GravityFlags.CenterHorizontal;
+                    // Place badge near the top of the rounded bar (not at the top of the chart).
+                    var barTop = barMaxHeight - barHeight;
+                    badgeLp.TopMargin = Math.Max(DpToPx(2), barTop + DpToPx(2));
+                    badge.LayoutParameters = badgeLp;
 
-                var track = new LinearLayout(this)
-                {
-                    Orientation = Orientation.Vertical
-                };
-                track.SetGravity(GravityFlags.Bottom);
-                track.LayoutParameters = new LinearLayout.LayoutParams(barWidth, barMaxHeight);
-                track.SetPadding(0, 0, 0, 0);
+                    var badgeDrawable = new GradientDrawable();
+                    badgeDrawable.SetColor(new Color(ContextCompat.GetColor(this, Resource.Color.md_theme_surfaceVariant)));
+                    badgeDrawable.SetCornerRadius(badgeSize / 2f);
+                    badgeDrawable.SetStroke(DpToPx(1), new Color(ContextCompat.GetColor(this, Resource.Color.md_theme_outline)));
+                    badge.Background = badgeDrawable;
 
-                var trackDrawable = new GradientDrawable();
-                trackDrawable.SetColor(new Color(ContextCompat.GetColor(this, Resource.Color.md_theme_surfaceVariant)));
-                trackDrawable.SetCornerRadius(DpToPx(6));
-                track.Background = trackDrawable;
+                    var check = new TextView(this)
+                    {
+                        Text = "✓",
+                        TextSize = 14
+                    };
+                    check.SetTextColor(new Color(ContextCompat.GetColor(this, Resource.Color.color_text_primary)));
+                    check.SetTypeface(null, TypefaceStyle.Bold);
+                    check.SetIncludeFontPadding(false);
+                    check.Gravity = GravityFlags.Center;
+                    check.LayoutParameters = new FrameLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MatchParent,
+                        ViewGroup.LayoutParams.MatchParent);
 
-                int barHeight = dailyCounts[i] == 0
-                    ? DpToPx(2)
-                    : Math.Max(DpToPx(8), (int)Math.Round(barMaxHeight * (dailyCounts[i] / (double)maxCount)));
+                    badge.AddView(check);
+                    barSlot.AddView(badge);
+                }
 
-                var fill = new View(this);
-                fill.LayoutParameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, barHeight);
-
-                var fillDrawable = new GradientDrawable();
-                fillDrawable.SetColor(new Color(ContextCompat.GetColor(this, Resource.Color.color_primary)));
-                fillDrawable.SetCornerRadius(DpToPx(6));
-                fill.Background = fillDrawable;
-
-                track.AddView(fill);
+                barsRow.AddView(barSlot);
 
                 var label = new TextView(this)
                 {
@@ -371,12 +487,50 @@ namespace Gym_App.Activities
                     TextSize = 11
                 };
                 label.SetTextColor(new Color(ContextCompat.GetColor(this, Resource.Color.color_text_secondary)));
+                label.Gravity = GravityFlags.Center;
+                label.SetIncludeFontPadding(false);
+                label.LayoutParameters = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WrapContent, 1f);
                 label.SetPadding(0, DpToPx(6), 0, 0);
-
-                column.AddView(track);
-                column.AddView(label);
-                _weeklyProgressChart.AddView(column);
+                labelsRow.AddView(label);
             }
+
+            chartFrame.AddView(barsRow);
+
+            barsAndLabels.AddView(chartFrame);
+            barsAndLabels.AddView(labelsRow);
+
+            outerRow.AddView(barsAndLabels);
+
+            var axisColumn = new FrameLayout(this);
+            axisColumn.LayoutParameters = new LinearLayout.LayoutParams(DpToPx(34), barMaxHeight);
+
+            void AddAxisLabelRight(int hours)
+            {
+                var label = new TextView(this)
+                {
+                    Text = $"{hours}h",
+                    TextSize = 10
+                };
+                label.SetTextColor(new Color(ContextCompat.GetColor(this, Resource.Color.color_text_primary)));
+                label.SetIncludeFontPadding(false);
+
+                var ratioTop = hours / 2d;
+                var top = (int)Math.Round(barMaxHeight * (1d - ratioTop));
+                top = Math.Max(0, Math.Min(barMaxHeight - DpToPx(12), top));
+
+                var lp = new FrameLayout.LayoutParams(ViewGroup.LayoutParams.WrapContent, ViewGroup.LayoutParams.WrapContent);
+                lp.Gravity = GravityFlags.Top | GravityFlags.End;
+                lp.TopMargin = top;
+                label.LayoutParameters = lp;
+                axisColumn.AddView(label);
+            }
+
+            AddAxisLabelRight(1);
+            AddAxisLabelRight(0);
+            AddAxisLabelRight(2);
+
+            outerRow.AddView(axisColumn);
+            _weeklyProgressChart.AddView(outerRow);
         }
 
         private int DpToPx(int dp)
@@ -659,14 +813,27 @@ namespace Gym_App.Activities
             if (hasSeenOnboarding)
                 return;
 
+            var dialogView = LayoutInflater?.Inflate(Resource.Layout.dialog_home_onboarding, null);
+            if (dialogView == null)
+                return;
+
+            var ctaButton = dialogView.FindViewById<Button>(Resource.Id.onboardingCtaButton);
+
             var dialog = new MaterialAlertDialogBuilder(this)
-                .SetTitle(GetString(Resource.String.home_onboarding_title))
-                .SetMessage(GetString(Resource.String.home_onboarding_message))
-                .SetPositiveButton(GetString(Resource.String.home_onboarding_cta), (s, e) => { })
+                .SetView(dialogView)
+                .SetCancelable(false)
                 .Create();
 
+            if (ctaButton != null)
+            {
+                ctaButton.Click += (s, e) =>
+                {
+                    prefs.Edit()?.PutBoolean("home_onboarding_seen", true)?.Apply();
+                    dialog.Dismiss();
+                };
+            }
+
             dialog.Show();
-            prefs.Edit()?.PutBoolean("home_onboarding_seen", true)?.Apply();
         }
 
         private void StartQuickExercise(Exercise exercise)

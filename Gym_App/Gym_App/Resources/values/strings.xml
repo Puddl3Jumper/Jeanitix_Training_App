@@ -1,6 +1,6 @@
 <resources>
-    <string name="app_name">GYM Fitness Log</string>
-    <string name="main_title">GYM Fitness Log</string>
+    <string name="app_name">Kore</string>
+    <string name="main_title">Kore</string>
     <string name="main_subtitle">The pain you feel today will be the strength you feel tomorrow.</string>
     <string name="main_subtitle_author">— Arnold Schwarzenegger</string>
     <string name="start_workout">GET STARTED</string>
@@ -24,16 +24,23 @@
     <string name="login_google">Continue with Google</string>
     <string name="launch_copyright">© 2026 Fitness Diary</string>
     <string name="home_greeting">Hi, User</string>
-    <string name="home_today_workout">Today\'s Workout</string>
-    <string name="home_start_workout">Start &amp; Select Workout</string>
+    <string name="home_today_workout">Today\'s Exercise</string>
+    <string name="home_start_workout">Start Workout</string>
     <string name="home_start_workout_tooltip">Start a session, then choose exercises to track.</string>
     <string name="home_today_exercises">Today\'s Exercises</string>
     <string name="home_add_exercise">Add Exercise</string>
     <string name="home_empty_first_step">No exercises logged yet. Pick your first step below.</string>
     <string name="home_browse_exercises">Browse Exercises</string>
+    <string name="home_onboarding_overline">Today\'s plan</string>
     <string name="home_onboarding_title">Quick start</string>
-    <string name="home_onboarding_message">Tap \'Start &amp; Select Workout\' to begin tracking your session. Use Quick Log for fast entries and History to review progress.</string>
+    <string name="home_onboarding_message">Tap \'Today\'s excercise\' to open your plan. Use Quick Log for fast entries and History to review progress.</string>
     <string name="home_onboarding_cta">Got it</string>
+    <string name="today_plan_day_1">Training Day 1</string>
+    <string name="today_plan_day_2">Training Day 2</string>
+    <string name="today_plan_day_3">Training Day 3</string>
+    <string name="today_plan_format">%1$s: %2$s, %3$s | %4$s: %5$s</string>
+    <string name="today_plan_upper_format">Upper Body: %1$s</string>
+    <string name="today_plan_lower_format">%1$s: %2$s</string>
     <string name="oauth_client_id">gym-app-mobile</string>
     <string name="oauth_authority_url">http://10.0.2.2:5076</string>
     <string name="oauth_redirect_url">com.leiyu.GymJournal://oauth2redirect</string>

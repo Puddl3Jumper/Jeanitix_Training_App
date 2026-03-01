@@ -3,29 +3,26 @@ using Android.Content;
 using Android.App;
 using Android.Util;
 using Android.Views;
-using Duende.IdentityModel.Client;
-using Duende.IdentityModel.OidcClient;
-using Duende.IdentityModel.OidcClient.Browser;
+using Android.Gms.Auth.Api.SignIn;
+using Android.Gms.Common.Apis;
 using Gym_App.Data;
-using System.Security.Claims;
 using System.Threading;
 
 namespace Gym_App.Activities
 {
     [Activity(LaunchMode = Android.Content.PM.LaunchMode.SingleTask, Exported = true)]
-    [IntentFilter(
-        new[] { Intent.ActionView },
-        Categories = new[] { Intent.CategoryDefault, Intent.CategoryBrowsable },
-        DataScheme = "com.leiyu.GymJournal",
-        DataHost = "oauth2redirect")]
     public class LoginActivity : Activity
     {
         private const string LogTag = "OAuth2";
+        private const int GoogleSignInRequestCode = 9101;
+
         private readonly SemaphoreSlim _oauthLock = new(1, 1);
         private View? _googleLoginButton;
         private View? _primaryLoginButton;
         private EditText? _usernameInput;
         private EditText? _passwordInput;
+
+        private TaskCompletionSource<GoogleSignInAccount?>? _googleSignInTcs;
 
         protected override void OnCreate(Bundle? savedInstanceState)
         {
@@ -38,8 +35,6 @@ namespace Gym_App.Activities
             _primaryLoginButton = FindViewById(Resource.Id.primaryLoginButton);
             _usernameInput = FindViewById<EditText>(Resource.Id.loginUsernameInput);
             _passwordInput = FindViewById<EditText>(Resource.Id.loginPasswordInput);
-
-            TryHandleOAuthCallback(Intent);
 
             _ = TryAutoSignInAsync();
 
@@ -57,16 +52,50 @@ namespace Gym_App.Activities
             }
         }
 
-        protected override void OnNewIntent(Intent? intent)
+        protected override void OnActivityResult(int requestCode, Result resultCode, Intent? data)
         {
-            base.OnNewIntent(intent);
-            TryHandleOAuthCallback(intent);
-        }
+            base.OnActivityResult(requestCode, resultCode, data);
 
-        protected override void OnDestroy()
-        {
-            AndroidOidcBrowser.CancelIfPending();
-            base.OnDestroy();
+            if (requestCode != GoogleSignInRequestCode)
+                return;
+
+            var tcs = _googleSignInTcs;
+            _googleSignInTcs = null;
+
+            if (tcs == null)
+                return;
+
+            if (resultCode != Result.Ok)
+            {
+                tcs.TrySetResult(null);
+                return;
+            }
+
+            try
+            {
+                var task = GoogleSignIn.GetSignedInAccountFromIntent(data);
+                var account = (GoogleSignInAccount?)task.GetResult(Java.Lang.Class.FromType(typeof(ApiException)));
+                tcs.TrySetResult(account);
+            }
+            catch (ApiException ex)
+            {
+                var statusCode = ex.StatusCode;
+                Log.Warn(LogTag, $"GoogleSignIn ApiException. StatusCode={statusCode}, Message='{ex.Message}'");
+
+                var help = statusCode switch
+                {
+                    10 => "Developer error (10). In Firebase Console → Authentication → Sign-in method → Google, ensure it's enabled, then add this app's SHA-1/SHA-256 under Project settings → Your apps → Android, download an updated google-services.json, and rebuild.",
+                    7 => "Network error (7). Check emulator internet access and try again.",
+                    _ => $"Google sign-in failed (code {statusCode})."
+                };
+
+                tcs.TrySetException(new InvalidOperationException(help));
+            }
+            catch (Exception ex)
+            {
+                Log.Warn(LogTag, $"GoogleSignIn unexpected error: {ex}");
+                tcs.TrySetException(ex);
+            }
         }
 
         private async Task BeginOAuthSignInAsync()
@@ -76,7 +105,7 @@ namespace Gym_App.Activities
             {
                 if (_googleLoginButton != null)
                 {
-                    _googleLoginButton.Enabled = false;
+                    RunOnUiThread(() => _googleLoginButton.Enabled = false);
                 }
 
                 var config = FirebaseProjectConfig.LoadFromGoogleServicesJson(this);
@@ -87,74 +116,67 @@ namespace Gym_App.Activities
                     return;
                 }
 
-                var redirectUrlText = GetString(Resource.String.oauth_redirect_url);
-                var scope = "openid profile email";
-                var authorityUrl = new Uri("https://accounts.google.com");
+                var gso = new GoogleSignInOptions.Builder(GoogleSignInOptions.DefaultSignIn)
+                    .RequestIdToken(googleWebClientId)
+                    .RequestEmail()
+                    .Build();
 
-                Log.Info(LogTag, $"Starting Google OIDC login for Firebase. client_id='{googleWebClientId}', authority='{authorityUrl}', redirect_uri='{redirectUrlText}', scope='{scope}'");
+                var googleClient = GoogleSignIn.GetClient(this, gso);
 
-                if (!Uri.TryCreate(redirectUrlText, UriKind.Absolute, out var redirectUrl))
-                {
-                    Toast.MakeText(this, "OAuth2 redirect URL is invalid.", ToastLength.Long)?.Show();
-                    return;
-                }
-
-                var oidcClient = new OidcClient(new OidcClientOptions
-                {
-                    Authority = authorityUrl.AbsoluteUri,
-                    ClientId = googleWebClientId,
-                    Scope = scope,
-                    RedirectUri = redirectUrl.AbsoluteUri,
-                    Browser = new AndroidOidcBrowser(this),
-                    Policy = new Policy
-                    {
-                        Discovery = new DiscoveryPolicy
-                        {
-                            RequireHttps = true
-                        },
-                        RequireIdentityTokenSignature = true
-                    }
-                });
-
+                _googleSignInTcs = new TaskCompletionSource<GoogleSignInAccount?>();
                 Toast.MakeText(this, "Opening Google sign-in…", ToastLength.Short)?.Show();
-                var loginResult = await oidcClient.LoginAsync(new LoginRequest());
+                StartActivityForResult(googleClient.SignInIntent, GoogleSignInRequestCode);
 
-                if (loginResult.IsError)
+                GoogleSignInAccount? account;
+                try
                 {
-                    Log.Warn(LogTag, $"OIDC login error. Error='{loginResult.Error}', ErrorDescription='{loginResult.ErrorDescription}'");
-                    var msg = string.IsNullOrWhiteSpace(loginResult.ErrorDescription)
-                        ? loginResult.Error
-                        : $"{loginResult.Error}: {loginResult.ErrorDescription}";
-                    Toast.MakeText(this, $"Google sign-in failed: {msg}", ToastLength.Long)?.Show();
+                    account = await _googleSignInTcs.Task;
+                }
+                finally
+                {
+                    _googleSignInTcs = null;
+                }
+
+                if (account == null)
+                {
+                    Toast.MakeText(this, "Google sign-in cancelled.", ToastLength.Short)?.Show();
                     return;
                 }
 
-                var googleIdToken = loginResult.IdentityToken;
+                var googleIdToken = account.IdToken;
                 if (string.IsNullOrWhiteSpace(googleIdToken))
                 {
-                    Toast.MakeText(this, "Google sign-in did not return an ID token.", ToastLength.Long)?.Show();
+                    Toast.MakeText(this, "Google sign-in did not return an ID token. Check Firebase/Google OAuth configuration (SHA-1/SHA-256) and try again.", ToastLength.Long)?.Show();
                     return;
                 }
 
                 var auth = new FirebaseAuthService(config);
-                var session = await auth.SignInWithGoogleIdTokenAsync(googleIdToken, redirectUrl.AbsoluteUri, CancellationToken.None);
-                var email =
-                    session.Email ??
-                    loginResult.User?.FindFirst("email")?.Value ??
-                    loginResult.User?.FindFirst(ClaimTypes.Email)?.Value ??
-                    loginResult.User?.Identity?.Name ??
-                    string.Empty;
+                using var signInTimeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+                var session = await auth.SignInWithGoogleIdTokenAsync(googleIdToken, requestUri: "http://localhost", signInTimeoutCts.Token);
+                var email = !string.IsNullOrWhiteSpace(session.Email)
+                    ? session.Email
+                    : (account.Email ?? string.Empty);
 
                 var stitched = string.IsNullOrWhiteSpace(session.Email) && !string.IsNullOrWhiteSpace(email)
                     ? session with { Email = email }
                     : session;
 
                 AuthSessionStore.Save(this, stitched);
+                IncrementTrainingLoginCount();
+
+                // Pull workouts immediately after login so Home/Log reflect server data without restart.
+                await TryPullWorkoutsAfterAuthAsync();
+
+                EnsureBasicUserProfile(email, stitched.DisplayName);
 
                 Log.Info(LogTag, $"Firebase sign-in success. email='{email}'");
                 Toast.MakeText(this, "Signed in", ToastLength.Short)?.Show();
                 StartActivity(new Intent(this, typeof(HomeActivity)));
                 Finish();
+            }
+            catch (OperationCanceledException)
+            {
+                Toast.MakeText(this, "Sign in timed out. Please check network and try again.", ToastLength.Long)?.Show();
             }
             catch (Exception ex)
             {
@@ -165,23 +187,9 @@ namespace Gym_App.Activities
             {
                 if (_googleLoginButton != null)
                 {
-                    _googleLoginButton.Enabled = true;
+                    RunOnUiThread(() => _googleLoginButton.Enabled = true);
                 }
                 _oauthLock.Release();
-            }
-        }
-
-        private void TryHandleOAuthCallback(Intent? intent)
-        {
-            var callbackUrl = intent?.DataString;
-            if (string.IsNullOrWhiteSpace(callbackUrl))
-                return;
-
-            Log.Info(LogTag, $"Received OAuth2 redirect callback: '{callbackUrl}'");
-            var completed = AndroidOidcBrowser.Complete(callbackUrl);
-            if (!completed)
-            {
-                Log.Warn(LogTag, "OAuth2 callback received but no pending login task was waiting.");
             }
         }
 
@@ -196,7 +204,7 @@ namespace Gym_App.Activities
                 return;
             }
 
-            if (!Patterns.EmailAddress.Matcher(username).Matches())
+            if (Android.Util.Patterns.EmailAddress?.Matcher(username)?.Matches() != true)
             {
                 Toast.MakeText(this, "Please enter a valid email", ToastLength.Short)?.Show();
                 return;
@@ -211,17 +219,26 @@ namespace Gym_App.Activities
             try
             {
                 if (_primaryLoginButton != null)
-                    _primaryLoginButton.Enabled = false;
+                    RunOnUiThread(() => _primaryLoginButton.Enabled = false);
 
                 var config = FirebaseProjectConfig.LoadFromGoogleServicesJson(this);
                 var auth = new FirebaseAuthService(config);
-                var session = await auth.SignInWithEmailPasswordAsync(username, password, CancellationToken.None);
+                using var signInTimeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+                var session = await auth.SignInWithEmailPasswordAsync(username, password, signInTimeoutCts.Token);
                 AuthSessionStore.Save(this, session);
+                IncrementTrainingLoginCount();
 
-                EnsureBasicUserProfile(username);
+                // Pull workouts immediately after login so Home/Log reflect server data without restart.
+                await TryPullWorkoutsAfterAuthAsync();
+
+                EnsureBasicUserProfile(session.Email, session.DisplayName);
                 Toast.MakeText(this, "Signed in", ToastLength.Short)?.Show();
                 StartActivity(new Intent(this, typeof(HomeActivity)));
                 Finish();
+            }
+            catch (OperationCanceledException)
+            {
+                Toast.MakeText(this, "Sign in timed out. Please check network and try again.", ToastLength.Long)?.Show();
             }
             catch (Exception ex)
             {
@@ -231,7 +248,7 @@ namespace Gym_App.Activities
             finally
             {
                 if (_primaryLoginButton != null)
-                    _primaryLoginButton.Enabled = true;
+                    RunOnUiThread(() => _primaryLoginButton.Enabled = true);
             }
         }
 
@@ -262,6 +279,8 @@ namespace Gym_App.Activities
                 var stitched = refreshed with { Email = email };
                 AuthSessionStore.Save(this, stitched);
 
+                EnsureBasicUserProfile(email, stitched.DisplayName);
+
                 StartActivity(new Intent(this, typeof(HomeActivity)));
                 Finish();
             }
@@ -272,7 +291,22 @@ namespace Gym_App.Activities
             }
         }
 
-        private void EnsureBasicUserProfile(string username)
+        private async Task TryPullWorkoutsAfterAuthAsync()
+        {
+            try
+            {
+                // Best-effort: do not block navigation for too long.
+                using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+                var database = new GymDatabase();
+                await WorkoutCloudSyncService.TryPullAndApplyAsync(database, timeoutCts.Token).ConfigureAwait(false);
+            }
+            catch
+            {
+                // Ignore: best-effort sync.
+            }
+        }
+
+        private void EnsureBasicUserProfile(string email, string? displayName)
         {
             var prefs = GetSharedPreferences("user_profile", FileCreationMode.Private);
             var editor = prefs?.Edit();
@@ -284,13 +318,14 @@ namespace Gym_App.Activities
             var existingName = prefs?.GetString("full_name", string.Empty) ?? string.Empty;
             if (string.IsNullOrWhiteSpace(existingName))
             {
-                editor.PutString("full_name", username);
+                var nameToUse = string.IsNullOrWhiteSpace(displayName) ? email : displayName;
+                editor.PutString("full_name", nameToUse);
             }
 
             var existingEmail = prefs?.GetString("email", string.Empty) ?? string.Empty;
             if (string.IsNullOrWhiteSpace(existingEmail))
             {
-                editor.PutString("email", username);
+                editor.PutString("email", email);
             }
 
             var unit = prefs?.GetString("unit", string.Empty) ?? string.Empty;
@@ -301,66 +336,13 @@ namespace Gym_App.Activities
 
             editor.Apply();
         }
-    }
 
-    internal sealed class AndroidOidcBrowser : IBrowser
-    {
-        private readonly Activity _activity;
-        private static TaskCompletionSource<BrowserResult>? _taskCompletionSource;
-
-        public AndroidOidcBrowser(Activity activity)
+        // Keep a simple login-based training cycle counter (1 -> 2 -> 3 -> 1 ...).
+        private void IncrementTrainingLoginCount()
         {
-            _activity = activity;
-        }
-
-        public Task<BrowserResult> InvokeAsync(BrowserOptions options, CancellationToken cancellationToken = default)
-        {
-            CancelIfPending();
-            _taskCompletionSource = new TaskCompletionSource<BrowserResult>();
-
-            Log.Info("OAuth2", $"Launching system browser: '{options.StartUrl}'");
-
-            var browserIntent = new Intent(Intent.ActionView, Android.Net.Uri.Parse(options.StartUrl));
-            browserIntent.AddFlags(ActivityFlags.SingleTop);
-            _activity.StartActivity(browserIntent);
-
-            if (cancellationToken.CanBeCanceled)
-            {
-                cancellationToken.Register(() =>
-                {
-                    _taskCompletionSource?.TrySetResult(new BrowserResult
-                    {
-                        ResultType = BrowserResultType.UserCancel,
-                        Error = "User cancelled"
-                    });
-                });
-            }
-
-            return _taskCompletionSource.Task;
-        }
-
-        public static void CancelIfPending()
-        {
-            _taskCompletionSource?.TrySetResult(new BrowserResult
-            {
-                ResultType = BrowserResultType.UserCancel,
-                Error = "Cancelled"
-            });
-            _taskCompletionSource = null;
-        }
-
-        public static bool Complete(string callbackUrl)
-        {
-            if (_taskCompletionSource == null)
-                return false;
-
-            _taskCompletionSource.TrySetResult(new BrowserResult
-            {
-                ResultType = BrowserResultType.Success,
-                Response = callbackUrl
-            });
-            _taskCompletionSource = null;
-            return true;
+            var prefs = GetSharedPreferences("training_plan", FileCreationMode.Private);
+            var currentCount = prefs?.GetInt("login_count", 0) ?? 0;
+            prefs?.Edit()?.PutInt("login_count", currentCount + 1)?.Apply();
         }
     }
 }
