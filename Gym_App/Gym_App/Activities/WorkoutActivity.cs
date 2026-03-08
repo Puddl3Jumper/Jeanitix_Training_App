@@ -5,6 +5,7 @@ using Android.Graphics;
 using Android.Graphics.Drawables;
 using Android.Text;
 using Android.Text.Style;
+using Gym_App;
 using Gym_App.Data;
 using Gym_App.Models;
 using Google.Android.Material.Dialog;
@@ -326,18 +327,32 @@ namespace Gym_App.Activities
 
         private void ShowAddSetDialog(WorkoutExercise workoutExercise)
         {
-            var dialog = new MaterialAlertDialogBuilder(this);
-            dialog.SetTitle("Add Set");
+            var dialogBuilder = new MaterialAlertDialogBuilder(this);
+
+            var titleView = new TextView(this)
+            {
+                Text = "Add Set"
+            };
+            titleView.SetTextSize(Android.Util.ComplexUnitType.Sp, 20f);
+            titleView.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.color_text_primary)));
+            titleView.SetTypeface(Typeface.Create("sans-serif-medium", TypefaceStyle.Bold), TypefaceStyle.Bold);
+            titleView.SetPadding(DpToPx(24), DpToPx(20), DpToPx(24), DpToPx(8));
+            dialogBuilder.SetCustomTitle(titleView);
 
             var layout = new LinearLayout(this) { Orientation = Orientation.Vertical };
             layout.SetPadding(32, 16, 32, 16);
 
             var repsInput = new EditText(this) { Hint = "Reps", InputType = Android.Text.InputTypes.ClassNumber };
             var userPrefs = GetSharedPreferences("user_profile", FileCreationMode.Private);
-            var unit = userPrefs?.GetString("unit", "kg") ?? "kg";
+            var unit = userPrefs?.GetString("unit", "lb") ?? "lb";
             var weightInput = new EditText(this) { Hint = $"Weight ({unit})", InputType = Android.Text.InputTypes.ClassNumber | Android.Text.InputTypes.NumberFlagDecimal };
             var loopInput = new EditText(this) { Hint = "Loop Number", InputType = Android.Text.InputTypes.ClassNumber };
             var notesInput = new EditText(this) { Hint = "Notes (optional)" };
+
+            StyleDialogInput(repsInput);
+            StyleDialogInput(weightInput);
+            StyleDialogInput(loopInput);
+            StyleDialogInput(notesInput);
 
             bool isCircuitExercise = !string.IsNullOrWhiteSpace(workoutExercise.CircuitName);
             int suggestedLoop = workoutExercise.Sets.Count == 0
@@ -354,11 +369,44 @@ namespace Gym_App.Activities
                 layout.AddView(loopInput);
             }
             layout.AddView(notesInput);
-            dialog.SetView(layout);
-
-            dialog.SetPositiveButton("Add", (s, e) =>
+            var actionRow = new LinearLayout(this) { Orientation = Orientation.Horizontal };
+            actionRow.LayoutParameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent)
             {
-                if (int.TryParse(repsInput.Text, out int reps) && 
+                TopMargin = DpToPx(14)
+            };
+
+            var cancelButton = new Button(this) { Text = "Cancel" };
+            var addButton = new Button(this) { Text = "Add" };
+
+            var cancelLp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WrapContent, 1f)
+            {
+                RightMargin = DpToPx(6)
+            };
+            var addLp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WrapContent, 1f)
+            {
+                LeftMargin = DpToPx(6)
+            };
+
+            cancelButton.LayoutParameters = cancelLp;
+            addButton.LayoutParameters = addLp;
+
+            StyleDialogActionButton(cancelButton);
+            StyleDialogActionButton(addButton);
+
+            actionRow.AddView(cancelButton);
+            actionRow.AddView(addButton);
+            layout.AddView(actionRow);
+
+            dialogBuilder.SetView(layout);
+
+            var addSetDialog = dialogBuilder.Create();
+            addSetDialog.Show();
+            DialogThemeHelper.StyleShownDialog(this, addSetDialog, styleButtons: false);
+
+            cancelButton.Click += (s, e) => addSetDialog.Dismiss();
+            addButton.Click += (s, e) =>
+            {
+                if (int.TryParse(repsInput.Text, out int reps) &&
                     double.TryParse(weightInput.Text, out double weight))
                 {
                     int loopNumber = 1;
@@ -373,11 +421,27 @@ namespace Gym_App.Activities
                     _database?.AddSetToExercise(workoutExercise.Id, reps, weight, notesInput.Text, loopNumber, unit);
                     _currentWorkout = _database?.GetWorkoutSession(_currentWorkout?.Id ?? -1);
                     UpdateUI();
+                    addSetDialog.Dismiss();
                 }
-            });
+            };
+        }
 
-            dialog.SetNegativeButton("Cancel", (s, e) => { });
-            dialog.Show();
+        private void StyleDialogInput(EditText input)
+        {
+            DialogThemeHelper.StyleInput(this, input);
+        }
+
+        private void StyleDialogActionButton(Button? button)
+        {
+            if (button == null)
+                return;
+
+            button.SetAllCaps(false);
+            button.SetBackgroundResource(Resource.Drawable.bg_button_primary);
+            button.SetTextColor(new Color(GetColor(Android.Resource.Color.Black)));
+            button.SetTextSize(Android.Util.ComplexUnitType.Sp, 16f);
+            button.SetTypeface(null, TypefaceStyle.Bold);
+            button.SetPadding(DpToPx(18), DpToPx(8), DpToPx(18), DpToPx(8));
         }
 
         private void CopyPreviousSet(WorkoutExercise workoutExercise)
@@ -411,7 +475,7 @@ namespace Gym_App.Activities
             var datePicker = new DatePicker(this);
             datePicker.UpdateDate(currentDate.Year, currentDate.Month - 1, currentDate.Day);
 
-            new MaterialAlertDialogBuilder(this)
+            var dateDialog = new MaterialAlertDialogBuilder(this)
                 .SetTitle("Select Date")
                 .SetView(datePicker)
                 .SetPositiveButton("OK", (s, e) =>
@@ -423,6 +487,8 @@ namespace Gym_App.Activities
                 })
                 .SetNegativeButton("Cancel", (s, e) => { })
                 .Show();
+
+            DialogThemeHelper.StyleShownDialog(this, dateDialog);
         }
 
         private void ShowEditSetDialog(int setId)
@@ -460,11 +526,15 @@ namespace Gym_App.Activities
                 Text = targetSet.Notes ?? string.Empty
             };
 
+            StyleDialogInput(repsInput);
+            StyleDialogInput(weightInput);
+            StyleDialogInput(notesInput);
+
             layout.AddView(repsInput);
             layout.AddView(weightInput);
             layout.AddView(notesInput);
 
-            new MaterialAlertDialogBuilder(this)
+            var editDialog = new MaterialAlertDialogBuilder(this)
                 .SetTitle($"Edit Set {targetSet.SetNumber}")
                 .SetView(layout)
                 .SetPositiveButton("Save", (s, e) =>
@@ -489,6 +559,8 @@ namespace Gym_App.Activities
                 })
                 .SetNegativeButton("Cancel", (s, e) => { })
                 .Show();
+
+            DialogThemeHelper.StyleShownDialog(this, editDialog);
         }
 
         private void ConfirmDeleteSet(int setId)
@@ -496,7 +568,7 @@ namespace Gym_App.Activities
             if (_database == null || _currentWorkout == null)
                 return;
 
-            new MaterialAlertDialogBuilder(this)
+            var deleteDialog = new MaterialAlertDialogBuilder(this)
                 .SetTitle("Delete set")
                 .SetMessage("This will remove the set from the workout.")
                 .SetPositiveButton("Delete", (s, e) =>
@@ -508,6 +580,8 @@ namespace Gym_App.Activities
                 })
                 .SetNegativeButton("Cancel", (s, e) => { })
                 .Show();
+
+            DialogThemeHelper.StyleShownDialog(this, deleteDialog);
         }
 
         private void AddExerciseButton_Click(object? sender, EventArgs e)
@@ -549,12 +623,23 @@ namespace Gym_App.Activities
             var listView = new ListView(this);
             listView.SetBackgroundColor(new Color(GetColor(Resource.Color.color_surface)));
             listView.DividerHeight = 0;
+            listView.SetPadding(DpToPx(16), DpToPx(12), DpToPx(16), DpToPx(12));
+            listView.SetClipToPadding(false);
 
             var adapter = new YellowListAdapter(this, options);
             listView.Adapter = adapter;
 
+            var titleView = new TextView(this)
+            {
+                Text = title,
+                TextSize = 22f
+            };
+            titleView.SetPadding(DpToPx(24), DpToPx(20), DpToPx(24), DpToPx(8));
+            titleView.SetTextColor(new Color(GetColor(Resource.Color.color_text_primary)));
+            titleView.SetTypeface(null, TypefaceStyle.Bold);
+
             var dialog = new MaterialAlertDialogBuilder(this).Create();
-            dialog.SetTitle(title);
+            dialog.SetCustomTitle(titleView);
             dialog.SetView(listView);
 
             listView.ItemClick += (sender, args) =>
@@ -564,6 +649,7 @@ namespace Gym_App.Activities
             };
 
             dialog.Show();
+            DialogThemeHelper.StyleShownDialog(this, dialog, styleButtons: false);
         }
 
         private sealed class YellowListAdapter : ArrayAdapter<string>
@@ -578,13 +664,14 @@ namespace Gym_App.Activities
 
             public override View GetView(int position, View? convertView, ViewGroup parent)
             {
-                var view = base.GetView(position, convertView, parent);
-                if (view is TextView textView)
+                var view = convertView ?? _activity.LayoutInflater?.Inflate(Resource.Layout.item_selection_option, parent, false);
+                if (view == null)
+                    return base.GetView(position, convertView, parent);
+
+                var optionText = view.FindViewById<TextView>(Resource.Id.selectionOptionText);
+                if (optionText != null)
                 {
-                    textView.SetTextColor(new Color(_activity.GetColor(Resource.Color.color_primary)));
-                    textView.SetBackgroundColor(new Color(_activity.GetColor(Resource.Color.color_surface)));
-                    textView.TextSize = 16;
-                    textView.SetPadding(48, 32, 48, 32);
+                    optionText.Text = GetItem(position) ?? string.Empty;
                 }
 
                 return view;
@@ -603,6 +690,8 @@ namespace Gym_App.Activities
             {
                 Hint = "e.g., Circuit A"
             };
+
+            StyleDialogInput(circuitNameInput);
 
             layout.AddView(circuitNameInput);
             dialog.SetView(layout);
@@ -623,7 +712,8 @@ namespace Gym_App.Activities
             });
 
             dialog.SetNegativeButton("Cancel", (sender, args) => { });
-            dialog.Show();
+            var shownDialog = dialog.Show();
+            DialogThemeHelper.StyleShownDialog(this, shownDialog);
         }
 
         private void FinishWorkoutButton_Click(object? sender, EventArgs e)
@@ -643,21 +733,72 @@ namespace Gym_App.Activities
                 return;
             }
 
-            var dialog = new MaterialAlertDialogBuilder(this);
-            dialog.SetTitle("Finish Workout");
-            dialog.SetMessage("Are you sure you want to finish this workout?");
-            dialog.SetPositiveButton("Yes", (s, e) =>
+            var workoutId = _currentWorkout.Id;
+
+            var layout = new LinearLayout(this) { Orientation = Orientation.Vertical };
+            layout.SetPadding(DpToPx(24), DpToPx(18), DpToPx(24), DpToPx(18));
+
+            var titleText = new TextView(this)
             {
-                _database.CompleteWorkout(_currentWorkout.Id);
+                Text = "Finish Workout",
+                TextSize = 22f
+            };
+            titleText.SetTextColor(new Color(GetColor(Resource.Color.color_text_primary)));
+            titleText.SetTypeface(null, TypefaceStyle.Bold);
+
+            var messageText = new TextView(this)
+            {
+                Text = "Are you sure you want to finish this workout?",
+                TextSize = 16f
+            };
+            messageText.SetTextColor(new Color(GetColor(Resource.Color.color_text_secondary)));
+            messageText.SetPadding(0, DpToPx(10), 0, DpToPx(16));
+
+            var actionRow = new LinearLayout(this) { Orientation = Orientation.Horizontal };
+            var noButton = new Button(this) { Text = "No" };
+            var yesButton = new Button(this) { Text = "Yes" };
+
+            var noLp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WrapContent, 1f)
+            {
+                RightMargin = DpToPx(6)
+            };
+            var yesLp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WrapContent, 1f)
+            {
+                LeftMargin = DpToPx(6)
+            };
+
+            noButton.LayoutParameters = noLp;
+            yesButton.LayoutParameters = yesLp;
+
+            StyleDialogActionButton(noButton);
+            StyleDialogActionButton(yesButton);
+
+            actionRow.AddView(noButton);
+            actionRow.AddView(yesButton);
+
+            layout.AddView(titleText);
+            layout.AddView(messageText);
+            layout.AddView(actionRow);
+
+            var dialog = new MaterialAlertDialogBuilder(this)
+                .SetView(layout)
+                .Create();
+
+            dialog.Show();
+            dialog.Window?.SetBackgroundDrawableResource(Resource.Drawable.bg_card_today_outer);
+
+            noButton.Click += (s, e) => dialog.Dismiss();
+            yesButton.Click += (s, e) =>
+            {
+                dialog.Dismiss();
+                _database.CompleteWorkout(workoutId);
                 Toast.MakeText(this, "Workout completed!", ToastLength.Short)?.Show();
 
                 var historyIntent = new Intent(this, typeof(HistoryActivity));
                 historyIntent.AddFlags(ActivityFlags.ClearTop);
                 StartActivity(historyIntent);
                 Finish();
-            });
-            dialog.SetNegativeButton("No", (s, e) => { });
-            dialog.Show();
+            };
         }
 
         protected override void OnDestroy()

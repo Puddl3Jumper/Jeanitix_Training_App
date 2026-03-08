@@ -108,7 +108,7 @@
                 android:layout_weight="1"
                 android:orientation="vertical"
                 android:gravity="center"
-                android:background="@drawable/bg_card"
+                android:background="@drawable/bg_card_today_outer"
                 android:clickable="true"
                 android:focusable="true"
                 android:padding="10dp"
@@ -137,7 +137,7 @@
                 android:layout_weight="1"
                 android:orientation="vertical"
                 android:gravity="center"
-                android:background="@drawable/bg_card"
+                android:background="@drawable/bg_card_today_outer"
                 android:clickable="true"
                 android:focusable="true"
                 android:padding="10dp"
@@ -166,7 +166,7 @@
                 android:layout_weight="1"
                 android:orientation="vertical"
                 android:gravity="center"
-                android:background="@drawable/bg_card"
+                android:background="@drawable/bg_card_today_outer"
                 android:clickable="true"
                 android:focusable="true"
                 android:padding="10dp">
@@ -203,7 +203,7 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:background="@drawable/bg_card"
+                    android:background="@drawable/bg_card_today_outer"
                     android:padding="16dp"
                     android:layout_marginBottom="12dp">
 
@@ -237,29 +237,28 @@
                         android:progressDrawable="@drawable/bg_weekly_progress" />
                 </LinearLayout>
 
-                <TextView
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:text="Key Metrics"
-                    android:textSize="14sp"
-                    android:textStyle="bold"
-                    android:textColor="@color/color_primary"
-                    android:layout_marginBottom="8dp" />
-
                 <LinearLayout
                     android:id="@+id/keyMetricsCard"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:background="@drawable/bg_card"
+                    android:background="@drawable/bg_card_today_outer"
                     android:padding="16dp"
                     android:layout_marginBottom="12dp">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Key Metrics"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@color/color_primary"
+                        android:layout_marginBottom="8dp" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
-                        android:layout_marginTop="8dp"
                         android:layout_marginBottom="8dp">
 
                         <TextView
@@ -272,7 +271,7 @@
                             android:textStyle="bold"
                             android:textSize="13sp"
                             android:textColor="@color/color_on_primary"
-                            android:background="@drawable/bg_log_tab_active" />
+                            android:background="@drawable/bg_button_primary" />
 
                         <TextView
                             android:id="@+id/keyMetricsTabPrs"
@@ -285,7 +284,7 @@
                             android:textStyle="bold"
                             android:textSize="13sp"
                             android:textColor="@color/color_text_secondary"
-                            android:background="@drawable/bg_log_tab_inactive" />
+                            android:background="@drawable/bg_key_metrics_tab_inactive" />
                     </LinearLayout>
 
                     <LinearLayout
@@ -480,7 +479,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:layout_marginBottom="8dp">
+                    android:background="@drawable/bg_card_today_outer"
+                    android:padding="16dp"
+                    android:layout_marginBottom="12dp">
 
                     <TextView
                         android:layout_width="match_parent"
@@ -488,16 +489,8 @@
                         android:text="Training Summary"
                         android:textSize="16sp"
                         android:textStyle="bold"
-                        android:textColor="@color/color_primary" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:background="@drawable/bg_card"
-                    android:padding="16dp"
-                    android:layout_marginBottom="12dp">
+                        android:textColor="@color/color_primary"
+                        android:layout_marginBottom="8dp" />
 
                     <TextView
                         android:id="@+id/summaryWeekValue"
@@ -539,7 +532,9 @@
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
-                    android:layout_marginBottom="8dp">
+                    android:background="@drawable/bg_card_today_outer"
+                    android:padding="16dp"
+                    android:layout_marginBottom="12dp">
 
                     <TextView
                         android:layout_width="match_parent"
@@ -547,62 +542,78 @@
                         android:text="Quick Actions"
                         android:textSize="16sp"
                         android:textStyle="bold"
-                        android:textColor="@color/color_primary" />
-                </LinearLayout>
-
-                <LinearLayout
-                    android:layout_width="match_parent"
-                    android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:background="@drawable/bg_card"
-                    android:padding="16dp"
-                    android:layout_marginBottom="12dp">
+                        android:textColor="@color/color_primary"
+                        android:layout_marginBottom="8dp" />
 
                     <Button
                         android:id="@+id/quickStartWorkoutButton"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:minHeight="@dimen/gym_primary_button_height"
                         android:text="Start Workout"
                         android:textAllCaps="false"
+                        android:textSize="16sp"
                         android:drawableStart="@android:drawable/ic_media_play"
+                        android:drawableTint="@android:color/white"
                         android:drawablePadding="8dp"
                         android:background="@drawable/bg_button_primary"
                         android:textColor="@color/color_on_primary"
+                        android:fontFamily="sans-serif-medium"
+                        android:stateListAnimator="@animator/edit_button_elevation"
+                        android:elevation="2dp"
                         android:layout_marginBottom="8dp" />
 
                     <Button
                         android:id="@+id/quickLogWeightButton"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:minHeight="@dimen/gym_primary_button_height"
                         android:text="Log Weight"
                         android:textAllCaps="false"
+                        android:textSize="16sp"
                         android:drawableStart="@android:drawable/ic_menu_edit"
+                        android:drawableTint="@android:color/white"
                         android:drawablePadding="8dp"
                         android:background="@drawable/bg_button_primary"
                         android:textColor="@color/color_on_primary"
+                        android:fontFamily="sans-serif-medium"
+                        android:stateListAnimator="@animator/edit_button_elevation"
+                        android:elevation="2dp"
                         android:layout_marginBottom="8dp" />
 
                     <Button
                         android:id="@+id/quickViewHistoryButton"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:minHeight="@dimen/gym_primary_button_height"
                         android:text="View Full History"
                         android:textAllCaps="false"
+                        android:textSize="16sp"
                         android:drawableStart="@android:drawable/ic_menu_recent_history"
+                        android:drawableTint="@android:color/white"
                         android:drawablePadding="8dp"
                         android:background="@drawable/bg_button_primary"
-                        android:textColor="@color/color_on_primary" />
+                        android:textColor="@color/color_on_primary"
+                        android:fontFamily="sans-serif-medium"
+                        android:stateListAnimator="@animator/edit_button_elevation"
+                        android:elevation="2dp" />
 
                     <Button
                         android:id="@+id/quickViewProgressButton"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
+                        android:minHeight="@dimen/gym_primary_button_height"
                         android:text="View Progress"
                         android:textAllCaps="false"
+                        android:textSize="16sp"
                         android:drawableStart="@android:drawable/ic_menu_sort_by_size"
+                        android:drawableTint="@android:color/white"
                         android:drawablePadding="8dp"
                         android:background="@drawable/bg_button_primary"
                         android:textColor="@color/color_on_primary"
+                        android:fontFamily="sans-serif-medium"
+                        android:stateListAnimator="@animator/edit_button_elevation"
+                        android:elevation="2dp"
                         android:layout_marginTop="8dp" />
                 </LinearLayout>
 

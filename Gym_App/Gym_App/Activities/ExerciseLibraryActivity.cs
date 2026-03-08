@@ -2,6 +2,7 @@ using Android.Views;
 using Android.Widget;
 using Android.Content;
 using Android.Graphics;
+using Gym_App;
 using Gym_App.Data;
 using Gym_App.Models;
 using Google.Android.Material.Dialog;
@@ -176,6 +177,10 @@ namespace Gym_App.Activities
             var muscleGroupInput = new EditText(this) { Hint = "Muscle Group (e.g., Chest, Legs)" };
             var descriptionInput = new EditText(this) { Hint = "Description (optional)" };
 
+            DialogThemeHelper.StyleInput(this, nameInput);
+            DialogThemeHelper.StyleInput(this, muscleGroupInput);
+            DialogThemeHelper.StyleInput(this, descriptionInput);
+
             layout.AddView(nameInput);
             layout.AddView(muscleGroupInput);
             layout.AddView(descriptionInput);
@@ -199,7 +204,8 @@ namespace Gym_App.Activities
             });
 
             dialog.SetNegativeButton("Cancel", (s, e) => { });
-            dialog.Show();
+            var shownDialog = dialog.Show();
+            DialogThemeHelper.StyleShownDialog(this, shownDialog);
         }
     }
 }

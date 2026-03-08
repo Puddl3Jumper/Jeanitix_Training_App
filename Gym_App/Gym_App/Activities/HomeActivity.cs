@@ -6,6 +6,7 @@ using Android.Text.Style;
 using Android.Views;
 using Android.Widget;
 using AndroidX.Core.Content;
+using Gym_App;
 using Gym_App.Data;
 using Gym_App.Models;
 using Google.Android.Material.Dialog;
@@ -26,6 +27,7 @@ namespace Gym_App.Activities
         private TextView? _weeklyAvgLabelText;
         private TextView? _weeklyGoalSummaryText;
         private TextView? _insightText;
+        private TextView? _homeWelcomeText;
         private LinearLayout? _todayExercisesContainer;
         private ImageView? _noRecordsIcon;
         private TextView? _noRecordsText;
@@ -48,6 +50,7 @@ namespace Gym_App.Activities
             _weeklyAvgLabelText = FindViewById<TextView>(Resource.Id.weeklyAvgLabelText);
             _weeklyGoalSummaryText = FindViewById<TextView>(Resource.Id.weeklyGoalSummaryText);
             _insightText = FindViewById<TextView>(Resource.Id.insightText);
+            _homeWelcomeText = FindViewById<TextView>(Resource.Id.homeWelcomeText);
             _todayExercisesContainer = FindViewById<LinearLayout>(Resource.Id.todayExercisesContainer);
             _noRecordsIcon = FindViewById<ImageView>(Resource.Id.noRecordsIcon);
             _noRecordsText = FindViewById<TextView>(Resource.Id.noRecordsText);
@@ -64,6 +67,9 @@ namespace Gym_App.Activities
             {
                 name = "User";
             }
+
+            UpdateWelcomeHeader(name);
+
             if (!_hasShownWelcomePromptThisLaunch)
             {
                 Toast.MakeText(this, $"Welcome back, {name}", ToastLength.Short)?.Show();
@@ -144,9 +150,27 @@ namespace Gym_App.Activities
         protected override void OnResume()
         {
             base.OnResume();
+            var profilePrefs = GetSharedPreferences("user_profile", FileCreationMode.Private);
+            var name = profilePrefs?.GetString("full_name", "User") ?? "User";
+            UpdateWelcomeHeader(name);
             RenderTodayTrainingPlan();
             LoadTodayRecords();
             _ = TryPullWorkoutsAndRefreshAsync();
+        }
+
+        private void UpdateWelcomeHeader(string? rawName)
+        {
+            if (_homeWelcomeText == null)
+                return;
+
+            var name = rawName?.Trim();
+            if (string.IsNullOrWhiteSpace(name) || string.Equals(name, "User", StringComparison.OrdinalIgnoreCase))
+            {
+                _homeWelcomeText.Text = "Welcome, [Name]!";
+                return;
+            }
+
+            _homeWelcomeText.Text = $"Welcome, {name}!";
         }
 
         private void RenderTodayTrainingPlan()
@@ -170,13 +194,13 @@ namespace Gym_App.Activities
                     lowerBodyValue = "Abs";
                     break;
                 case 2:
-                    upperBodyValue = "Chest/Delt";
+                    upperBodyValue = "Chest/Delts";
                     lowerBodyLabel = "Lower Body";
-                    lowerBodyValue = "Leg";
+                    lowerBodyValue = "Legs";
                     break;
                 default:
                     upperBodyValue = "Back/Shoulder";
-                    lowerBodyLabel = "Cardio";
+                    lowerBodyLabel = "Lower Body";
                     lowerBodyValue = "Cardio";
                     break;
             }
@@ -834,6 +858,7 @@ namespace Gym_App.Activities
             }
 
             dialog.Show();
+            DialogThemeHelper.StyleShownDialog(this, dialog, styleButtons: false);
         }
 
         private void StartQuickExercise(Exercise exercise)
@@ -871,7 +896,8 @@ namespace Gym_App.Activities
                 var selected = exercises[args.Which];
                 ShowSetEntryDialog(selected);
             });
-            picker.Show();
+            var pickerDialog = picker.Show();
+            DialogThemeHelper.StyleShownDialog(this, pickerDialog, styleButtons: false);
         }
 
         private void ShowSetEntryDialog(Exercise exercise)
@@ -895,6 +921,9 @@ namespace Gym_App.Activities
                 Hint = "Weight (kg)",
                 InputType = Android.Text.InputTypes.ClassNumber | Android.Text.InputTypes.NumberFlagDecimal
             };
+
+            DialogThemeHelper.StyleInput(this, repsInput);
+            DialogThemeHelper.StyleInput(this, weightInput);
 
             layout.AddView(repsInput);
             layout.AddView(weightInput);
@@ -929,7 +958,8 @@ namespace Gym_App.Activities
             });
 
             dialog.SetNegativeButton("Cancel", (s, e) => { });
-            dialog.Show();
+            var shownDialog = dialog.Show();
+            DialogThemeHelper.StyleShownDialog(this, shownDialog);
         }
     }
 }

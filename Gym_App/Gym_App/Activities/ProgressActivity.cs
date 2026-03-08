@@ -119,7 +119,7 @@ namespace Gym_App.Activities
                 return;
 
             var unitPrefs = GetSharedPreferences("user_profile", FileCreationMode.Private);
-            var unit = unitPrefs?.GetString("unit", "kg") ?? "kg";
+            var unit = unitPrefs?.GetString("unit", "lb") ?? "lb";
 
             var points = _database.GetExerciseProgress(exerciseName, 30);
             var metrics = _database.GetExercisePrAndLastWeight(exerciseName);

@@ -10,6 +10,7 @@ using Android.Content.Res;
 using System;
 using System.Linq;
 using Android.Views;
+using Gym_App;
 using Google.Android.Material.Dialog;
 
 namespace Gym_App.Activities
@@ -20,6 +21,7 @@ namespace Gym_App.Activities
         private GymDatabase? _database;
 
         private const int PickAvatarRequestCode = 3101;
+        private const int EditProfileRequestCode = 3102;
         private const string ProfilePrefsName = "user_profile";
         private const string AvatarUriKey = "avatar_uri";
 
@@ -94,11 +96,11 @@ namespace Gym_App.Activities
                 statsContainer.Visibility = ViewStates.Visible;
                 prsContainer.Visibility = ViewStates.Gone;
 
-                tabStats.SetBackgroundResource(Resource.Drawable.bg_log_tab_active);
+                tabStats.SetBackgroundResource(Resource.Drawable.bg_button_primary);
                 tabStats.SetTextColor(new Color(GetColor(Resource.Color.color_on_primary)));
                 tabStats.SetTypeface(null, TypefaceStyle.Bold);
 
-                tabPrs.SetBackgroundResource(Resource.Drawable.bg_log_tab_inactive);
+                tabPrs.SetBackgroundResource(Resource.Drawable.bg_key_metrics_tab_inactive);
                 tabPrs.SetTextColor(new Color(GetColor(Resource.Color.color_text_secondary)));
                 tabPrs.SetTypeface(null, TypefaceStyle.Bold);
             }
@@ -108,11 +110,11 @@ namespace Gym_App.Activities
                 statsContainer.Visibility = ViewStates.Gone;
                 prsContainer.Visibility = ViewStates.Visible;
 
-                tabPrs.SetBackgroundResource(Resource.Drawable.bg_log_tab_active);
+                tabPrs.SetBackgroundResource(Resource.Drawable.bg_button_primary);
                 tabPrs.SetTextColor(new Color(GetColor(Resource.Color.color_on_primary)));
                 tabPrs.SetTypeface(null, TypefaceStyle.Bold);
 
-                tabStats.SetBackgroundResource(Resource.Drawable.bg_log_tab_inactive);
+                tabStats.SetBackgroundResource(Resource.Drawable.bg_key_metrics_tab_inactive);
                 tabStats.SetTextColor(new Color(GetColor(Resource.Color.color_text_secondary)));
                 tabStats.SetTypeface(null, TypefaceStyle.Bold);
             }
@@ -242,6 +244,17 @@ namespace Gym_App.Activities
         {
             base.OnActivityResult(requestCode, resultCode, data);
 
+            if (requestCode == EditProfileRequestCode)
+            {
+                if (resultCode == Result.Ok)
+                {
+                    LoadProfileHeader();
+                    LoadStatsOverview();
+                    LoadWeeklyProgressCard();
+                }
+                return;
+            }
+
             if (requestCode != PickAvatarRequestCode)
                 return;
 
@@ -303,7 +316,7 @@ namespace Gym_App.Activities
 
         private void OnEditProfileClick(object? sender, EventArgs e)
         {
-            StartActivity(new Intent(this, typeof(EditProfileActivity)));
+            StartActivityForResult(new Intent(this, typeof(EditProfileActivity)), EditProfileRequestCode);
         }
 
         private void SetupHeaderActions()
@@ -422,7 +435,7 @@ namespace Gym_App.Activities
                 return;
 
             var prefs = GetSharedPreferences("user_profile", FileCreationMode.Private);
-            var unit = prefs?.GetString("unit", "kg") ?? "kg";
+            var unit = prefs?.GetString("unit", "lb") ?? "lb";
 
             var height = prefs?.GetString("height_cm", "--") ?? "--";
             var currentWeight = prefs?.GetString("current_weight", "--") ?? "--";
@@ -432,24 +445,29 @@ namespace Gym_App.Activities
                 ? "Tap to add your first weight log"
                 : $"{currentWeight} {unit}";
 
-            heightValue.Text = height == "--"
+            var hasHeight = TryParseNumber(height, out var heightRawNumeric) && heightRawNumeric > 0;
+            var heightFeet = hasHeight
+                ? (heightRawNumeric > 20 ? heightRawNumeric / 30.48 : heightRawNumeric)
+                : 0;
+
+            heightValue.Text = !hasHeight
                 ? "Tap to add height"
-                : $"{height} cm";
+                : $"{heightFeet:0.##} ft";
 
             ageValue.Text = age == "--"
                 ? "Tap to add age"
                 : $"{age} yrs";
 
             if (TryParseNumber(currentWeight, out var weightNumeric) &&
-                TryParseNumber(height, out var heightCmNumeric) &&
+                hasHeight &&
                 TryParseNumber(age, out var ageNumeric) &&
-                heightCmNumeric > 0)
+                heightFeet > 0)
             {
                 var weightKg = unit.Equals("lb", StringComparison.OrdinalIgnoreCase)
                     ? weightNumeric * 0.45359237
                     : weightNumeric;
 
-                var heightMeters = heightCmNumeric / 100.0;
+                var heightMeters = heightFeet * 0.3048;
                 var bmi = weightKg / (heightMeters * heightMeters);
                 var bodyFatPercent = (1.2 * bmi) + (0.23 * ageNumeric) - 5.4;
                 var clampedBodyFat = Math.Clamp(bodyFatPercent, 2.0, 65.0);
@@ -572,6 +590,7 @@ namespace Gym_App.Activities
                 Hint = "Enter current weight"
             };
             input.InputType = InputTypes.ClassNumber | InputTypes.NumberFlagDecimal;
+            DialogThemeHelper.StyleInput(this, input);
 
             var dialog = new MaterialAlertDialogBuilder(this);
             dialog.SetTitle("Log Weight");
@@ -591,7 +610,8 @@ namespace Gym_App.Activities
                 Toast.MakeText(this, "Weight updated", ToastLength.Short)?.Show();
             });
             dialog.SetNegativeButton("Cancel", (s, e) => { });
-            dialog.Show();
+            var shownDialog = dialog.Show();
+            DialogThemeHelper.StyleShownDialog(this, shownDialog);
         }
 
         private static (double weight, DateTime? date) ComputePrForCategory(IEnumerable<WorkoutSession> workouts, string category)

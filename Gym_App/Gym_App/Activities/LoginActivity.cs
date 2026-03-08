@@ -15,6 +15,8 @@ namespace Gym_App.Activities
     {
         private const string LogTag = "OAuth2";
         private const int GoogleSignInRequestCode = 9101;
+        private static readonly TimeSpan AuthTimeout = TimeSpan.FromSeconds(45);
+        private static readonly TimeSpan GoogleUiTimeout = TimeSpan.FromSeconds(75);
 
         private readonly SemaphoreSlim _oauthLock = new(1, 1);
         private View? _googleLoginButton;
@@ -100,13 +102,15 @@ namespace Gym_App.Activities
 
         private async Task BeginOAuthSignInAsync()
         {
-            await _oauthLock.WaitAsync();
+            if (!await _oauthLock.WaitAsync(0))
+            {
+                Toast.MakeText(this, "Sign in already in progress…", ToastLength.Short)?.Show();
+                return;
+            }
+
             try
             {
-                if (_googleLoginButton != null)
-                {
-                    RunOnUiThread(() => _googleLoginButton.Enabled = false);
-                }
+                SetSignInButtonsEnabled(false);
 
                 var config = FirebaseProjectConfig.LoadFromGoogleServicesJson(this);
                 var googleWebClientId = config.GoogleWebClientId;
@@ -130,7 +134,15 @@ namespace Gym_App.Activities
                 GoogleSignInAccount? account;
                 try
                 {
-                    account = await _googleSignInTcs.Task;
+                    var signInUiTask = _googleSignInTcs.Task;
+                    var completedTask = await Task.WhenAny(signInUiTask, Task.Delay(GoogleUiTimeout));
+                    if (completedTask != signInUiTask)
+                    {
+                        Toast.MakeText(this, "Google sign-in took too long. Please try again.", ToastLength.Long)?.Show();
+                        return;
+                    }
+
+                    account = await signInUiTask;
                 }
                 finally
                 {
@@ -151,7 +163,7 @@ namespace Gym_App.Activities
                 }
 
                 var auth = new FirebaseAuthService(config);
-                using var signInTimeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+                using var signInTimeoutCts = new CancellationTokenSource(AuthTimeout);
                 var session = await auth.SignInWithGoogleIdTokenAsync(googleIdToken, requestUri: "http://localhost", signInTimeoutCts.Token);
                 var email = !string.IsNullOrWhiteSpace(session.Email)
                     ? session.Email
@@ -164,8 +176,8 @@ namespace Gym_App.Activities
                 AuthSessionStore.Save(this, stitched);
                 IncrementTrainingLoginCount();
 
-                // Pull workouts immediately after login so Home/Log reflect server data without restart.
-                await TryPullWorkoutsAfterAuthAsync();
+                // Do not block navigation after auth; sync in background.
+                StartPostSignInSync();
 
                 EnsureBasicUserProfile(email, stitched.DisplayName);
 
@@ -185,10 +197,7 @@ namespace Gym_App.Activities
             }
             finally
             {
-                if (_googleLoginButton != null)
-                {
-                    RunOnUiThread(() => _googleLoginButton.Enabled = true);
-                }
+                SetSignInButtonsEnabled(true);
                 _oauthLock.Release();
             }
         }
@@ -216,20 +225,25 @@ namespace Gym_App.Activities
                 return;
             }
 
+            if (!await _oauthLock.WaitAsync(0))
+            {
+                Toast.MakeText(this, "Sign in already in progress…", ToastLength.Short)?.Show();
+                return;
+            }
+
             try
             {
-                if (_primaryLoginButton != null)
-                    RunOnUiThread(() => _primaryLoginButton.Enabled = false);
+                SetSignInButtonsEnabled(false);
 
                 var config = FirebaseProjectConfig.LoadFromGoogleServicesJson(this);
                 var auth = new FirebaseAuthService(config);
-                using var signInTimeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+                using var signInTimeoutCts = new CancellationTokenSource(AuthTimeout);
                 var session = await auth.SignInWithEmailPasswordAsync(username, password, signInTimeoutCts.Token);
                 AuthSessionStore.Save(this, session);
                 IncrementTrainingLoginCount();
 
-                // Pull workouts immediately after login so Home/Log reflect server data without restart.
-                await TryPullWorkoutsAfterAuthAsync();
+                // Do not block navigation after auth; sync in background.
+                StartPostSignInSync();
 
                 EnsureBasicUserProfile(session.Email, session.DisplayName);
                 Toast.MakeText(this, "Signed in", ToastLength.Short)?.Show();
@@ -247,8 +261,8 @@ namespace Gym_App.Activities
             }
             finally
             {
-                if (_primaryLoginButton != null)
-                    RunOnUiThread(() => _primaryLoginButton.Enabled = true);
+                SetSignInButtonsEnabled(true);
+                _oauthLock.Release();
             }
         }
 
@@ -273,7 +287,8 @@ namespace Gym_App.Activities
 
                 var config = FirebaseProjectConfig.LoadFromGoogleServicesJson(this);
                 var auth = new FirebaseAuthService(config);
-                var refreshed = await auth.RefreshIdTokenAsync(refreshToken, CancellationToken.None);
+                using var refreshTimeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(15));
+                var refreshed = await auth.RefreshIdTokenAsync(refreshToken, refreshTimeoutCts.Token);
 
                 var email = AuthSessionStore.ReadEmail(this) ?? string.Empty;
                 var stitched = refreshed with { Email = email };
@@ -291,19 +306,33 @@ namespace Gym_App.Activities
             }
         }
 
-        private async Task TryPullWorkoutsAfterAuthAsync()
+        private void StartPostSignInSync()
         {
-            try
+            _ = Task.Run(async () =>
             {
-                // Best-effort: do not block navigation for too long.
-                using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
-                var database = new GymDatabase();
-                await WorkoutCloudSyncService.TryPullAndApplyAsync(database, timeoutCts.Token).ConfigureAwait(false);
-            }
-            catch
+                try
+                {
+                    using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+                    var database = new GymDatabase();
+                    await WorkoutCloudSyncService.TryPullAndApplyAsync(database, timeoutCts.Token).ConfigureAwait(false);
+                }
+                catch (Exception ex)
+                {
+                    Log.Warn(LogTag, $"Post-sign-in sync skipped: {ex.Message}");
+                }
+            });
+        }
+
+        private void SetSignInButtonsEnabled(bool isEnabled)
+        {
+            RunOnUiThread(() =>
             {
-                // Ignore: best-effort sync.
-            }
+                if (_googleLoginButton != null)
+                    _googleLoginButton.Enabled = isEnabled;
+
+                if (_primaryLoginButton != null)
+                    _primaryLoginButton.Enabled = isEnabled;
+            });
         }
 
         private void EnsureBasicUserProfile(string email, string? displayName)
@@ -315,23 +344,54 @@ namespace Gym_App.Activities
                 return;
             }
 
+            var normalizedEmail = (email ?? string.Empty).Trim().ToLowerInvariant();
+            var emailSpecificNameKey = string.IsNullOrWhiteSpace(normalizedEmail)
+                ? string.Empty
+                : $"profile_full_name::{normalizedEmail}";
+
+            var existingEmail = prefs?.GetString("email", string.Empty) ?? string.Empty;
             var existingName = prefs?.GetString("full_name", string.Empty) ?? string.Empty;
-            if (string.IsNullOrWhiteSpace(existingName))
+
+            if (!string.IsNullOrWhiteSpace(existingEmail) &&
+                !string.Equals(existingEmail.Trim(), email.Trim(), StringComparison.OrdinalIgnoreCase) &&
+                !string.IsNullOrWhiteSpace(existingName))
+            {
+                var previousEmailKey = $"profile_full_name::{existingEmail.Trim().ToLowerInvariant()}";
+                editor.PutString(previousEmailKey, existingName);
+            }
+
+            var savedNameForEmail = !string.IsNullOrWhiteSpace(emailSpecificNameKey)
+                ? (prefs?.GetString(emailSpecificNameKey, string.Empty) ?? string.Empty)
+                : string.Empty;
+
+            var chosenProfileName = existingName;
+
+            if (!string.IsNullOrWhiteSpace(savedNameForEmail))
+            {
+                editor.PutString("full_name", savedNameForEmail);
+                chosenProfileName = savedNameForEmail;
+            }
+            else if (string.IsNullOrWhiteSpace(existingName))
             {
                 var nameToUse = string.IsNullOrWhiteSpace(displayName) ? email : displayName;
                 editor.PutString("full_name", nameToUse);
+                chosenProfileName = nameToUse;
             }
 
-            var existingEmail = prefs?.GetString("email", string.Empty) ?? string.Empty;
-            if (string.IsNullOrWhiteSpace(existingEmail))
+            if (!string.IsNullOrWhiteSpace(email))
             {
                 editor.PutString("email", email);
+            }
+
+            if (!string.IsNullOrWhiteSpace(emailSpecificNameKey) && !string.IsNullOrWhiteSpace(chosenProfileName))
+            {
+                editor.PutString(emailSpecificNameKey, chosenProfileName);
             }
 
             var unit = prefs?.GetString("unit", string.Empty) ?? string.Empty;
             if (string.IsNullOrWhiteSpace(unit))
             {
-                editor.PutString("unit", "kg");
+                editor.PutString("unit", "lb");
             }
 
             editor.Apply();

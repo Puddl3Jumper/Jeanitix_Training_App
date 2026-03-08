@@ -3,6 +3,9 @@ using Android.Graphics;
 using Android.Text;
 using Android.Widget;
 using System;
+using System.Threading;
+using System.Threading.Tasks;
+using Gym_App.Data;
 
 namespace Gym_App.Activities
 {
@@ -81,6 +84,11 @@ namespace Gym_App.Activities
             var age = prefs?.GetString("age", string.Empty) ?? string.Empty;
             var sex = prefs?.GetString("sex", "Not set") ?? "Not set";
 
+            if (TryParseNumber(height, out var heightNumeric) && heightNumeric > 20)
+            {
+                height = (heightNumeric / 30.48).ToString("0.##");
+            }
+
             if (nicknameInput != null) nicknameInput.Text = nickname;
             if (weightInput != null && weight != "--") weightInput.Text = weight;
             if (heightInput != null && height != "--") heightInput.Text = height;
@@ -94,7 +102,7 @@ namespace Gym_App.Activities
 
             if (saveButton != null)
             {
-                saveButton.Click += (s, e) =>
+                saveButton.Click += async (s, e) =>
                 {
                     var enteredNickname = nicknameInput?.Text?.Trim() ?? string.Empty;
                     var enteredWeight = weightInput?.Text?.Trim() ?? string.Empty;
@@ -102,15 +110,60 @@ namespace Gym_App.Activities
                     var enteredAge = ageInput?.Text?.Trim() ?? string.Empty;
                     var selectedSex = sexSpinner?.SelectedItem?.ToString() ?? "Not set";
 
-                    prefs?.Edit()?
-                        .PutString("full_name", enteredNickname)
-                        .PutString("current_weight", string.IsNullOrWhiteSpace(enteredWeight) ? "--" : enteredWeight)
-                        .PutString("height_cm", string.IsNullOrWhiteSpace(enteredHeight) ? "--" : enteredHeight)
-                        .PutString("age", string.IsNullOrWhiteSpace(enteredAge) ? "--" : enteredAge)
-                        .PutString("sex", selectedSex)
-                        ?.Apply();
+                    if (prefs == null)
+                    {
+                        Toast.MakeText(this, "Unable to save profile", ToastLength.Short)?.Show();
+                        return;
+                    }
 
-                    Toast.MakeText(this, "Profile updated", ToastLength.Short)?.Show();
+                    var existingNickname = prefs.GetString("full_name", string.Empty) ?? string.Empty;
+                    var existingWeight = prefs.GetString("current_weight", "--") ?? "--";
+                    var existingHeight = prefs.GetString("height_cm", "--") ?? "--";
+                    var existingAge = prefs.GetString("age", "--") ?? "--";
+
+                    var nicknameToSave = string.IsNullOrWhiteSpace(enteredNickname) ? existingNickname : enteredNickname;
+                    var weightToSave = string.IsNullOrWhiteSpace(enteredWeight) ? existingWeight : enteredWeight;
+                    var heightToSave = string.IsNullOrWhiteSpace(enteredHeight) ? existingHeight : enteredHeight;
+                    var ageToSave = string.IsNullOrWhiteSpace(enteredAge) ? existingAge : enteredAge;
+
+                    var editor = prefs.Edit();
+                    editor.PutString("full_name", nicknameToSave);
+                    editor.PutString("current_weight", weightToSave);
+                    editor.PutString("height_cm", heightToSave);
+                    editor.PutString("age", ageToSave);
+                    editor.PutString("sex", selectedSex);
+                    editor.PutString("unit", "lb");
+
+                    var currentEmail = (prefs.GetString("email", string.Empty) ?? string.Empty).Trim();
+                    if (!string.IsNullOrWhiteSpace(currentEmail) && !string.IsNullOrWhiteSpace(nicknameToSave))
+                    {
+                        var nicknameKey = $"profile_full_name::{currentEmail.ToLowerInvariant()}";
+                        editor.PutString(nicknameKey, nicknameToSave);
+                    }
+
+                    var saved = editor.Commit();
+                    if (!saved)
+                    {
+                        Toast.MakeText(this, "Profile save failed. Please try again.", ToastLength.Short)?.Show();
+                        return;
+                    }
+
+                    var cloudSynced = true;
+                    if (!string.IsNullOrWhiteSpace(nicknameToSave))
+                    {
+                        try
+                        {
+                            using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(12));
+                            cloudSynced = await TryUpdateOnlineNicknameAsync(nicknameToSave, timeoutCts.Token);
+                        }
+                        catch
+                        {
+                            cloudSynced = false;
+                        }
+                    }
+
+                    SetResult(Result.Ok);
+                    Toast.MakeText(this, cloudSynced ? "Profile updated" : "Profile updated locally. Online nickname sync pending.", ToastLength.Short)?.Show();
                     Finish();
                 };
             }
@@ -136,6 +189,52 @@ namespace Gym_App.Activities
                 return;
 
             label.SetTypeface(null, isSelected ? TypefaceStyle.Bold : TypefaceStyle.Normal);
+        }
+
+        private async Task<bool> TryUpdateOnlineNicknameAsync(string nickname, CancellationToken cancellationToken)
+        {
+            if (string.IsNullOrWhiteSpace(nickname))
+                return true;
+
+            if (!AuthSessionStore.HasSession(this))
+                return true;
+
+            var config = FirebaseProjectConfig.LoadFromGoogleServicesJson(this);
+            var auth = new FirebaseAuthService(config);
+
+            var (refreshToken, idToken, expiresAtUtc) = AuthSessionStore.ReadSessionTokens(this);
+            var token = idToken ?? string.Empty;
+
+            if (string.IsNullOrWhiteSpace(token) || !expiresAtUtc.HasValue || expiresAtUtc.Value <= DateTimeOffset.UtcNow.AddMinutes(1))
+            {
+                if (string.IsNullOrWhiteSpace(refreshToken))
+                    return false;
+
+                var refreshed = await auth.RefreshIdTokenAsync(refreshToken, cancellationToken);
+                var email = AuthSessionStore.ReadEmail(this) ?? string.Empty;
+                if (string.IsNullOrWhiteSpace(refreshed.Email) && !string.IsNullOrWhiteSpace(email))
+                    refreshed = refreshed with { Email = email };
+
+                AuthSessionStore.Save(this, refreshed);
+                token = refreshed.IdToken;
+            }
+
+            if (string.IsNullOrWhiteSpace(token))
+                return false;
+
+            var updated = await auth.UpdateProfileDisplayNameAsync(token, nickname, cancellationToken);
+            var existingEmail = AuthSessionStore.ReadEmail(this) ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(updated.Email) && !string.IsNullOrWhiteSpace(existingEmail))
+                updated = updated with { Email = existingEmail };
+
+            AuthSessionStore.Save(this, updated);
+            return true;
+        }
+
+        private bool TryParseNumber(string value, out double number)
+        {
+            return double.TryParse(value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out number) ||
+                   double.TryParse(value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.CurrentCulture, out number);
         }
     }
 }

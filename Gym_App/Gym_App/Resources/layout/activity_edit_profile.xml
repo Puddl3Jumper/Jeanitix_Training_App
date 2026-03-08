@@ -25,7 +25,7 @@
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Update nickname, weight, age, and sex"
+            android:text="Update nickname, weight (lb), height (ft), age, and sex"
             android:textColor="@android:color/white"
             android:textSize="14sp"
             android:layout_marginBottom="14dp" />
@@ -34,7 +34,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:background="@drawable/bg_card"
+            android:background="@drawable/bg_card_today_outer"
             android:padding="16dp">
 
             <TextView
@@ -58,7 +58,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Weight"
+                android:text="Weight (lb)"
                 android:textColor="@color/color_primary"
                 android:textStyle="bold"
                 android:layout_marginTop="8dp"
@@ -68,7 +68,7 @@
                 android:id="@+id/editWeightInput"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Enter weight"
+                android:hint="Enter weight in lb"
                 android:textColor="@android:color/white"
                 android:textColorHint="#99FFFFFF"
                 android:background="@android:color/transparent"
@@ -77,7 +77,7 @@
             <TextView
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Height"
+                android:text="Height (ft)"
                 android:textColor="@color/color_primary"
                 android:textStyle="bold"
                 android:layout_marginTop="8dp"
@@ -87,7 +87,7 @@
                 android:id="@+id/editHeightInput"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:hint="Enter height in cm"
+                android:hint="Enter height in feet (e.g. 5.9)"
                 android:textColor="@android:color/white"
                 android:textColorHint="#99FFFFFF"
                 android:background="@android:color/transparent"

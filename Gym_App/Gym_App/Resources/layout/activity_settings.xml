@@ -26,7 +26,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:background="@drawable/bg_card"
+            android:background="@drawable/bg_card_today_outer"
             android:padding="16dp"
             android:layout_marginBottom="12dp">
 
@@ -122,7 +122,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:background="@drawable/bg_card"
+            android:background="@drawable/bg_card_today_outer"
             android:padding="16dp"
             android:layout_marginBottom="12dp">
 
@@ -196,7 +196,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:background="@drawable/bg_card"
+            android:background="@drawable/bg_card_today_outer"
             android:padding="16dp"
             android:layout_marginBottom="12dp">
 
@@ -270,7 +270,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:background="@drawable/bg_card"
+            android:background="@drawable/bg_card_today_outer"
             android:padding="16dp">
 
             <com.google.android.material.button.MaterialButton
@@ -305,7 +305,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:background="@drawable/bg_card"
+            android:background="@drawable/bg_card_today_outer"
             android:padding="16dp"
             android:layout_marginBottom="12dp">
 

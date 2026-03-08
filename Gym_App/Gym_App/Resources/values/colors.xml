@@ -2,7 +2,7 @@
 <resources>
   <color name="md_theme_primary">#F4511E</color>
   <color name="md_theme_primary_pressed">#E64A19</color>
-  <color name="md_theme_onPrimary">#000000</color>
+  <color name="md_theme_onPrimary">#FFFFFF</color>
   <color name="md_theme_primaryContainer">#432800</color>
   <color name="md_theme_onPrimaryContainer">#FFDFB3</color>
   <color name="md_theme_secondary">#49454F</color>
@@ -21,7 +21,7 @@
   <color name="md_theme_outline">#49454F</color>
 
   <color name="md_theme_light_primary">#F4511E</color>
-  <color name="md_theme_light_onPrimary">#000000</color>
+  <color name="md_theme_light_onPrimary">#FFFFFF</color>
   <color name="md_theme_light_primaryContainer">#FFDFB3</color>
   <color name="md_theme_light_onPrimaryContainer">#432800</color>
   <color name="md_theme_light_secondary">#E6E6E6</color>
@@ -54,8 +54,8 @@
   <color name="bottom_nav_active_tint">@color/md_theme_primary</color>
   <color name="bottom_nav_inactive">#FF9E9E9E</color>
 
-  <!-- Selected state: primary + 20% alpha -->
-  <color name="bottom_nav_selected_bg">#33F4511E</color>
+  <!-- Selected state: use primary orange to match pill-button language -->
+  <color name="bottom_nav_selected_bg">@color/md_theme_primary</color>
   
   <color name="icon_background">#1E1E1E</color>
   <!-- Specific brand-orange for the EDIT pill button (kept local to that control). -->

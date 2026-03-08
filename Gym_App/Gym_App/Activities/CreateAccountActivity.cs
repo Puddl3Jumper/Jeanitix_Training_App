@@ -122,7 +122,7 @@ namespace Gym_App.Activities
                     editor?.PutString("training_years", "1");
                     editor?.PutString("training_stage", "Intermediate");
                     editor?.PutString("goal", "Build strength");
-                    editor?.PutString("unit", "kg");
+                    editor?.PutString("unit", "lb");
                     editor?.Apply();
 
                     Toast.MakeText(this, "Account created", ToastLength.Short)?.Show();

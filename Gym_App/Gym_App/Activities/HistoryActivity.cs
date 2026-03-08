@@ -3,6 +3,7 @@ using Android.Widget;
 using Android.Content;
 using Android.Graphics;
 using System.Globalization;
+using Gym_App;
 using Gym_App.Data;
 using Gym_App.Models;
 using Google.Android.Material.Dialog;
@@ -293,12 +294,14 @@ namespace Gym_App.Activities
                     Text = "Start First Workout",
                     TextSize = 16
                 };
-                startFirstWorkoutButton.SetTypeface(null, TypefaceStyle.Bold);
+                startFirstWorkoutButton.SetAllCaps(false);
+                startFirstWorkoutButton.SetTypeface(Typeface.Create("sans-serif-medium", TypefaceStyle.Normal), TypefaceStyle.Normal);
                 startFirstWorkoutButton.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.color_on_primary)));
                 startFirstWorkoutButton.SetBackgroundResource(Resource.Drawable.bg_button_primary);
                 startFirstWorkoutButton.BackgroundTintList = null;
+                startFirstWorkoutButton.SetMinHeight((int)Resources.GetDimension(Resource.Dimension.gym_primary_button_height));
                 var buttonParams = new LinearLayout.LayoutParams(
-                    ViewGroup.LayoutParams.WrapContent,
+                    ViewGroup.LayoutParams.MatchParent,
                     ViewGroup.LayoutParams.WrapContent);
                 buttonParams.TopMargin = DpToPx(16);
                 startFirstWorkoutButton.LayoutParameters = buttonParams;
@@ -385,7 +388,7 @@ namespace Gym_App.Activities
                 layoutParams.SetMargins(0, 0, 0, DpToPx(bottomMarginDp));
             }
             workoutCard.LayoutParameters = layoutParams;
-            workoutCard.SetBackgroundResource(Resource.Drawable.bg_card);
+            workoutCard.SetBackgroundResource(Resource.Drawable.bg_card_today_outer);
             workoutCard.SetPadding(DpToPx(20), DpToPx(18), DpToPx(20), DpToPx(18));
 
             var headerRow = new LinearLayout(this)
@@ -625,7 +628,7 @@ namespace Gym_App.Activities
                 var datePicker = new DatePicker(this);
                 datePicker.UpdateDate(selectedDate.Year, selectedDate.Month - 1, selectedDate.Day);
 
-                new MaterialAlertDialogBuilder(this)
+                var dateDialog = new MaterialAlertDialogBuilder(this)
                     .SetTitle("Select Date")
                     .SetView(datePicker)
                     .SetPositiveButton("OK", (sender, args) =>
@@ -635,6 +638,8 @@ namespace Gym_App.Activities
                     })
                     .SetNegativeButton("Cancel", (sender, args) => { })
                     .Show();
+
+                DialogThemeHelper.StyleShownDialog(this, dateDialog);
             };
 
             var notesInput = new EditText(this)
@@ -642,6 +647,10 @@ namespace Gym_App.Activities
                 Hint = "Workout Notes (optional)",
                 Text = workout.Notes ?? string.Empty
             };
+
+            DialogThemeHelper.StyleInput(this, nameInput);
+            DialogThemeHelper.StyleInput(this, dateInput);
+            DialogThemeHelper.StyleInput(this, notesInput);
 
             layout.AddView(nameInput);
             layout.AddView(dateInput);
@@ -657,7 +666,8 @@ namespace Gym_App.Activities
                 Toast.MakeText(this, "Workout updated", ToastLength.Short)?.Show();
             });
             dialog.SetNegativeButton("Cancel", (s, e) => { });
-            dialog.Show();
+            var shownDialog = dialog.Show();
+            DialogThemeHelper.StyleShownDialog(this, shownDialog);
         }
 
         private void ConfirmDeleteWorkout(int workoutId)
@@ -675,7 +685,8 @@ namespace Gym_App.Activities
                 Toast.MakeText(this, "Workout deleted", ToastLength.Short)?.Show();
             });
             dialog.SetNegativeButton("Cancel", (s, e) => { });
-            dialog.Show();
+            var shownDialog = dialog.Show();
+            DialogThemeHelper.StyleShownDialog(this, shownDialog);
         }
     }
 }
