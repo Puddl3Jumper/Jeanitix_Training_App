@@ -27,11 +27,18 @@
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="Welcome, [Name]!"
-                android:textSize="42sp"
-                android:lineSpacingExtra="2dp"
+                android:textSize="38sp"
+                android:lineSpacingExtra="1dp"
                 android:fontFamily="sans-serif"
                 android:textFontWeight="900"
                 android:textColor="@color/color_primary"
+                android:maxLines="2"
+                android:breakStrategy="balanced"
+                android:hyphenationFrequency="none"
+                android:autoSizeTextType="uniform"
+                android:autoSizeMinTextSize="28sp"
+                android:autoSizeMaxTextSize="42sp"
+                android:autoSizeStepGranularity="1sp"
                 android:layout_marginBottom="14dp" />
 
             <LinearLayout
@@ -390,7 +397,8 @@
                 android:textSize="16sp"
                 android:textStyle="normal"
                 android:layout_marginTop="16dp"
-                android:layout_marginBottom="8dp" />
+                android:layout_marginBottom="8dp"
+                android:visibility="gone" />
 
             <LinearLayout
                 android:id="@+id/todayExercisesContainer"
@@ -399,7 +407,8 @@
                 android:orientation="vertical"
                 android:background="@drawable/bg_card_today_outer"
                 android:elevation="2dp"
-                android:padding="16dp">
+                android:padding="16dp"
+                android:visibility="gone">
                 <ImageView
                     android:id="@+id/noRecordsIcon"
                     android:layout_width="48dp"

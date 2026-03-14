@@ -27,8 +27,13 @@
         android:gravity="center"
         android:text="TRACK&#10;LIFT&#10;PROGRESS"
         android:textColor="@color/color_primary"
-        android:textSize="48sp"
-        android:textStyle="bold" />
+        android:textSize="44sp"
+        android:textStyle="bold"
+        android:maxLines="3"
+        android:autoSizeTextType="uniform"
+        android:autoSizeMinTextSize="30sp"
+        android:autoSizeMaxTextSize="48sp"
+        android:autoSizeStepGranularity="1sp" />
 
     <TextView
         android:layout_width="match_parent"

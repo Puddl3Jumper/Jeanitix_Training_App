@@ -1,6 +1,7 @@
 {
   "project_info": {
     "project_number": "509759772251",
+    "firebase_url": "https://new-project-6f5fc-default-rtdb.firebaseio.com",
     "project_id": "new-project-6f5fc",
     "storage_bucket": "new-project-6f5fc.firebasestorage.app"
   },
@@ -14,7 +15,15 @@
       },
       "oauth_client": [
         {
-          "client_id": "509759772251-65miraqe00ml7hf0a49fhispimb0qesk.apps.googleusercontent.com",
+          "client_id": "509759772251-ggequ3u9c9l3m4t2s7d5eq9nvmkkuuor.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.leiyu.GymJournal",
+            "certificate_hash": "eb6a1156fa87c223f5e9f145ee0d1e13c7b815bb"
+          }
+        },
+        {
+          "client_id": "509759772251-6m9eeeqb2ofi8d3jmh9uhsi85o0phsue.apps.googleusercontent.com",
           "client_type": 3
         }
       ],

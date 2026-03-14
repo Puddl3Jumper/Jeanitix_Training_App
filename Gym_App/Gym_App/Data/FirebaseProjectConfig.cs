@@ -66,7 +66,57 @@ public sealed record FirebaseProjectConfig(
                     }
                 }
 
+                if (string.IsNullOrWhiteSpace(googleWebClientId) &&
+                    client.TryGetProperty("services", out var servicesEl) &&
+                    servicesEl.ValueKind == JsonValueKind.Object &&
+                    servicesEl.TryGetProperty("appinvite_service", out var appInviteEl) &&
+                    appInviteEl.ValueKind == JsonValueKind.Object &&
+                    appInviteEl.TryGetProperty("other_platform_oauth_client", out var otherOauthClients) &&
+                    otherOauthClients.ValueKind == JsonValueKind.Array)
+                {
+                    foreach (var oc in otherOauthClients.EnumerateArray())
+                    {
+                        var clientType = oc.TryGetProperty("client_type", out var typeEl) ? typeEl.GetInt32() : -1;
+                        if (clientType == 3)
+                        {
+                            googleWebClientId = oc.TryGetProperty("client_id", out var idEl)
+                                ? idEl.GetString()
+                                : null;
+                            if (!string.IsNullOrWhiteSpace(googleWebClientId))
+                                break;
+                        }
+                    }
+                }
+
                 break;
+            }
+        }
+
+        if (string.IsNullOrWhiteSpace(googleWebClientId) &&
+            root.TryGetProperty("client", out var allClients) &&
+            allClients.ValueKind == JsonValueKind.Array)
+        {
+            foreach (var client in allClients.EnumerateArray())
+            {
+                if (!client.TryGetProperty("oauth_client", out var oauthClients) || oauthClients.ValueKind != JsonValueKind.Array)
+                    continue;
+
+                foreach (var oc in oauthClients.EnumerateArray())
+                {
+                    var clientType = oc.TryGetProperty("client_type", out var typeEl) ? typeEl.GetInt32() : -1;
+                    if (clientType != 3)
+                        continue;
+
+                    googleWebClientId = oc.TryGetProperty("client_id", out var idEl)
+                        ? idEl.GetString()
+                        : null;
+
+                    if (!string.IsNullOrWhiteSpace(googleWebClientId))
+                        break;
+                }
+
+                if (!string.IsNullOrWhiteSpace(googleWebClientId))
+                    break;
             }
         }
 

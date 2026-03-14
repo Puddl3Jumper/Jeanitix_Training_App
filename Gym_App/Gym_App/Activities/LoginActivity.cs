@@ -67,12 +67,6 @@ namespace Gym_App.Activities
             if (tcs == null)
                 return;
 
-            if (resultCode != Result.Ok)
-            {
-                tcs.TrySetResult(null);
-                return;
-            }
-
             try
             {
                 var task = GoogleSignIn.GetSignedInAccountFromIntent(data);
@@ -88,10 +82,19 @@ namespace Gym_App.Activities
                 {
                     10 => "Developer error (10). In Firebase Console → Authentication → Sign-in method → Google, ensure it's enabled, then add this app's SHA-1/SHA-256 under Project settings → Your apps → Android, download an updated google-services.json, and rebuild.",
                     7 => "Network error (7). Check emulator internet access and try again.",
+                    12501 => "Google sign-in was canceled.",
+                    12500 => "Google sign-in failed. Check Google Play services and Google account setup on this device.",
                     _ => $"Google sign-in failed (code {statusCode})."
                 };
 
-                tcs.TrySetException(new InvalidOperationException(help));
+                if (statusCode == 12501)
+                {
+                    tcs.TrySetResult(null);
+                }
+                else
+                {
+                    tcs.TrySetException(new InvalidOperationException(help));
+                }
             }
             catch (Exception ex)
             {
@@ -138,6 +141,8 @@ namespace Gym_App.Activities
                     var completedTask = await Task.WhenAny(signInUiTask, Task.Delay(GoogleUiTimeout));
                     if (completedTask != signInUiTask)
                     {
+                        _googleSignInTcs?.TrySetCanceled();
+                        _googleSignInTcs = null;
                         Toast.MakeText(this, "Google sign-in took too long. Please try again.", ToastLength.Long)?.Show();
                         return;
                     }
@@ -192,6 +197,8 @@ namespace Gym_App.Activities
             }
             catch (Exception ex)
             {
+                _googleSignInTcs?.TrySetCanceled();
+                _googleSignInTcs = null;
                 Log.Error(LogTag, ex.ToString());
                 Toast.MakeText(this, ex.Message, ToastLength.Long)?.Show();
             }

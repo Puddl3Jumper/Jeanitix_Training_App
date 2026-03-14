@@ -10,24 +10,19 @@
     android:paddingBottom="20dp">
 
     <TextView
-        android:id="@+id/onboardingOverlineText"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/home_onboarding_overline"
-        android:textColor="@color/color_primary"
-        android:textStyle="bold"
-        android:textSize="12sp"
-        android:letterSpacing="0.08" />
-
-    <TextView
         android:id="@+id/onboardingTitleText"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
-        android:layout_marginTop="8dp"
         android:text="@string/home_onboarding_title"
         android:textColor="@color/color_text_primary"
         android:textStyle="bold"
         android:textSize="30sp"
+        android:maxLines="2"
+        android:breakStrategy="balanced"
+        android:autoSizeTextType="uniform"
+        android:autoSizeMinTextSize="24sp"
+        android:autoSizeMaxTextSize="34sp"
+        android:autoSizeStepGranularity="1sp"
         android:lineSpacingExtra="2dp" />
 
     <TextView

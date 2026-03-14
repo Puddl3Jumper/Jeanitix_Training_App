@@ -1,24 +1,35 @@
 using Android.Content;
 using Android.Graphics;
 using Android.Text;
+using Android.Views;
 using Android.Widget;
 using System;
+using System.Net.Http;
+using System.Text;
+using System.Text.Json;
 using System.Threading;
 using System.Threading.Tasks;
 using Gym_App.Data;
 
 namespace Gym_App.Activities
 {
-    [Activity(Label = "Edit Profile")]
+    [Activity(Label = "Personal Information")]
     public class EditProfileActivity : Activity
     {
         private const string ProfilePrefsName = "user_profile";
+        private static readonly HttpClient Http = new();
 
         protected override void OnCreate(Bundle? savedInstanceState)
         {
             ThemeManager.ApplyTheme(this);
             base.OnCreate(savedInstanceState);
             SetContentView(Resource.Layout.activity_edit_profile);
+
+            var toolbar = FindViewById<Google.Android.Material.AppBar.MaterialToolbar>(Resource.Id.editProfileToolbar);
+            if (toolbar != null)
+            {
+                toolbar.Title = "Personal Information";
+            }
 
             var homeTab = FindViewById<LinearLayout>(Resource.Id.homeTab);
             var diaryTab = FindViewById<LinearLayout>(Resource.Id.diaryTab);
@@ -50,7 +61,7 @@ namespace Gym_App.Activities
             var weightInput = FindViewById<EditText>(Resource.Id.editWeightInput);
             var heightInput = FindViewById<EditText>(Resource.Id.editHeightInput);
             var ageInput = FindViewById<EditText>(Resource.Id.editAgeInput);
-            var sexSpinner = FindViewById<Spinner>(Resource.Id.editSexSpinner);
+            var sexSelector = FindViewById<TextView>(Resource.Id.editSexSelector);
             var saveButton = FindViewById(Resource.Id.saveProfileButton);
             var cancelButton = FindViewById(Resource.Id.cancelEditProfileButton);
 
@@ -70,12 +81,6 @@ namespace Gym_App.Activities
             }
 
             var sexOptions = new[] { "Not set", "Male", "Female", "Other" };
-            if (sexSpinner != null)
-            {
-                var adapter = new ArrayAdapter<string>(this, Android.Resource.Layout.SimpleSpinnerItem, sexOptions);
-                adapter.SetDropDownViewResource(Android.Resource.Layout.SimpleSpinnerDropDownItem);
-                sexSpinner.Adapter = adapter;
-            }
 
             var prefs = GetSharedPreferences(ProfilePrefsName, FileCreationMode.Private);
             var nickname = prefs?.GetString("full_name", string.Empty) ?? string.Empty;
@@ -83,6 +88,7 @@ namespace Gym_App.Activities
             var height = prefs?.GetString("height_cm", string.Empty) ?? string.Empty;
             var age = prefs?.GetString("age", string.Empty) ?? string.Empty;
             var sex = prefs?.GetString("sex", "Not set") ?? "Not set";
+            var selectedSex = sexOptions.Contains(sex) ? sex : "Not set";
 
             if (TryParseNumber(height, out var heightNumeric) && heightNumeric > 20)
             {
@@ -94,10 +100,17 @@ namespace Gym_App.Activities
             if (heightInput != null && height != "--") heightInput.Text = height;
             if (ageInput != null && age != "--") ageInput.Text = age;
 
-            if (sexSpinner != null)
+            if (sexSelector != null)
             {
-                var index = Array.IndexOf(sexOptions, sex);
-                sexSpinner.SetSelection(index >= 0 ? index : 0);
+                sexSelector.Text = selectedSex;
+                sexSelector.Click += (s, e) =>
+                {
+                    ShowStyledSelectionDialog("Select Sex", sexOptions, selectedIndex =>
+                    {
+                        selectedSex = sexOptions[selectedIndex];
+                        sexSelector.Text = selectedSex;
+                    });
+                };
             }
 
             if (saveButton != null)
@@ -108,7 +121,7 @@ namespace Gym_App.Activities
                     var enteredWeight = weightInput?.Text?.Trim() ?? string.Empty;
                     var enteredHeight = heightInput?.Text?.Trim() ?? string.Empty;
                     var enteredAge = ageInput?.Text?.Trim() ?? string.Empty;
-                    var selectedSex = sexSpinner?.SelectedItem?.ToString() ?? "Not set";
+                    var selectedSexValue = selectedSex;
 
                     if (prefs == null)
                     {
@@ -131,7 +144,7 @@ namespace Gym_App.Activities
                     editor.PutString("current_weight", weightToSave);
                     editor.PutString("height_cm", heightToSave);
                     editor.PutString("age", ageToSave);
-                    editor.PutString("sex", selectedSex);
+                    editor.PutString("sex", selectedSexValue);
                     editor.PutString("unit", "lb");
 
                     var currentEmail = (prefs.GetString("email", string.Empty) ?? string.Empty).Trim();
@@ -162,6 +175,24 @@ namespace Gym_App.Activities
                         }
                     }
 
+                    try
+                    {
+                        using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(12));
+                        var profileSynced = await TryUpdateOnlineProfileAsync(
+                            nicknameToSave,
+                            weightToSave,
+                            heightToSave,
+                            ageToSave,
+                            selectedSexValue,
+                            "lb",
+                            timeoutCts.Token);
+                        cloudSynced = cloudSynced && profileSynced;
+                    }
+                    catch
+                    {
+                        cloudSynced = false;
+                    }
+
                     SetResult(Result.Ok);
                     Toast.MakeText(this, cloudSynced ? "Profile updated" : "Profile updated locally. Online nickname sync pending.", ToastLength.Short)?.Show();
                     Finish();
@@ -189,6 +220,56 @@ namespace Gym_App.Activities
                 return;
 
             label.SetTypeface(null, isSelected ? TypefaceStyle.Bold : TypefaceStyle.Normal);
+        }
+
+        private void ShowStyledSelectionDialog(string title, string[] options, Action<int> onSelected)
+        {
+            var adapter = new SelectionListAdapter(this, options);
+
+            var builder = new Google.Android.Material.Dialog.MaterialAlertDialogBuilder(this);
+
+            var titleView = new TextView(this)
+            {
+                Text = title,
+                TextSize = 20f
+            };
+            titleView.SetTypeface(null, TypefaceStyle.Bold);
+            titleView.SetTextColor(new Color(GetColor(Resource.Color.color_text_primary)));
+            titleView.SetPadding(DpToPx(24), DpToPx(20), DpToPx(24), DpToPx(8));
+            builder.SetCustomTitle(titleView);
+
+            builder.SetAdapter(adapter, (s, e) => onSelected(e.Which));
+            var dialog = builder.Show();
+            DialogThemeHelper.StyleShownDialog(this, dialog, styleButtons: false);
+        }
+
+        private sealed class SelectionListAdapter : ArrayAdapter<string>
+        {
+            private readonly Activity _activity;
+
+            public SelectionListAdapter(Activity activity, string[] options)
+                : base(activity, Android.Resource.Layout.SimpleListItem1, options)
+            {
+                _activity = activity;
+            }
+
+            public override View GetView(int position, View? convertView, ViewGroup parent)
+            {
+                var view = convertView ?? _activity.LayoutInflater?.Inflate(Resource.Layout.item_selection_option, parent, false);
+                if (view == null)
+                    return base.GetView(position, convertView, parent);
+
+                var optionText = view.FindViewById<TextView>(Resource.Id.selectionOptionText);
+                if (optionText != null)
+                    optionText.Text = GetItem(position) ?? string.Empty;
+
+                return view;
+            }
+        }
+
+        private int DpToPx(int dp)
+        {
+            return (int)(dp * Resources.DisplayMetrics.Density);
         }
 
         private async Task<bool> TryUpdateOnlineNicknameAsync(string nickname, CancellationToken cancellationToken)
@@ -235,6 +316,67 @@ namespace Gym_App.Activities
         {
             return double.TryParse(value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.InvariantCulture, out number) ||
                    double.TryParse(value, System.Globalization.NumberStyles.Float, System.Globalization.CultureInfo.CurrentCulture, out number);
+        }
+
+        private async Task<bool> TryUpdateOnlineProfileAsync(
+            string nickname,
+            string weight,
+            string height,
+            string age,
+            string sex,
+            string unit,
+            CancellationToken cancellationToken)
+        {
+            if (!AuthSessionStore.HasSession(this))
+                return true;
+
+            var localId = AuthSessionStore.ReadLocalId(this) ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(localId))
+                return false;
+
+            var config = FirebaseProjectConfig.LoadFromGoogleServicesJson(this);
+            var idToken = await GetValidIdTokenAsync(config, cancellationToken);
+            if (string.IsNullOrWhiteSpace(idToken))
+                return false;
+
+            var baseUrl = $"https://{config.ProjectId}-default-rtdb.firebaseio.com";
+            var url = $"{baseUrl}/users/{Uri.EscapeDataString(localId)}/profile.json?auth={Uri.EscapeDataString(idToken)}";
+
+            var payload = new
+            {
+                fullName = nickname,
+                currentWeight = weight,
+                heightCm = height,
+                age,
+                sex,
+                unit,
+                updatedAtUnixSeconds = DateTimeOffset.UtcNow.ToUnixTimeSeconds()
+            };
+
+            var json = JsonSerializer.Serialize(payload);
+            using var content = new StringContent(json, Encoding.UTF8, "application/json");
+            using var response = await Http.PutAsync(url, content, cancellationToken);
+            return response.IsSuccessStatusCode;
+        }
+
+        private async Task<string?> GetValidIdTokenAsync(FirebaseProjectConfig config, CancellationToken cancellationToken)
+        {
+            var (refreshToken, idToken, expiresAtUtc) = AuthSessionStore.ReadSessionTokens(this);
+
+            if (!string.IsNullOrWhiteSpace(idToken) && expiresAtUtc.HasValue && expiresAtUtc.Value > DateTimeOffset.UtcNow.AddMinutes(1))
+                return idToken;
+
+            if (string.IsNullOrWhiteSpace(refreshToken))
+                return null;
+
+            var auth = new FirebaseAuthService(config);
+            var refreshed = await auth.RefreshIdTokenAsync(refreshToken, cancellationToken);
+            var email = AuthSessionStore.ReadEmail(this) ?? string.Empty;
+            if (string.IsNullOrWhiteSpace(refreshed.Email) && !string.IsNullOrWhiteSpace(email))
+                refreshed = refreshed with { Email = email };
+
+            AuthSessionStore.Save(this, refreshed);
+            return refreshed.IdToken;
         }
     }
 }

@@ -188,7 +188,6 @@ namespace Gym_App.Activities
             {
                 titleText = $"{workoutExercise.Exercise.Name} (Circuit: {workoutExercise.CircuitName} #{workoutExercise.CircuitOrder})";
             }
-            titleText = $"🏋️ {titleText}";
 
             var exerciseTitle = new TextView(this)
             {
@@ -198,6 +197,8 @@ namespace Gym_App.Activities
             exerciseTitle.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.color_primary)));
             exerciseTitle.Typeface = Typeface.Create("sans-serif-medium", TypefaceStyle.Normal);
             exerciseTitle.SetLineSpacing(0f, 1.4f);
+            exerciseTitle.SetCompoundDrawablesWithIntrinsicBounds(GetExerciseIconResource(workoutExercise.Exercise.Name), 0, 0, 0);
+            exerciseTitle.CompoundDrawablePadding = DpToPx(8);
             exerciseTitle.SetPadding(0, 0, 0, 8);
             sectionContainer.AddView(exerciseTitle);
 
@@ -568,20 +569,18 @@ namespace Gym_App.Activities
             if (_database == null || _currentWorkout == null)
                 return;
 
-            var deleteDialog = new MaterialAlertDialogBuilder(this)
-                .SetTitle("Delete set")
-                .SetMessage("This will remove the set from the workout.")
-                .SetPositiveButton("Delete", (s, e) =>
+            DialogThemeHelper.ShowPillConfirmationDialog(
+                this,
+                title: "Delete set",
+                message: "This will remove the set from the workout.",
+                positiveText: "Delete",
+                onPositive: () =>
                 {
                     _database.DeleteWorkoutSet(setId);
                     _currentWorkout = _database.GetWorkoutSession(_currentWorkout.Id);
                     UpdateUI();
                     Toast.MakeText(this, "Set deleted", ToastLength.Short)?.Show();
-                })
-                .SetNegativeButton("Cancel", (s, e) => { })
-                .Show();
-
-            DialogThemeHelper.StyleShownDialog(this, deleteDialog);
+                });
         }
 
         private void AddExerciseButton_Click(object? sender, EventArgs e)
@@ -681,7 +680,16 @@ namespace Gym_App.Activities
         private void ShowCircuitNameDialog(Exercise selectedExercise)
         {
             var dialog = new MaterialAlertDialogBuilder(this);
-            dialog.SetTitle("Circuit Name");
+
+            var titleView = new TextView(this)
+            {
+                Text = "Circuit Name"
+            };
+            titleView.SetTextSize(Android.Util.ComplexUnitType.Sp, 20f);
+            titleView.SetTextColor(new Color(GetColor(Resource.Color.color_text_primary)));
+            titleView.SetTypeface(Typeface.Create("sans-serif-medium", TypefaceStyle.Bold), TypefaceStyle.Bold);
+            titleView.SetPadding(DpToPx(24), DpToPx(20), DpToPx(24), DpToPx(8));
+            dialog.SetCustomTitle(titleView);
 
             var layout = new LinearLayout(this) { Orientation = Orientation.Vertical };
             layout.SetPadding(32, 16, 32, 16);
@@ -694,9 +702,43 @@ namespace Gym_App.Activities
             StyleDialogInput(circuitNameInput);
 
             layout.AddView(circuitNameInput);
+
+            var actionRow = new LinearLayout(this) { Orientation = Orientation.Horizontal };
+            actionRow.LayoutParameters = new LinearLayout.LayoutParams(ViewGroup.LayoutParams.MatchParent, ViewGroup.LayoutParams.WrapContent)
+            {
+                TopMargin = DpToPx(14)
+            };
+
+            var cancelButton = new Button(this) { Text = "Cancel" };
+            var addButton = new Button(this) { Text = "Add" };
+
+            var cancelLp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WrapContent, 1f)
+            {
+                RightMargin = DpToPx(6)
+            };
+            var addLp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WrapContent, 1f)
+            {
+                LeftMargin = DpToPx(6)
+            };
+
+            cancelButton.LayoutParameters = cancelLp;
+            addButton.LayoutParameters = addLp;
+
+            StyleDialogActionButton(cancelButton);
+            StyleDialogActionButton(addButton);
+
+            actionRow.AddView(cancelButton);
+            actionRow.AddView(addButton);
+            layout.AddView(actionRow);
+
             dialog.SetView(layout);
 
-            dialog.SetPositiveButton("Add", (sender, args) =>
+            var shownDialog = dialog.Create();
+            shownDialog.Show();
+            DialogThemeHelper.StyleShownDialog(this, shownDialog, styleButtons: false);
+
+            cancelButton.Click += (sender, args) => shownDialog.Dismiss();
+            addButton.Click += (sender, args) =>
             {
                 var circuitName = circuitNameInput.Text?.Trim();
                 if (!string.IsNullOrWhiteSpace(circuitName))
@@ -704,16 +746,13 @@ namespace Gym_App.Activities
                     _database?.AddExerciseToWorkout(_currentWorkout?.Id ?? -1, selectedExercise.Id, circuitName);
                     _currentWorkout = _database?.GetWorkoutSession(_currentWorkout?.Id ?? -1);
                     UpdateUI();
+                    shownDialog.Dismiss();
                 }
                 else
                 {
                     Toast.MakeText(this, "Circuit name is required", ToastLength.Short)?.Show();
                 }
-            });
-
-            dialog.SetNegativeButton("Cancel", (sender, args) => { });
-            var shownDialog = dialog.Show();
-            DialogThemeHelper.StyleShownDialog(this, shownDialog);
+            };
         }
 
         private void FinishWorkoutButton_Click(object? sender, EventArgs e)
@@ -810,6 +849,19 @@ namespace Gym_App.Activities
         private int DpToPx(int dp)
         {
             return (int)(dp * Resources.DisplayMetrics.Density);
+        }
+
+        private int GetExerciseIconResource(string exerciseName)
+        {
+            var name = (exerciseName ?? string.Empty).ToLowerInvariant();
+
+            if (name.Contains("push") || name.Contains("bench") || name.Contains("press") || name.Contains("chest"))
+                return Resource.Drawable.ic_fitness_center;
+
+            if (name.Contains("squat") || name.Contains("lunge") || name.Contains("leg") || name.Contains("calf") || name.Contains("hamstring") || name.Contains("quad"))
+                return Resource.Drawable.ic_accessibility_new;
+
+            return Resource.Drawable.ic_dumbbell;
         }
     }
 }

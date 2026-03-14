@@ -23,6 +23,11 @@
             android:textSize="24sp"
             android:textStyle="bold"
             android:textColor="@color/color_primary"
+            android:maxLines="1"
+            android:autoSizeTextType="uniform"
+            android:autoSizeMinTextSize="20sp"
+            android:autoSizeMaxTextSize="28sp"
+            android:autoSizeStepGranularity="1sp"
             android:layout_marginTop="0dp"
             android:layout_marginBottom="16dp" />
 

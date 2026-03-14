@@ -585,6 +585,8 @@ namespace Gym_App.Activities
 
         private void ShowLogWeightDialog()
         {
+            int DpToPx(int dp) => (int)(dp * Resources.DisplayMetrics.Density);
+
             var input = new EditText(this)
             {
                 Hint = "Enter current weight"
@@ -592,10 +594,63 @@ namespace Gym_App.Activities
             input.InputType = InputTypes.ClassNumber | InputTypes.NumberFlagDecimal;
             DialogThemeHelper.StyleInput(this, input);
 
-            var dialog = new MaterialAlertDialogBuilder(this);
-            dialog.SetTitle("Log Weight");
-            dialog.SetView(input);
-            dialog.SetPositiveButton("Save", (s, e) =>
+            var layout = new LinearLayout(this) { Orientation = Android.Widget.Orientation.Vertical };
+            layout.SetPadding(DpToPx(24), DpToPx(18), DpToPx(24), DpToPx(18));
+
+            var titleText = new TextView(this)
+            {
+                Text = "Log Weight",
+                TextSize = 22f
+            };
+            titleText.SetTextColor(new Color(GetColor(Resource.Color.color_text_primary)));
+            titleText.SetTypeface(null, TypefaceStyle.Bold);
+
+            input.SetPadding(0, DpToPx(10), 0, DpToPx(16));
+
+            var actionRow = new LinearLayout(this) { Orientation = Android.Widget.Orientation.Horizontal };
+            var cancelButton = new Button(this) { Text = "Cancel" };
+            var saveButton = new Button(this) { Text = "Save" };
+
+            var cancelLp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WrapContent, 1f)
+            {
+                RightMargin = DpToPx(6)
+            };
+            var saveLp = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WrapContent, 1f)
+            {
+                LeftMargin = DpToPx(6)
+            };
+
+            cancelButton.LayoutParameters = cancelLp;
+            saveButton.LayoutParameters = saveLp;
+
+            cancelButton.SetAllCaps(false);
+            cancelButton.SetBackgroundResource(Resource.Drawable.bg_button_primary);
+            cancelButton.SetTextColor(new Color(GetColor(Android.Resource.Color.Black)));
+            cancelButton.SetTypeface(null, TypefaceStyle.Bold);
+            cancelButton.SetPadding(DpToPx(18), DpToPx(8), DpToPx(18), DpToPx(8));
+
+            saveButton.SetAllCaps(false);
+            saveButton.SetBackgroundResource(Resource.Drawable.bg_button_primary);
+            saveButton.SetTextColor(new Color(GetColor(Android.Resource.Color.Black)));
+            saveButton.SetTypeface(null, TypefaceStyle.Bold);
+            saveButton.SetPadding(DpToPx(18), DpToPx(8), DpToPx(18), DpToPx(8));
+
+            actionRow.AddView(cancelButton);
+            actionRow.AddView(saveButton);
+
+            layout.AddView(titleText);
+            layout.AddView(input);
+            layout.AddView(actionRow);
+
+            var dialog = new MaterialAlertDialogBuilder(this)
+                .SetView(layout)
+                .Create();
+
+            dialog.Show();
+            DialogThemeHelper.StyleShownDialog(this, dialog, styleButtons: false);
+
+            cancelButton.Click += (s, e) => dialog.Dismiss();
+            saveButton.Click += (s, e) =>
             {
                 var value = input.Text?.Trim() ?? string.Empty;
                 if (string.IsNullOrWhiteSpace(value))
@@ -608,10 +663,8 @@ namespace Gym_App.Activities
                 prefs?.Edit()?.PutString("current_weight", value)?.Apply();
                 LoadStatsOverview();
                 Toast.MakeText(this, "Weight updated", ToastLength.Short)?.Show();
-            });
-            dialog.SetNegativeButton("Cancel", (s, e) => { });
-            var shownDialog = dialog.Show();
-            DialogThemeHelper.StyleShownDialog(this, shownDialog);
+                dialog.Dismiss();
+            };
         }
 
         private static (double weight, DateTime? date) ComputePrForCategory(IEnumerable<WorkoutSession> workouts, string category)

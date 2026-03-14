@@ -519,17 +519,7 @@ namespace Gym_App.Activities
             moreButton.LayoutParameters = moreParams;
             moreButton.Click += (s, e) =>
             {
-                var popup = new PopupMenu(this, moreButton);
-                var menu = popup.Menu;
-                menu?.Add(0, 1, 0, "Delete");
-                popup.MenuItemClick += (_, args) =>
-                {
-                    if (args.Item?.ItemId == 1)
-                    {
-                        ConfirmDeleteWorkout(workout.Id);
-                    }
-                };
-                popup.Show();
+                ConfirmDeleteWorkout(workout.Id);
             };
 
             if (editButton != null)
@@ -675,18 +665,17 @@ namespace Gym_App.Activities
             if (_database == null)
                 return;
 
-            var dialog = new MaterialAlertDialogBuilder(this);
-            dialog.SetTitle("Delete Workout");
-            dialog.SetMessage("This will permanently delete this workout.");
-            dialog.SetPositiveButton("Delete", (s, e) =>
+            DialogThemeHelper.ShowPillConfirmationDialog(
+                this,
+                title: "Delete Workout",
+                message: "This will permanently delete this workout.",
+                positiveText: "Delete",
+                onPositive: () =>
             {
                 _database.DeleteWorkoutSession(workoutId);
                 LoadHistory();
                 Toast.MakeText(this, "Workout deleted", ToastLength.Short)?.Show();
             });
-            dialog.SetNegativeButton("Cancel", (s, e) => { });
-            var shownDialog = dialog.Show();
-            DialogThemeHelper.StyleShownDialog(this, shownDialog);
         }
     }
 }

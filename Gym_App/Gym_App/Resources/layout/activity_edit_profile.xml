@@ -16,16 +16,17 @@
         android:paddingTop="12dp">
 
         <com.google.android.material.appbar.MaterialToolbar
+            android:id="@+id/editProfileToolbar"
             style="@style/Widget.GymApp.TopAppBar"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:layout_marginBottom="12dp"
-            app:title="Edit Profile" />
+            app:title="Personal Information" />
 
         <TextView
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="Update nickname, weight (lb), height (ft), age, and sex"
+            android:text="Personal Information"
             android:textColor="@android:color/white"
             android:textSize="14sp"
             android:layout_marginBottom="14dp" />
@@ -121,12 +122,21 @@
                 android:layout_marginTop="8dp"
                 android:layout_marginBottom="6dp" />
 
-            <Spinner
-                android:id="@+id/editSexSpinner"
+            <TextView
+                android:id="@+id/editSexSelector"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
+                android:minHeight="48dp"
                 android:background="@android:color/transparent"
-                android:padding="10dp" />
+                android:gravity="center_vertical"
+                android:padding="10dp"
+                android:text="Not set"
+                android:textColor="@android:color/white"
+                android:drawableEnd="@drawable/ic_expand_more"
+                android:drawablePadding="8dp"
+                android:drawableTint="@color/color_text_secondary"
+                android:clickable="true"
+                android:focusable="true" />
 
             <Button
                 android:id="@+id/saveProfileButton"

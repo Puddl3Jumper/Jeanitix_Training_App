@@ -205,6 +205,156 @@ public class GymDatabaseTests
         });
     }
 
+    [Fact]
+    public void LogSomeWorkout_CreatesCompletedWorkoutWithSets()
+    {
+        RunInIsolatedDataHome(database =>
+        {
+            var workout = database.CreateWorkoutSession("Test Workout");
+            var exercise = database.GetAllExercises().First(e => e.Name == "Bench Press");
+
+            database.AddExerciseToWorkout(workout.Id, exercise.Id);
+            var workoutExercise = database.GetWorkoutSession(workout.Id)!.Exercises.Single();
+            database.AddSetToExercise(workoutExercise.Id, reps: 10, weight: 70, notes: "unit-test set");
+            database.CompleteWorkout(workout.Id);
+
+            var savedWorkout = database.GetWorkoutSession(workout.Id);
+            Assert.NotNull(savedWorkout);
+            Assert.True(savedWorkout!.IsCompleted);
+            Assert.Single(savedWorkout.Exercises);
+            Assert.Single(savedWorkout.Exercises[0].Sets);
+        });
+    }
+
+    [Fact]
+    public void LoggedWorkout_IsRecordedInLogTabDataSource()
+    {
+        RunInIsolatedDataHome(database =>
+        {
+            var workout = database.CreateWorkoutSession("Log Tab Visibility Test");
+            var exercise = database.GetAllExercises().First(e => e.Name == "Squat");
+
+            database.AddExerciseToWorkout(workout.Id, exercise.Id);
+            var workoutExercise = database.GetWorkoutSession(workout.Id)!.Exercises.Single();
+            database.AddSetToExercise(workoutExercise.Id, reps: 5, weight: 100);
+            database.CompleteWorkout(workout.Id);
+
+            var history = database.GetWorkoutHistory(limit: 50);
+            var fromLogDataSource = history.SingleOrDefault(h => h.Id == workout.Id);
+
+            Assert.NotNull(fromLogDataSource);
+            Assert.True(fromLogDataSource!.IsCompleted);
+            Assert.Equal("Log Tab Visibility Test", fromLogDataSource.Name);
+        });
+    }
+
+    [Fact]
+    public void LoginPullFromServer_AppliesRemoteWorkoutsToLocalLog()
+    {
+        RunInIsolatedDataHome(database =>
+        {
+            var localWorkout = database.CreateWorkoutSession("Local Unsynced Workout");
+            var localExercise = database.GetAllExercises().First(e => e.Name == "Push-ups");
+            database.AddExerciseToWorkout(localWorkout.Id, localExercise.Id);
+            var localWorkoutExercise = database.GetWorkoutSession(localWorkout.Id)!.Exercises.Single();
+            database.AddSetToExercise(localWorkoutExercise.Id, reps: 20, weight: 0);
+            database.CompleteWorkout(localWorkout.Id);
+
+            var serverWorkout = new WorkoutSession
+            {
+                Id = 9001,
+                Name = "Pulled From Server",
+                StartTime = DateTime.Now,
+                IsCompleted = true,
+                Exercises = new List<WorkoutExercise>
+                {
+                    new()
+                    {
+                        Id = 9101,
+                        ExerciseId = localExercise.Id,
+                        Exercise = localExercise,
+                        Sets = new List<WorkoutSet>
+                        {
+                            new()
+                            {
+                                Id = 9201,
+                                SetNumber = 1,
+                                Reps = 8,
+                                Weight = 85,
+                                WeightUnit = "kg"
+                            }
+                        }
+                    }
+                }
+            };
+
+            var payload = new WorkoutCloudSyncService.WorkoutSyncPayload
+            {
+                UpdatedAtUnixSeconds = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+                WorkoutSessions = new List<WorkoutSession> { serverWorkout },
+                NextWorkoutSessionId = 9002,
+                NextWorkoutExerciseId = 9102,
+                NextWorkoutSetId = 9202
+            };
+
+            var applied = database.TryApplyRemoteWorkoutSync(payload);
+            Assert.True(applied);
+
+            var historyAfterPull = database.GetWorkoutHistory(limit: 50);
+            var pulled = Assert.Single(historyAfterPull);
+            Assert.Equal("Pulled From Server", pulled.Name);
+            Assert.Single(pulled.Exercises);
+            Assert.Single(pulled.Exercises[0].Sets);
+            Assert.Equal(85, pulled.Exercises[0].Sets[0].Weight);
+        });
+    }
+
+    [Fact]
+    public void EndToEnd_LogWorkout_VerifyLogSource_ThenReloginPullFromServer()
+    {
+        WorkoutCloudSyncService.WorkoutSyncPayload payloadFromServer = null!;
+
+        RunInIsolatedDataHome(database =>
+        {
+            var workout = database.CreateWorkoutSession("E2E Local Workout");
+            var exercise = database.GetAllExercises().First(e => e.Name == "Deadlift");
+
+            database.AddExerciseToWorkout(workout.Id, exercise.Id);
+            var workoutExercise = database.GetWorkoutSession(workout.Id)!.Exercises.Single();
+            database.AddSetToExercise(workoutExercise.Id, reps: 5, weight: 120, notes: "e2e");
+            database.CompleteWorkout(workout.Id);
+
+            var history = database.GetWorkoutHistory(limit: 50);
+            var logged = history.SingleOrDefault(h => h.Id == workout.Id);
+            Assert.NotNull(logged);
+            Assert.True(logged!.IsCompleted);
+
+            payloadFromServer = database.ExportWorkoutSyncPayload();
+            payloadFromServer.UpdatedAtUnixSeconds = DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+            payloadFromServer.WorkoutSessions = payloadFromServer.WorkoutSessions
+                .Select(session =>
+                {
+                    session.Name = "Pulled After Relogin";
+                    return session;
+                })
+                .ToList();
+        });
+
+        RunInIsolatedDataHome(database =>
+        {
+            var applied = database.TryApplyRemoteWorkoutSync(payloadFromServer);
+            Assert.True(applied);
+
+            var historyAfterRelogin = database.GetWorkoutHistory(limit: 50);
+            var pulled = Assert.Single(historyAfterRelogin);
+            Assert.Equal("Pulled After Relogin", pulled.Name);
+            Assert.True(pulled.IsCompleted);
+            Assert.Single(pulled.Exercises);
+            Assert.Single(pulled.Exercises[0].Sets);
+            Assert.Equal(120, pulled.Exercises[0].Sets[0].Weight);
+        });
+    }
+
 
     private static void RunInIsolatedDataHome(Action<GymDatabase> action)
     {

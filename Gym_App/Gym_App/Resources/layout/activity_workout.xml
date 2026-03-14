@@ -23,6 +23,11 @@
             android:textSize="24sp"
             android:textStyle="bold"
             android:textColor="@color/color_primary"
+            android:maxLines="1"
+            android:autoSizeTextType="uniform"
+            android:autoSizeMinTextSize="20sp"
+            android:autoSizeMaxTextSize="28sp"
+            android:autoSizeStepGranularity="1sp"
             android:layout_marginTop="0dp"
             android:layout_marginBottom="16dp" />
 
@@ -33,41 +38,58 @@
             android:gravity="center_vertical"
             android:layout_marginBottom="12dp">
 
-            <TextView
-                android:layout_width="wrap_content"
+            <LinearLayout
+                android:layout_width="0dp"
                 android:layout_height="wrap_content"
-                android:text="⏱️"
-                android:textSize="14sp"
-                android:layout_marginEnd="6dp" />
+                android:layout_weight="1"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:layout_marginEnd="10dp">
 
-            <TextView
-                android:id="@+id/workoutTimeText"
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="@string/duration_default"
-                android:textSize="18sp"
-                android:textStyle="bold"
-                android:textColor="@color/color_text_primary"
-                android:lineSpacingMultiplier="1.4" />
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="⏱️"
+                    android:textSize="14sp"
+                    android:layout_marginEnd="6dp" />
 
-            <TextView
-                android:layout_width="wrap_content"
-                android:layout_height="wrap_content"
-                android:text="📅"
-                android:textSize="14sp"
-                android:layout_marginStart="12dp"
-                android:layout_marginEnd="6dp" />
+                <TextView
+                    android:id="@+id/workoutTimeText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="@string/duration_default"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/color_text_primary"
+                    android:singleLine="true"
+                    android:ellipsize="end" />
+            </LinearLayout>
 
-            <TextView
-                android:id="@+id/workoutDateText"
+            <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:text="2026-02-14"
-                android:textSize="16sp"
-                android:textColor="@color/color_text_secondary"
-                android:lineSpacingMultiplier="1.4"
-                android:clickable="true"
-                android:focusable="true" />
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <TextView
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="📅"
+                    android:textSize="14sp"
+                    android:layout_marginEnd="6dp" />
+
+                <TextView
+                    android:id="@+id/workoutDateText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="2026-02-14"
+                    android:textSize="14sp"
+                    android:textColor="@color/color_text_secondary"
+                    android:singleLine="true"
+                    android:ellipsize="end"
+                    android:clickable="true"
+                    android:focusable="true" />
+            </LinearLayout>
         </LinearLayout>
 
         <HorizontalScrollView
