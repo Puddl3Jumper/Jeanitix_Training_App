@@ -170,7 +170,7 @@
                     android:tooltipText="@string/home_start_workout_tooltip"
                     android:textAllCaps="false"
                     android:textSize="16sp"
-                    android:textColor="@android:color/white"
+                    android:textColor="@color/color_on_primary"
                     android:background="@drawable/bg_button_primary"
                     android:stateListAnimator="@animator/edit_button_elevation"
                     android:elevation="2dp"

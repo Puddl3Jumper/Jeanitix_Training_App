@@ -82,7 +82,7 @@
                 android:textColorHint="@color/color_text_secondary" />
         </com.google.android.material.textfield.TextInputLayout>
 
-        <com.google.android.material.button.MaterialButton
+        <Button
             android:id="@+id/primaryLoginButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
@@ -92,17 +92,24 @@
             android:textColor="@color/color_on_primary"
             android:background="@drawable/bg_button_primary"
             android:minHeight="56dp"
+            android:fontFamily="sans-serif-medium"
+            android:stateListAnimator="@animator/edit_button_elevation"
+            android:elevation="2dp"
             android:layout_marginBottom="12dp" />
 
-        <com.google.android.material.button.MaterialButton
+        <Button
             android:id="@+id/googleLoginButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:text="@string/login_google"
             android:textAllCaps="false"
+            android:textStyle="bold"
             android:textColor="@color/color_on_primary"
             android:background="@drawable/bg_button_primary"
-            android:minHeight="56dp" />
+            android:minHeight="56dp"
+            android:fontFamily="sans-serif-medium"
+            android:stateListAnimator="@animator/edit_button_elevation"
+            android:elevation="2dp" />
 
     </LinearLayout>
     </ScrollView>

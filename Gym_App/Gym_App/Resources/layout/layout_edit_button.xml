@@ -9,7 +9,7 @@
     android:background="@drawable/bg_button_primary"
     android:stateListAnimator="@animator/edit_button_elevation"
     android:text="EDIT"
-    android:textColor="@android:color/white"
+    android:textColor="@color/color_on_primary"
     android:textSize="16sp"
     android:fontFamily="sans-serif-medium"
     android:gravity="center"

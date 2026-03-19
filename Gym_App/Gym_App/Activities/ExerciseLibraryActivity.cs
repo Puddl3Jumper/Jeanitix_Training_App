@@ -2,6 +2,7 @@ using Android.Views;
 using Android.Widget;
 using Android.Content;
 using Android.Graphics;
+using Android.Text;
 using Gym_App;
 using Gym_App.Data;
 using Gym_App.Models;
@@ -14,6 +15,8 @@ namespace Gym_App.Activities
     {
         private GymDatabase? _database;
         private LinearLayout? _exerciseListContainer;
+        private int _targetWorkoutId = -1;
+        private static readonly string[] CircuitOptions = { "Circuit A", "Circuit B", "Circuit C" };
 
         protected override void OnCreate(Bundle? savedInstanceState)
         {
@@ -22,6 +25,7 @@ namespace Gym_App.Activities
             SetContentView(Resource.Layout.activity_exercise_library);
 
             _database = new GymDatabase();
+            _targetWorkoutId = Intent?.GetIntExtra("workoutId", -1) ?? -1;
             _exerciseListContainer = FindViewById<LinearLayout>(Resource.Id.exerciseListContainer);
 
             var homeTab = FindViewById<LinearLayout>(Resource.Id.homeTab);
@@ -161,8 +165,148 @@ namespace Gym_App.Activities
 
                     _exerciseListContainer.AddView(exerciseTitle);
                     _exerciseListContainer.AddView(exerciseView);
+
+                    exerciseTitle.Click += (s, e) => ShowLogExerciseDialog(exercise);
+                    exerciseView.Click += (s, e) => ShowLogExerciseDialog(exercise);
                 }
             }
+        }
+
+        private WorkoutSession EnsureActiveWorkout()
+        {
+            var session = _targetWorkoutId > 0
+                ? _database?.GetWorkoutSession(_targetWorkoutId)
+                : _database?.GetCurrentWorkout();
+
+            if (session == null)
+            {
+                session = _database!.CreateWorkoutSession("Training");
+            }
+
+            _targetWorkoutId = session.Id;
+            return session;
+        }
+
+        private void ShowLogExerciseDialog(Exercise exercise)
+        {
+            if (_database == null)
+                return;
+
+            var session = EnsureActiveWorkout();
+
+            var dialog = new MaterialAlertDialogBuilder(this);
+            dialog.SetTitle($"Log {exercise.Name}");
+
+            var layout = new LinearLayout(this) { Orientation = Orientation.Vertical };
+            layout.SetPadding(32, 16, 32, 16);
+
+            var circuitLabel = new TextView(this)
+            {
+                Text = "Workout Group",
+                TextSize = 14
+            };
+            circuitLabel.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.color_text_primary)));
+
+            var circuitSpinner = new Spinner(this);
+            var circuitAdapter = new ArrayAdapter<string>(this, Android.Resource.Layout.SimpleSpinnerDropDownItem, CircuitOptions);
+            circuitSpinner.Adapter = circuitAdapter;
+
+            var countLabel = new TextView(this)
+            {
+                Text = "Done Count",
+                TextSize = 14
+            };
+            countLabel.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.color_text_primary)));
+            countLabel.SetPadding(0, 20, 0, 0);
+
+            var countInput = new EditText(this)
+            {
+                Hint = "How many sets completed"
+            };
+            countInput.InputType = InputTypes.ClassNumber;
+            DialogThemeHelper.StyleInput(this, countInput);
+
+            var existingByCircuit = session.Exercises
+                .Where(e => e.ExerciseId == exercise.Id && !string.IsNullOrWhiteSpace(e.CircuitName))
+                .OrderBy(e => e.CircuitName)
+                .ToList();
+
+            if (existingByCircuit.Count > 0)
+            {
+                var existing = existingByCircuit[0];
+                var circuitName = existing.CircuitName?.Trim() ?? CircuitOptions[0];
+                var selectedIndex = Array.FindIndex(CircuitOptions, c => string.Equals(c, circuitName, StringComparison.OrdinalIgnoreCase));
+                if (selectedIndex >= 0)
+                    circuitSpinner.SetSelection(selectedIndex);
+
+                countInput.Text = Math.Max(0, existing.Sets.Count).ToString();
+            }
+            else
+            {
+                countInput.Text = "1";
+            }
+
+            layout.AddView(circuitLabel);
+            layout.AddView(circuitSpinner);
+            layout.AddView(countLabel);
+            layout.AddView(countInput);
+            dialog.SetView(layout);
+
+            dialog.SetPositiveButton("Save", (s, e) =>
+            {
+                var selectedCircuit = CircuitOptions[Math.Max(0, circuitSpinner.SelectedItemPosition)];
+                var targetCount = 0;
+                if (!int.TryParse(countInput.Text?.Trim(), out targetCount))
+                    targetCount = 0;
+                targetCount = Math.Max(0, targetCount);
+
+                var activeSession = EnsureActiveWorkout();
+                var targetExercise = activeSession.Exercises
+                    .FirstOrDefault(ex => ex.ExerciseId == exercise.Id && string.Equals(ex.CircuitName, selectedCircuit, StringComparison.OrdinalIgnoreCase));
+
+                if (targetExercise == null && targetCount > 0)
+                {
+                    _database.AddExerciseToWorkout(activeSession.Id, exercise.Id, selectedCircuit);
+                    activeSession = _database.GetWorkoutSession(activeSession.Id) ?? activeSession;
+                    targetExercise = activeSession.Exercises
+                        .Where(ex => ex.ExerciseId == exercise.Id && string.Equals(ex.CircuitName, selectedCircuit, StringComparison.OrdinalIgnoreCase))
+                        .OrderByDescending(ex => ex.Id)
+                        .FirstOrDefault();
+                }
+
+                if (targetExercise == null)
+                {
+                    Toast.MakeText(this, "Saved", ToastLength.Short)?.Show();
+                    return;
+                }
+
+                var currentCount = targetExercise.Sets.Count;
+                if (targetCount > currentCount)
+                {
+                    for (var i = currentCount; i < targetCount; i++)
+                    {
+                        _database.AddSetToExercise(targetExercise.Id, 1, 0, "Logged from library", 1, "kg");
+                    }
+                }
+                else if (targetCount < currentCount)
+                {
+                    var setsToDelete = targetExercise.Sets
+                        .OrderByDescending(set => set.SetNumber)
+                        .Take(currentCount - targetCount)
+                        .ToList();
+
+                    foreach (var set in setsToDelete)
+                    {
+                        _database.DeleteWorkoutSet(set.Id);
+                    }
+                }
+
+                Toast.MakeText(this, $"{exercise.Name} saved to {selectedCircuit}", ToastLength.Short)?.Show();
+            });
+
+            dialog.SetNegativeButton("Cancel", (s, e) => { });
+            var shownDialog = dialog.Show();
+            DialogThemeHelper.StyleShownDialog(this, shownDialog);
         }
 
         private void AddCustomExerciseButton_Click(object? sender, EventArgs e)

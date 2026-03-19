@@ -9,8 +9,16 @@ public sealed record FirebaseProjectConfig(
     string WebApiKey,
     string? GoogleWebClientId)
 {
+    private static readonly object CacheLock = new();
+    private static FirebaseProjectConfig? _cached;
+
     public static FirebaseProjectConfig LoadFromGoogleServicesJson(Context context)
     {
+        var packageName = context.PackageName;
+        var cached = _cached;
+        if (cached != null && string.Equals(cached.AndroidPackageName, packageName, StringComparison.Ordinal))
+            return cached;
+
         using var stream = context.Assets?.Open("google-services.json")
             ?? throw new InvalidOperationException("google-services.json was not found in Android assets. Ensure the .csproj includes <AndroidAsset Include=\"google-services.json\" />.");
 
@@ -21,8 +29,6 @@ public sealed record FirebaseProjectConfig(
         var projectId = root.GetProperty("project_info").GetProperty("project_id").GetString();
         if (string.IsNullOrWhiteSpace(projectId))
             throw new InvalidOperationException("Firebase project_id is missing in google-services.json.");
-
-        var packageName = context.PackageName;
 
         string? apiKey = null;
         string? googleWebClientId = null;
@@ -126,10 +132,17 @@ public sealed record FirebaseProjectConfig(
         if (string.IsNullOrWhiteSpace(apiKey))
             throw new InvalidOperationException("Firebase Web API key (api_key/current_key) is missing in google-services.json.");
 
-        return new FirebaseProjectConfig(
+        var resolved = new FirebaseProjectConfig(
             ProjectId: projectId,
             AndroidPackageName: matchedPackageName,
             WebApiKey: apiKey,
             GoogleWebClientId: googleWebClientId);
+
+        lock (CacheLock)
+        {
+            _cached = resolved;
+        }
+
+        return resolved;
     }
 }

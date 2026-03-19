@@ -1,10 +1,11 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-  <color name="md_theme_primary">#F4511E</color>
-  <color name="md_theme_primary_pressed">#E64A19</color>
-  <color name="md_theme_onPrimary">#FFFFFF</color>
-  <color name="md_theme_primaryContainer">#432800</color>
-  <color name="md_theme_onPrimaryContainer">#FFDFB3</color>
+  <!-- M3 Dark – Yellow/Amber seed #FFC107 -->
+  <color name="md_theme_primary">#E7B84A</color>
+  <color name="md_theme_primary_pressed">#CF9E31</color>
+  <color name="md_theme_onPrimary">#1F1600</color>
+  <color name="md_theme_primaryContainer">#4A3800</color>
+  <color name="md_theme_onPrimaryContainer">#FFE7B3</color>
   <color name="md_theme_secondary">#49454F</color>
   <color name="md_theme_onSecondary">#FFFFFF</color>
   <color name="md_theme_secondaryContainer">#49454F</color>
@@ -20,10 +21,11 @@
   <color name="md_theme_onSurfaceVariant">#E0E0E0</color>
   <color name="md_theme_outline">#49454F</color>
 
-  <color name="md_theme_light_primary">#F4511E</color>
+  <!-- M3 Light – Yellow/Amber seed #FFC107 -->
+  <color name="md_theme_light_primary">#695F00</color>
   <color name="md_theme_light_onPrimary">#FFFFFF</color>
-  <color name="md_theme_light_primaryContainer">#FFDFB3</color>
-  <color name="md_theme_light_onPrimaryContainer">#432800</color>
+  <color name="md_theme_light_primaryContainer">#FFEEA4</color>
+  <color name="md_theme_light_onPrimaryContainer">#211A00</color>
   <color name="md_theme_light_secondary">#E6E6E6</color>
   <color name="md_theme_light_onSecondary">#1E1E1E</color>
   <color name="md_theme_light_secondaryContainer">#F0F0F0</color>
@@ -54,23 +56,25 @@
   <color name="bottom_nav_active_tint">@color/md_theme_primary</color>
   <color name="bottom_nav_inactive">#FF9E9E9E</color>
 
-  <!-- Selected state: use primary orange to match pill-button language -->
-  <color name="bottom_nav_selected_bg">@color/md_theme_primary</color>
+  <!-- Selected state: match primary pill-button orange exactly -->
+  <color name="bottom_nav_selected_bg">@color/home_cta_orange</color>
   
   <color name="icon_background">#1E1E1E</color>
-  <!-- Specific brand-orange for the EDIT pill button (kept local to that control). -->
-  <color name="edit_button_orange">#FF9800</color>
-  <color name="edit_button_orange_pressed">#F57C00</color>
+  <!-- Specific brand-yellow for the EDIT pill button (kept local to that control). -->
+  <color name="edit_button_orange">#E7B84A</color>
+  <color name="edit_button_orange_pressed">#CF9E31</color>
 
-  <!-- EDIT pill: keep extra colors for earlier experiments (unused now), safe to leave. -->
-  <color name="edit_button_grad_start">#FFB74D</color>
-  <color name="edit_button_grad_end">#FF9800</color>
-  <color name="edit_button_grad_start_pressed">#FFA726</color>
-  <color name="edit_button_grad_end_pressed">#F57C00</color>
+  <!-- EDIT pill gradient – yellow/amber M3 tones -->
+  <color name="edit_button_grad_start">#F2CB72</color>
+  <color name="edit_button_grad_end">#E7B84A</color>
+  <color name="edit_button_grad_start_pressed">#E8BC58</color>
+  <color name="edit_button_grad_end_pressed">#CF9E31</color>
   <color name="edit_button_highlight">#26FFFFFF</color>
   <color name="edit_button_shade">#14000000</color>
   <color name="edit_button_shadow">#66000000</color>
 
-  <color name="home_cta_orange">#FF5722</color>
-  <color name="home_cta_orange_pressed">#E64A19</color>
+  <color name="home_cta_orange">#E7B84A</color>
+  <color name="home_cta_orange_pressed">#CF9E31</color>
+
+  <color name="train_chip_active_bg">#FFF3D6</color>
 </resources>

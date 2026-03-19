@@ -7,6 +7,7 @@ using Gym_App;
 using Gym_App.Data;
 using Gym_App.Models;
 using Google.Android.Material.Dialog;
+using System.Threading;
 
 namespace Gym_App.Activities
 {
@@ -30,6 +31,7 @@ namespace Gym_App.Activities
         private int _lastScrollY;
         private bool _isFabVisible = true;
         private HistoryRange _selectedRange = HistoryRange.Day;
+        private readonly SemaphoreSlim _cloudPullLock = new(1, 1);
 
         protected override void OnCreate(Bundle? savedInstanceState)
         {
@@ -145,6 +147,49 @@ namespace Gym_App.Activities
             UpdateHistoryRangeUi();
 
             LoadHistory();
+            _ = TryPullHistoryAndRefreshAsync();
+        }
+
+        protected override void OnResume()
+        {
+            base.OnResume();
+            LoadHistory();
+            _ = TryPullHistoryAndRefreshAsync();
+        }
+
+        private async Task TryPullHistoryAndRefreshAsync()
+        {
+            if (_database == null)
+                return;
+
+            if (!await _cloudPullLock.WaitAsync(TimeSpan.FromSeconds(8)).ConfigureAwait(false))
+                return;
+
+            try
+            {
+                using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(12));
+                await WorkoutCloudSyncService.TryPullAndApplyAsync(_database, timeoutCts.Token).ConfigureAwait(false);
+            }
+            catch
+            {
+                // Best-effort only.
+            }
+            finally
+            {
+                _cloudPullLock.Release();
+            }
+
+            RunOnUiThread(() =>
+            {
+                try
+                {
+                    LoadHistory();
+                }
+                catch
+                {
+                    // Ignore UI refresh failures.
+                }
+            });
         }
 
         private void UpdateHistoryRangeUi()
@@ -252,7 +297,16 @@ namespace Gym_App.Activities
 
             _historyContainer.RemoveAllViews();
 
-            var history = FilterHistoryByRange(_database.GetWorkoutHistory());
+            var history = _database.GetWorkoutHistory();
+            var currentWorkout = _database.GetCurrentWorkout();
+            if (currentWorkout != null && currentWorkout.Exercises.Any(e => e.Sets.Count > 0 || !string.IsNullOrWhiteSpace(e.CircuitName)))
+            {
+                history.Insert(0, currentWorkout);
+            }
+
+            history = FilterHistoryByRange(history)
+                .OrderByDescending(x => x.StartTime)
+                .ToList();
 
             if (history.Count == 0)
             {
@@ -417,7 +471,7 @@ namespace Gym_App.Activities
 
             var titleText = new TextView(this)
             {
-                Text = $"Session {sessionNumber}",
+                Text = workout.IsCompleted ? $"Session {sessionNumber}" : $"Session {sessionNumber} · In Progress",
                 TextSize = 18
             };
             titleText.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.color_primary)));
@@ -535,6 +589,18 @@ namespace Gym_App.Activities
 
         private string GetDurationDisplay(WorkoutSession workout)
         {
+            if (!workout.IsCompleted)
+            {
+                var inProgressDuration = DateTime.Now - workout.StartTime;
+                if (inProgressDuration < TimeSpan.Zero)
+                    inProgressDuration = TimeSpan.Zero;
+
+                if (inProgressDuration.TotalHours >= 1)
+                    return inProgressDuration.ToString("hh\\:mm\\:ss");
+
+                return inProgressDuration.ToString("mm\\:ss");
+            }
+
             if (workout.Duration <= TimeSpan.Zero)
                 return "No duration recorded";
 

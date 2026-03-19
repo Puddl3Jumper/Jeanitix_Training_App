@@ -216,12 +216,12 @@ namespace Gym_App.Activities
             if (_database == null)
                 return;
 
-            if (!await _cloudPullLock.WaitAsync(0).ConfigureAwait(false))
+            if (!await _cloudPullLock.WaitAsync(TimeSpan.FromSeconds(8)).ConfigureAwait(false))
                 return;
 
             try
             {
-                using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(3));
+                using var timeoutCts = new CancellationTokenSource(TimeSpan.FromSeconds(12));
                 await WorkoutCloudSyncService.TryPullAndApplyAsync(_database, timeoutCts.Token).ConfigureAwait(false);
             }
             catch
