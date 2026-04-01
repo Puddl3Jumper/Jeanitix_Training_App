@@ -74,12 +74,11 @@ namespace Gym_App.Activities
             
             if (workoutId == -1)
             {
-                _currentWorkout = _database.GetCurrentWorkout() ?? _database.CreateWorkoutSession("Workout Session");
+                _currentWorkout = _database.CreateWorkoutSession("Workout Session");
             }
             else
             {
                 _currentWorkout = _database.GetWorkoutSession(workoutId)
-                                 ?? _database.GetCurrentWorkout()
                                  ?? _database.CreateWorkoutSession("Workout Session");
             }
 

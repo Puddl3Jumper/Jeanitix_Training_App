@@ -134,6 +134,55 @@ public class GymDatabaseTests
         });
     }
 
+    [Fact]
+    public void GetCurrentWorkout_ReturnsNullAfterAllWorkoutsCompleted()
+    {
+        RunInIsolatedDataHome(database =>
+        {
+            var workout = database.CreateWorkoutSession("Workout 1");
+            var exercise = database.GetAllExercises().First(e => e.Name == "Bench Press");
+            database.AddExerciseToWorkout(workout.Id, exercise.Id);
+            database.CompleteWorkout(workout.Id);
+
+            var current = database.GetCurrentWorkout();
+
+            Assert.Null(current);
+        });
+    }
+
+    [Fact]
+    public void GetCurrentWorkout_ReturnsNull_WhenNoWorkoutsExist()
+    {
+        RunInIsolatedDataHome(database =>
+        {
+            var current = database.GetCurrentWorkout();
+
+            Assert.Null(current);
+        });
+    }
+
+    [Fact]
+    public void WorkoutRotation_CreateNewWorkout_AfterPreviousCompleted()
+    {
+        RunInIsolatedDataHome(database =>
+        {
+            var exercise = database.GetAllExercises().First(e => e.Name == "Bench Press");
+
+            var workout1 = database.CreateWorkoutSession("Session 1");
+            database.AddExerciseToWorkout(workout1.Id, exercise.Id);
+            database.CompleteWorkout(workout1.Id);
+
+            Assert.Null(database.GetCurrentWorkout());
+
+            var workout2 = database.CreateWorkoutSession("Session 2");
+
+            var current = database.GetCurrentWorkout();
+            Assert.NotNull(current);
+            Assert.Equal(workout2.Id, current.Id);
+            Assert.NotEqual(workout1.Id, current.Id);
+        });
+    }
+
     private static void RunInIsolatedDataHome(Action<GymDatabase> action)
     {
         var originalHome = Environment.GetEnvironmentVariable("HOME");

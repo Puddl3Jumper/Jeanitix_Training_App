@@ -76,13 +76,7 @@ namespace Gym_App.Activities
             {
                 startWorkoutButton.Click += (s, e) =>
                 {
-                    var currentWorkout = _database?.GetCurrentWorkout();
-                    var intent = new Intent(this, typeof(WorkoutActivity));
-                    if (currentWorkout != null)
-                    {
-                        intent.PutExtra("workoutId", currentWorkout.Id);
-                    }
-                    StartActivity(intent);
+                    StartActivity(new Intent(this, typeof(WorkoutActivity)));
                 };
             }
 
@@ -674,8 +668,7 @@ namespace Gym_App.Activities
             if (_database == null)
                 return;
 
-            var currentWorkout = _database.GetCurrentWorkout();
-            var session = currentWorkout ?? _database.CreateWorkoutSession("Quick Start Workout");
+            var session = _database.CreateWorkoutSession("Quick Start Workout");
             _database.AddExerciseToWorkout(session.Id, exercise.Id);
 
             var intent = new Intent(this, typeof(WorkoutActivity));
