@@ -82,6 +82,23 @@ public class GymDatabaseTests
     }
 
     [Fact]
+    public void GetCurrentWorkout_ReturnsMostRecentActiveSession()
+    {
+        RunInIsolatedDataHome(database =>
+        {
+            var first = database.CreateWorkoutSession("Old Session");
+            database.UpdateWorkoutSession(first.Id, first.Name, DateTime.Today.AddDays(-1), first.Notes);
+
+            var latest = database.CreateWorkoutSession("New Session");
+
+            var current = database.GetCurrentWorkout();
+
+            Assert.NotNull(current);
+            Assert.Equal(latest.Id, current!.Id);
+        });
+    }
+
+    [Fact]
     public void DeleteWorkoutSet_RenumbersRemainingSets()
     {
         RunInIsolatedDataHome(database =>

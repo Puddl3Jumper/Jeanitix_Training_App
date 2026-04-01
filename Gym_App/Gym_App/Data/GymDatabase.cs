@@ -490,7 +490,11 @@ namespace Gym_App.Data
 
         public WorkoutSession? GetCurrentWorkout()
         {
-            return CurrentUserSessions().FirstOrDefault(s => !s.IsCompleted);
+            return CurrentUserSessions()
+                .Where(s => !s.IsCompleted)
+                .OrderByDescending(s => s.StartTime)
+                .ThenByDescending(s => s.Id)
+                .FirstOrDefault();
         }
 
         public WorkoutSession? GetWorkoutSession(int id)
