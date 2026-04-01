@@ -134,6 +134,63 @@ public class GymDatabaseTests
         });
     }
 
+    [Fact]
+    public void GetCurrentWorkout_ReturnsNewestIncompleteWorkout()
+    {
+        RunInIsolatedDataHome(database =>
+        {
+            // Create an old workout and leave it incomplete
+            var oldWorkout = database.CreateWorkoutSession("Old Workout");
+            System.Threading.Thread.Sleep(10); // Ensure time difference
+
+            // Create a newer workout and leave it incomplete
+            var newWorkout = database.CreateWorkoutSession("New Workout");
+
+            // GetCurrentWorkout should return the newest incomplete workout
+            var current = database.GetCurrentWorkout();
+
+            Assert.NotNull(current);
+            Assert.Equal(newWorkout.Id, current.Id);
+            Assert.Equal("New Workout", current.Name);
+        });
+    }
+
+    [Fact]
+    public void GetCurrentWorkout_ReturnsNullWhenAllCompleted()
+    {
+        RunInIsolatedDataHome(database =>
+        {
+            var workout = database.CreateWorkoutSession("Completed Workout");
+            database.CompleteWorkout(workout.Id);
+
+            var current = database.GetCurrentWorkout();
+
+            Assert.Null(current);
+        });
+    }
+
+    [Fact]
+    public void GetCurrentWorkout_IgnoresCompletedWorkouts()
+    {
+        RunInIsolatedDataHome(database =>
+        {
+            // Create and complete an old workout
+            var oldWorkout = database.CreateWorkoutSession("Old Completed");
+            database.CompleteWorkout(oldWorkout.Id);
+
+            System.Threading.Thread.Sleep(10);
+
+            // Create a newer incomplete workout
+            var newWorkout = database.CreateWorkoutSession("New Incomplete");
+
+            // GetCurrentWorkout should return the incomplete one, not the completed one
+            var current = database.GetCurrentWorkout();
+
+            Assert.NotNull(current);
+            Assert.Equal(newWorkout.Id, current.Id);
+        });
+    }
+
     private static void RunInIsolatedDataHome(Action<GymDatabase> action)
     {
         var originalHome = Environment.GetEnvironmentVariable("HOME");
