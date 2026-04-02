@@ -349,7 +349,7 @@ namespace Gym_App.Activities
                     TextSize = 16
                 };
                 startFirstWorkoutButton.SetAllCaps(false);
-                startFirstWorkoutButton.SetTypeface(Typeface.Create("sans-serif-medium", TypefaceStyle.Normal), TypefaceStyle.Normal);
+                startFirstWorkoutButton.SetTypeface(Typeface.Create("sans-serif-medium", TypefaceStyle.Bold), TypefaceStyle.Bold);
                 startFirstWorkoutButton.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.color_on_primary)));
                 startFirstWorkoutButton.SetBackgroundResource(Resource.Drawable.bg_button_primary);
                 startFirstWorkoutButton.BackgroundTintList = null;
@@ -384,7 +384,7 @@ namespace Gym_App.Activities
                 var rowParams = new LinearLayout.LayoutParams(
                     ViewGroup.LayoutParams.MatchParent,
                     ViewGroup.LayoutParams.WrapContent);
-                rowParams.SetMargins(0, 0, 0, 16);
+                rowParams.SetMargins(0, 0, 0, 12);
                 timelineRow.LayoutParameters = rowParams;
 
                 var timelineColumn = new LinearLayout(this)
@@ -405,7 +405,7 @@ namespace Gym_App.Activities
                     timelineColumn.AddView(line);
                 }
 
-                var workoutCard = CreateWorkoutCard(workout, 16, index + 1);
+                var workoutCard = CreateWorkoutCard(workout, 0, index + 1);
 
                 timelineRow.AddView(timelineColumn);
                 timelineRow.AddView(workoutCard);
@@ -417,7 +417,7 @@ namespace Gym_App.Activities
                     var dividerParams = new LinearLayout.LayoutParams(
                         ViewGroup.LayoutParams.MatchParent,
                         DpToPx(1));
-                    dividerParams.SetMargins(DpToPx(36), 0, 0, DpToPx(16));
+                    dividerParams.SetMargins(DpToPx(36), 0, 0, DpToPx(12));
                     divider.LayoutParameters = dividerParams;
                     divider.SetBackgroundColor(new Android.Graphics.Color(GetColor(Resource.Color.md_theme_outline)));
                     _historyContainer.AddView(divider);
@@ -443,7 +443,7 @@ namespace Gym_App.Activities
             }
             workoutCard.LayoutParameters = layoutParams;
             workoutCard.SetBackgroundResource(Resource.Drawable.bg_card_today_outer);
-            workoutCard.SetPadding(DpToPx(20), DpToPx(18), DpToPx(20), DpToPx(18));
+            workoutCard.SetPadding(DpToPx(16), DpToPx(16), DpToPx(16), DpToPx(16));
 
             var headerRow = new LinearLayout(this)
             {
@@ -518,7 +518,7 @@ namespace Gym_App.Activities
                 };
                 exerciseNameText.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.color_text_primary)));
                 exerciseNameText.SetTypeface(null, TypefaceStyle.Bold);
-                exerciseNameText.SetPadding(DpToPx(4), DpToPx(10), 0, 0);
+                exerciseNameText.SetPadding(DpToPx(4), DpToPx(8), 0, 0);
                 workoutCard.AddView(exerciseNameText);
 
                 var repInfoText = new TextView(this)
@@ -528,7 +528,7 @@ namespace Gym_App.Activities
                 };
                 repInfoText.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.color_text_secondary)));
                 repInfoText.SetTypeface(null, TypefaceStyle.Bold);
-                repInfoText.SetPadding(DpToPx(24), DpToPx(4), 0, 0);
+                repInfoText.SetPadding(DpToPx(20), DpToPx(4), 0, 0);
                 workoutCard.AddView(repInfoText);
             }
 
@@ -538,7 +538,7 @@ namespace Gym_App.Activities
             };
             actionsRow.SetClipToPadding(false);
             actionsRow.SetClipChildren(false);
-            actionsRow.SetPadding(0, DpToPx(12), 0, DpToPx(12));
+            actionsRow.SetPadding(0, DpToPx(10), 0, DpToPx(4));
 
             var pillHeightPx = Resources.GetDimensionPixelSize(Resource.Dimension.gym_primary_button_height);
 
@@ -569,7 +569,7 @@ namespace Gym_App.Activities
             var moreParams = new LinearLayout.LayoutParams(DpToPx(52), ViewGroup.LayoutParams.WrapContent);
             moreParams.Width = pillHeightPx;
             moreParams.Height = pillHeightPx;
-            moreParams.SetMargins(DpToPx(10), 0, 0, DpToPx(2));
+            moreParams.SetMargins(DpToPx(10), 0, 0, 0);
             moreButton.LayoutParameters = moreParams;
             moreButton.Click += (s, e) =>
             {
@@ -619,18 +619,44 @@ namespace Gym_App.Activities
 
         private string GetExerciseIcon(string exerciseName)
         {
-            var lower = exerciseName.ToLowerInvariant();
+            var lower = (exerciseName ?? string.Empty).ToLowerInvariant();
 
-            if (lower.Contains("push") || lower.Contains("bench") || lower.Contains("press"))
-                return "💪";
+            if (ContainsAny(lower, "pull-up", "pull up", "pullup", "chin-up", "chin up", "chinup"))
+                return "🧗";
 
-            if (lower.Contains("squat") || lower.Contains("lunge") || lower.Contains("leg"))
+            if (ContainsAny(lower, "squat", "lunge", "leg press", "calf", "hamstring", "glute", "quad"))
                 return "🦵";
 
-            if (lower.Contains("row") || lower.Contains("pull") || lower.Contains("deadlift"))
+            if (ContainsAny(lower, "deadlift", "rdl", "romanian deadlift"))
                 return "🏋️";
 
-            return "🏃";
+            if (ContainsAny(lower, "row", "lat pulldown", "pulldown", "back"))
+                return "🚣";
+
+            if (ContainsAny(lower, "bicep", "curl", "tricep", "dip", "arm"))
+                return "💪";
+
+            if (ContainsAny(lower, "press", "bench", "push-up", "push up", "pushup", "chest", "fly"))
+                return "🏋️";
+
+            if (ContainsAny(lower, "plank", "crunch", "sit-up", "sit up", "situp", "abs", "core", "russian twist"))
+                return "🧘";
+
+            if (ContainsAny(lower, "run", "jog", "cardio", "treadmill", "bike", "cycle", "jump rope"))
+                return "🏃";
+
+            return "🏋️";
+        }
+
+        private static bool ContainsAny(string source, params string[] keywords)
+        {
+            foreach (var keyword in keywords)
+            {
+                if (source.Contains(keyword, StringComparison.OrdinalIgnoreCase))
+                    return true;
+            }
+
+            return false;
         }
 
         private View CreateTimelineNode()

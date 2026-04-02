@@ -178,9 +178,7 @@ namespace Gym_App.Activities
             if (_upperBodyLabelText == null || _upperBodyPlanText == null || _lowerBodyLabelText == null || _lowerBodyPlanText == null)
                 return;
 
-            var prefs = GetSharedPreferences("training_plan", FileCreationMode.Private);
-            var loginCount = prefs?.GetInt("login_count", 0) ?? 0;
-            var trainingDay = ((loginCount <= 0 ? 0 : loginCount - 1) % 3) + 1;
+            var trainingDay = _database?.GetNextTrainingDay() ?? 1;
 
             string upperBodyValue;
             string lowerBodyLabel;

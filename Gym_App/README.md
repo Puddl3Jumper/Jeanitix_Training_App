@@ -108,6 +108,35 @@ Potential features to add:
 dotnet build Gym_App/Gym_App.csproj
 ```
 
+## Automated Signed APK Release (GitHub Release + GitHub Pages)
+
+This repo includes a workflow at `.github/workflows/android-release.yml`.
+
+### What it does
+- Triggers when you push a tag like `v1.2.0`
+- Builds a **signed APK**
+- Generates a changelog from git commits
+- Uploads the APK + changelog to **GitHub Releases**
+- Publishes a download page + changelog to **GitHub Pages**
+
+### Required repository secrets
+Add these in GitHub repository settings → Secrets and variables → Actions:
+
+- `ANDROID_KEYSTORE_BASE64` (base64 content of your `.keystore` / `.jks`)
+- `ANDROID_KEYSTORE_PASSWORD`
+- `ANDROID_KEY_ALIAS`
+- `ANDROID_KEY_PASSWORD`
+
+### Trigger a release
+
+```bash
+git tag v1.2.0
+git push origin v1.2.0
+```
+
+### GitHub Pages setting
+In repository settings → Pages, ensure source is **GitHub Actions**.
+
 ## License
 
 This is a sample project created for personal gym tracking.

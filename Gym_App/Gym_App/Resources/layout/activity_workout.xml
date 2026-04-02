@@ -63,11 +63,11 @@
 
                     <TextView
                         android:id="@+id/focusValueText"
-                        android:layout_width="wrap_content"
+                        android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:text="Workout Focus"
                         android:textColor="@color/color_text_primary"
-                        android:textSize="18sp"
+                        android:textSize="24sp"
                         android:textStyle="bold"
                         android:layout_marginBottom="12dp" />
 
@@ -75,116 +75,127 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:layout_marginBottom="8dp">
-                        <TextView
-                            android:id="@+id/muscleBar1LabelText"
-                            android:layout_width="72dp"
-                            android:layout_height="wrap_content"
-                            android:text="Chest"
-                            android:textColor="@color/color_text_secondary" />
+                        android:gravity="top">
 
                         <LinearLayout
                             android:layout_width="0dp"
-                            android:layout_height="9dp"
+                            android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:orientation="horizontal"
-                            android:background="@drawable/bg_log_tab_inactive"
-                            android:layout_marginStart="8dp"
-                            android:layout_marginEnd="8dp">
-                            <View
-                                android:id="@+id/chestBarFill"
-                                android:layout_width="0dp"
-                                android:layout_height="match_parent"
-                                android:layout_weight="10"
-                                android:background="@color/color_primary" />
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:id="@+id/focusSubtitleText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="Today focus distribution"
+                                android:textColor="@color/color_text_secondary"
+                                android:textSize="13sp"
+                                android:layout_marginBottom="8dp"
+                                android:visibility="gone" />
+
+                            <LinearLayout
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:orientation="horizontal"
+                                android:gravity="center_vertical"
+                                android:weightSum="3">
+
+                                <LinearLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:orientation="vertical"
+                                    android:gravity="center_horizontal"
+                                    android:padding="8dp"
+                                    android:layout_marginEnd="6dp">
+
+                                    <ImageView
+                                        android:id="@+id/muscleChip1Image"
+                                        android:layout_width="96dp"
+                                        android:layout_height="74dp"
+                                        android:background="@drawable/bg_exercise_thumbnail_frame"
+                                        android:src="@drawable/welcome_hero"
+                                        android:scaleType="centerCrop" />
+
+                                    <TextView
+                                        android:id="@+id/muscleChip1Text"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="34dp"
+                                        android:text="Dumbbell Curl"
+                                        android:textColor="@color/color_text_primary"
+                                        android:textSize="13sp"
+                                        android:textStyle="bold"
+                                        android:layout_marginTop="8dp"
+                                        android:gravity="center"
+                                        android:maxLines="2"
+                                        android:ellipsize="end" />
+                                </LinearLayout>
+
+                                <LinearLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:orientation="vertical"
+                                    android:gravity="center_horizontal"
+                                    android:padding="8dp"
+                                    android:layout_marginStart="3dp"
+                                    android:layout_marginEnd="3dp">
+
+                                    <ImageView
+                                        android:id="@+id/muscleChip2Image"
+                                        android:layout_width="96dp"
+                                        android:layout_height="74dp"
+                                        android:background="@drawable/bg_exercise_thumbnail_frame"
+                                        android:src="@drawable/welcome_hero"
+                                        android:scaleType="centerCrop" />
+
+                                    <TextView
+                                        android:id="@+id/muscleChip2Text"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="34dp"
+                                        android:text="Cable Pushdown"
+                                        android:textColor="@color/color_text_primary"
+                                        android:textSize="13sp"
+                                        android:textStyle="bold"
+                                        android:layout_marginTop="8dp"
+                                        android:gravity="center"
+                                        android:maxLines="2"
+                                        android:ellipsize="end" />
+                                </LinearLayout>
+
+                                <LinearLayout
+                                    android:layout_width="0dp"
+                                    android:layout_height="wrap_content"
+                                    android:layout_weight="1"
+                                    android:orientation="vertical"
+                                    android:gravity="center_horizontal"
+                                    android:padding="8dp"
+                                    android:layout_marginStart="6dp">
+
+                                    <ImageView
+                                        android:id="@+id/muscleChip3Image"
+                                        android:layout_width="96dp"
+                                        android:layout_height="74dp"
+                                        android:background="@drawable/bg_exercise_thumbnail_frame"
+                                        android:src="@drawable/welcome_hero"
+                                        android:scaleType="centerCrop" />
+
+                                    <TextView
+                                        android:id="@+id/muscleChip3Text"
+                                        android:layout_width="match_parent"
+                                        android:layout_height="34dp"
+                                        android:text="Plank"
+                                        android:textColor="@color/color_text_primary"
+                                        android:textSize="13sp"
+                                        android:textStyle="bold"
+                                        android:layout_marginTop="8dp"
+                                        android:gravity="center"
+                                        android:maxLines="2"
+                                        android:ellipsize="end" />
+                                </LinearLayout>
+                            </LinearLayout>
                         </LinearLayout>
 
-                        <TextView
-                            android:id="@+id/chestBarTimeText"
-                            android:layout_width="40dp"
-                            android:layout_height="wrap_content"
-                            android:text="25m"
-                            android:textColor="@color/color_text_primary"
-                            android:textStyle="bold"
-                            android:gravity="end" />
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:layout_marginBottom="8dp">
-                        <TextView
-                            android:id="@+id/muscleBar2LabelText"
-                            android:layout_width="72dp"
-                            android:layout_height="wrap_content"
-                            android:text="Triceps"
-                            android:textColor="@color/color_text_secondary" />
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="9dp"
-                            android:layout_weight="1"
-                            android:orientation="horizontal"
-                            android:background="@drawable/bg_log_tab_inactive"
-                            android:layout_marginStart="8dp"
-                            android:layout_marginEnd="8dp">
-                            <View
-                                android:id="@+id/tricepsBarFill"
-                                android:layout_width="0dp"
-                                android:layout_height="match_parent"
-                                android:layout_weight="4"
-                                android:background="@color/color_primary" />
-                        </LinearLayout>
-
-                        <TextView
-                            android:id="@+id/tricepsBarTimeText"
-                            android:layout_width="40dp"
-                            android:layout_height="wrap_content"
-                            android:text="10m"
-                            android:textColor="@color/color_text_primary"
-                            android:textStyle="bold"
-                            android:gravity="end" />
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical">
-                        <TextView
-                            android:id="@+id/muscleBar3LabelText"
-                            android:layout_width="72dp"
-                            android:layout_height="wrap_content"
-                            android:text="Shoulders"
-                            android:textColor="@color/color_text_secondary" />
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="9dp"
-                            android:layout_weight="1"
-                            android:orientation="horizontal"
-                            android:background="@drawable/bg_log_tab_inactive"
-                            android:layout_marginStart="8dp"
-                            android:layout_marginEnd="8dp">
-                            <View
-                                android:id="@+id/shouldersBarFill"
-                                android:layout_width="0dp"
-                                android:layout_height="match_parent"
-                                android:layout_weight="2"
-                                android:background="@color/color_primary" />
-                        </LinearLayout>
-
-                        <TextView
-                            android:id="@+id/shouldersBarTimeText"
-                            android:layout_width="40dp"
-                            android:layout_height="wrap_content"
-                            android:text="7m"
-                            android:textColor="@color/color_text_primary"
-                            android:textStyle="bold"
-                            android:gravity="end" />
                     </LinearLayout>
 
                 </LinearLayout>
@@ -222,7 +233,8 @@
                             android:textColor="@color/color_primary"
                             android:textSize="15sp"
                             android:textStyle="bold"
-                            android:gravity="end" />
+                            android:gravity="end"
+                            android:visibility="gone" />
                     </LinearLayout>
 
                     <LinearLayout
@@ -324,36 +336,16 @@
                             android:textSize="24sp" />
                     </LinearLayout>
 
-                    <LinearLayout
+                    <Button
+                        android:id="@+id/finishWorkoutButton"
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:orientation="horizontal">
-
-                        <Button
-                            android:id="@+id/startTimerButton"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:minHeight="@dimen/gym_primary_button_height"
-                            android:text="Start Timer"
-                            android:textAllCaps="false"
-                            android:textStyle="bold"
-                            android:textColor="@color/color_on_primary"
-                            android:background="@drawable/bg_button_primary"
-                            android:layout_marginEnd="8dp" />
-
-                        <Button
-                            android:id="@+id/finishWorkoutButton"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:minHeight="@dimen/gym_primary_button_height"
-                            android:text="Finish"
-                            android:textAllCaps="false"
-                            android:textStyle="bold"
-                            android:textColor="@color/color_on_primary"
-                            android:background="@drawable/bg_button_train_action" />
-                    </LinearLayout>
+                        android:minHeight="@dimen/gym_primary_button_height"
+                        android:text="Finish"
+                        android:textAllCaps="false"
+                        android:textStyle="bold"
+                        android:textColor="@color/color_on_primary"
+                        android:background="@drawable/bg_button_train_action" />
                 </LinearLayout>
 
             </LinearLayout>

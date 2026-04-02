@@ -582,6 +582,12 @@ namespace Gym_App.Data
             }
         }
 
+        public int GetNextTrainingDay()
+        {
+            var completedCount = CurrentUserSessions().Count(s => s.IsCompleted);
+            return (completedCount % 3) + 1;
+        }
+
         public List<WorkoutSession> GetWorkoutHistory(int limit = 20)
         {
             return CurrentUserSessions()

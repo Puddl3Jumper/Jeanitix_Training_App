@@ -249,6 +249,29 @@ public class GymDatabaseTests
     }
 
     [Fact]
+    public void TrainingDayRotation_AdvancesOnlyAfterCompletedWorkout()
+    {
+        RunInIsolatedDataHome(database =>
+        {
+            Assert.Equal(1, database.GetNextTrainingDay());
+
+            var inProgress = database.CreateWorkoutSession("In Progress");
+            Assert.Equal(1, database.GetNextTrainingDay());
+
+            database.CompleteWorkout(inProgress.Id);
+            Assert.Equal(2, database.GetNextTrainingDay());
+
+            var second = database.CreateWorkoutSession("Second");
+            database.CompleteWorkout(second.Id);
+            Assert.Equal(3, database.GetNextTrainingDay());
+
+            var third = database.CreateWorkoutSession("Third");
+            database.CompleteWorkout(third.Id);
+            Assert.Equal(1, database.GetNextTrainingDay());
+        });
+    }
+
+    [Fact]
     public void LoginPullFromServer_AppliesRemoteWorkoutsToLocalLog()
     {
         RunInIsolatedDataHome(database =>

@@ -14,15 +14,12 @@ namespace Gym_App.Activities
         private WorkoutSession? _currentWorkout;
 
         private TextView? _focusValueText;
-        private TextView? _chestBarTimeText;
-        private TextView? _tricepsBarTimeText;
-        private TextView? _shouldersBarTimeText;
-        private TextView? _muscleBar1LabelText;
-        private TextView? _muscleBar2LabelText;
-        private TextView? _muscleBar3LabelText;
-        private View? _chestBarFill;
-        private View? _tricepsBarFill;
-        private View? _shouldersBarFill;
+        private TextView? _muscleChip1Text;
+        private TextView? _muscleChip2Text;
+        private TextView? _muscleChip3Text;
+        private ImageView? _muscleChip1Image;
+        private ImageView? _muscleChip2Image;
+        private ImageView? _muscleChip3Image;
 
         private TextView? _currentExerciseNameText;
         private TextView? _currentElapsedTimeText;
@@ -30,7 +27,6 @@ namespace Gym_App.Activities
         private TextView? _set2RepsText;
         private TextView? _set3RepsText;
 
-        private Button? _startTimerButton;
         private Button? _finishWorkoutButton;
 
         private readonly Dictionary<string, int> _muscleSecondsToday = new(StringComparer.OrdinalIgnoreCase)
@@ -52,13 +48,12 @@ namespace Gym_App.Activities
             ["Back"] = "Lat Pulldown",
             ["Legs"] = "Barbell Squat",
             ["Shoulders"] = "Overhead Press",
-            ["Biceps"] = "Barbell Curl",
+            ["Biceps"] = "Dumbbell Curl",
             ["Triceps"] = "Cable Pushdown",
             ["Core"] = "Plank"
         };
 
         private string _selectedFocus = "Chest";
-        private bool _timerRunning;
         private TimeSpan _elapsed = TimeSpan.Zero;
         private System.Threading.Timer? _elapsedTimer;
 
@@ -105,15 +100,12 @@ namespace Gym_App.Activities
         private void BindViews()
         {
             _focusValueText = FindViewById<TextView>(Resource.Id.focusValueText);
-            _chestBarTimeText = FindViewById<TextView>(Resource.Id.chestBarTimeText);
-            _tricepsBarTimeText = FindViewById<TextView>(Resource.Id.tricepsBarTimeText);
-            _shouldersBarTimeText = FindViewById<TextView>(Resource.Id.shouldersBarTimeText);
-            _muscleBar1LabelText = FindViewById<TextView>(Resource.Id.muscleBar1LabelText);
-            _muscleBar2LabelText = FindViewById<TextView>(Resource.Id.muscleBar2LabelText);
-            _muscleBar3LabelText = FindViewById<TextView>(Resource.Id.muscleBar3LabelText);
-            _chestBarFill = FindViewById(Resource.Id.chestBarFill);
-            _tricepsBarFill = FindViewById(Resource.Id.tricepsBarFill);
-            _shouldersBarFill = FindViewById(Resource.Id.shouldersBarFill);
+            _muscleChip1Text = FindViewById<TextView>(Resource.Id.muscleChip1Text);
+            _muscleChip2Text = FindViewById<TextView>(Resource.Id.muscleChip2Text);
+            _muscleChip3Text = FindViewById<TextView>(Resource.Id.muscleChip3Text);
+            _muscleChip1Image = FindViewById<ImageView>(Resource.Id.muscleChip1Image);
+            _muscleChip2Image = FindViewById<ImageView>(Resource.Id.muscleChip2Image);
+            _muscleChip3Image = FindViewById<ImageView>(Resource.Id.muscleChip3Image);
 
             _currentExerciseNameText = FindViewById<TextView>(Resource.Id.currentExerciseNameText);
             _currentElapsedTimeText = FindViewById<TextView>(Resource.Id.currentElapsedTimeText);
@@ -121,7 +113,6 @@ namespace Gym_App.Activities
             _set2RepsText = FindViewById<TextView>(Resource.Id.set2RepsText);
             _set3RepsText = FindViewById<TextView>(Resource.Id.set3RepsText);
 
-            _startTimerButton = FindViewById<Button>(Resource.Id.startTimerButton);
             _finishWorkoutButton = FindViewById<Button>(Resource.Id.finishWorkoutButton);
         }
 
@@ -151,18 +142,12 @@ namespace Gym_App.Activities
 
         private void BindWorkoutActions()
         {
-            if (_startTimerButton != null)
-            {
-                _startTimerButton.Click += (s, e) => ToggleTimer();
-            }
-
             if (_finishWorkoutButton != null)
             {
                 _finishWorkoutButton.Click += (s, e) =>
                 {
                     _elapsedTimer?.Dispose();
                     _elapsedTimer = null;
-                    _timerRunning = false;
 
                     if (_currentWorkout != null)
                     {
@@ -176,36 +161,6 @@ namespace Gym_App.Activities
                     Finish();
                 };
             }
-        }
-
-        private void ToggleTimer()
-        {
-            if (_timerRunning)
-            {
-                _elapsedTimer?.Dispose();
-                _elapsedTimer = null;
-                _timerRunning = false;
-                SaveTodayMuscleTimes();
-                if (_startTimerButton != null)
-                    _startTimerButton.Text = "Start Timer";
-                return;
-            }
-
-            _timerRunning = true;
-            if (_startTimerButton != null)
-                _startTimerButton.Text = "Pause Timer";
-
-            _elapsedTimer?.Dispose();
-            _elapsedTimer = new System.Threading.Timer(_ =>
-            {
-                RunOnUiThread(() =>
-                {
-                    _elapsed = _elapsed.Add(TimeSpan.FromSeconds(1));
-                    AddSecondToSelectedMuscle();
-                    UpdateElapsedText();
-                    UpdateMuscleTimeViews();
-                });
-            }, null, TimeSpan.FromSeconds(1), TimeSpan.FromSeconds(1));
         }
 
         private void RefreshScreen()
@@ -237,26 +192,13 @@ namespace Gym_App.Activities
             var group2 = plannedGroups[1];
             var group3 = plannedGroups[2];
 
-            var seconds1 = GetMuscleSeconds(group1);
-            var seconds2 = GetMuscleSeconds(group2);
-            var seconds3 = GetMuscleSeconds(group3);
+            _muscleChip1Text?.SetText(GetExerciseForMuscle(group1), TextView.BufferType.Normal);
+            _muscleChip2Text?.SetText(GetExerciseForMuscle(group2), TextView.BufferType.Normal);
+            _muscleChip3Text?.SetText(GetExerciseForMuscle(group3), TextView.BufferType.Normal);
 
-            var minutes1 = ToMinutes(seconds1);
-            var minutes2 = ToMinutes(seconds2);
-            var minutes3 = ToMinutes(seconds3);
-
-            _muscleBar1LabelText?.SetText(group1, TextView.BufferType.Normal);
-            _muscleBar2LabelText?.SetText(group2, TextView.BufferType.Normal);
-            _muscleBar3LabelText?.SetText(group3, TextView.BufferType.Normal);
-
-            _chestBarTimeText?.SetText($"{minutes1}m", TextView.BufferType.Normal);
-            _tricepsBarTimeText?.SetText($"{minutes2}m", TextView.BufferType.Normal);
-            _shouldersBarTimeText?.SetText($"{minutes3}m", TextView.BufferType.Normal);
-
-            var maxSeconds = Math.Max(1, Math.Max(seconds1, Math.Max(seconds2, seconds3)));
-            UpdateMuscleBarFill(_chestBarFill, seconds1, maxSeconds);
-            UpdateMuscleBarFill(_tricepsBarFill, seconds2, maxSeconds);
-            UpdateMuscleBarFill(_shouldersBarFill, seconds3, maxSeconds);
+            ApplyFocusCardImage(_muscleChip1Image, group1);
+            ApplyFocusCardImage(_muscleChip2Image, group2);
+            ApplyFocusCardImage(_muscleChip3Image, group3);
         }
 
         private int GetMuscleSeconds(string muscle)
@@ -269,27 +211,30 @@ namespace Gym_App.Activities
                 : 0;
         }
 
-        private static void UpdateMuscleBarFill(View? fill, int seconds, int maxSeconds)
+        private string GetExerciseForMuscle(string muscle)
         {
-            if (fill?.LayoutParameters is not LinearLayout.LayoutParams lp)
-                return;
+            if (string.Equals(muscle, "Cardio", StringComparison.OrdinalIgnoreCase))
+                muscle = "Core";
 
-            var value = Math.Max(0, seconds);
-            var ratio = maxSeconds <= 0 ? 0f : value / (float)maxSeconds;
-            var targetWeight = value <= 0 ? 0f : Math.Max(0.8f, ratio * 10f);
-
-            lp.Width = 0;
-            lp.Height = ViewGroup.LayoutParams.MatchParent;
-            lp.Weight = targetWeight;
-            fill.LayoutParameters = lp;
+            return _exerciseByMuscle.TryGetValue(muscle, out var exercise)
+                ? exercise
+                : "Workout";
         }
 
-        private static int ToMinutes(int seconds)
+        private void ApplyFocusCardImage(ImageView? target, string muscle)
         {
-            if (seconds <= 0)
-                return 0;
+            if (target == null)
+                return;
 
-            return (int)Math.Floor(seconds / 60d);
+            target.SetImageResource(ResolveMuscleImageResource(muscle));
+            target.ClearColorFilter();
+            target.SetScaleType(ImageView.ScaleType.CenterCrop);
+        }
+
+        private static int ResolveMuscleImageResource(string muscle)
+        {
+            _ = muscle;
+            return Resource.Drawable.welcome_hero;
         }
 
         private void AddSecondToSelectedMuscle()
@@ -352,9 +297,7 @@ namespace Gym_App.Activities
 
         private int GetTrainingDay()
         {
-            var prefs = GetSharedPreferences("training_plan", FileCreationMode.Private);
-            var loginCount = prefs?.GetInt("login_count", 0) ?? 0;
-            return ((loginCount <= 0 ? 0 : loginCount - 1) % 3) + 1;
+            return _database?.GetNextTrainingDay() ?? 1;
         }
 
         private string[] GetPlannedMuscleGroups()

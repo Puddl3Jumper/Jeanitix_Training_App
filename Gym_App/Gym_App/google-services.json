@@ -15,11 +15,11 @@
       },
       "oauth_client": [
         {
-          "client_id": "509759772251-ggequ3u9c9l3m4t2s7d5eq9nvmkkuuor.apps.googleusercontent.com",
+          "client_id": "509759772251-lgghojmp468s7s4p208ehm60sjkaudje.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
             "package_name": "com.leiyu.GymJournal",
-            "certificate_hash": "eb6a1156fa87c223f5e9f145ee0d1e13c7b815bb"
+            "certificate_hash": "7c8bd1510cc87dd0d4c2e1c5e8c7450d200936c5"
           }
         },
         {

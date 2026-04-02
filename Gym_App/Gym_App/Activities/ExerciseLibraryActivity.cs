@@ -15,8 +15,11 @@ namespace Gym_App.Activities
     {
         private GymDatabase? _database;
         private LinearLayout? _exerciseListContainer;
+        private EditText? _searchExerciseInput;
         private int _targetWorkoutId = -1;
         private static readonly string[] CircuitOptions = { "Circuit A", "Circuit B", "Circuit C" };
+        private readonly Dictionary<string, bool> _expandedGroups = new(StringComparer.OrdinalIgnoreCase);
+        private string _searchQuery = string.Empty;
 
         protected override void OnCreate(Bundle? savedInstanceState)
         {
@@ -27,6 +30,16 @@ namespace Gym_App.Activities
             _database = new GymDatabase();
             _targetWorkoutId = Intent?.GetIntExtra("workoutId", -1) ?? -1;
             _exerciseListContainer = FindViewById<LinearLayout>(Resource.Id.exerciseListContainer);
+            _searchExerciseInput = FindViewById<EditText>(Resource.Id.searchExerciseInput);
+
+            if (_searchExerciseInput != null)
+            {
+                _searchExerciseInput.TextChanged += (s, e) =>
+                {
+                    _searchQuery = _searchExerciseInput.Text?.Trim() ?? string.Empty;
+                    LoadExercises();
+                };
+            }
 
             var homeTab = FindViewById<LinearLayout>(Resource.Id.homeTab);
             var diaryTab = FindViewById<LinearLayout>(Resource.Id.diaryTab);
@@ -102,74 +115,238 @@ namespace Gym_App.Activities
 
             _exerciseListContainer.RemoveAllViews();
 
-            var exercises = _database.GetAllExercises();
-            var groupedExercises = exercises.GroupBy(e => e.MuscleGroup);
+            var allExercises = _database.GetAllExercises();
+            var filtered = string.IsNullOrWhiteSpace(_searchQuery)
+                ? allExercises
+                : allExercises.Where(e =>
+                    e.Name.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase) ||
+                    e.MuscleGroup.Contains(_searchQuery, StringComparison.OrdinalIgnoreCase) ||
+                    (e.Description ?? string.Empty).Contains(_searchQuery, StringComparison.OrdinalIgnoreCase))
+                  .ToList();
+
+            var groupedExercises = filtered
+                .GroupBy(e => string.IsNullOrWhiteSpace(e.MuscleGroup) ? "Other" : e.MuscleGroup.Trim())
+                .OrderBy(g => GetGroupSortOrder(g.Key))
+                .ThenBy(g => g.Key, StringComparer.OrdinalIgnoreCase)
+                .ToList();
+
+            if (groupedExercises.Count == 0)
+            {
+                var emptyText = new TextView(this)
+                {
+                    Text = "No exercises found",
+                    TextSize = 15
+                };
+                emptyText.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.color_text_secondary)));
+                emptyText.SetPadding(0, 8, 0, 0);
+                _exerciseListContainer.AddView(emptyText);
+                return;
+            }
 
             foreach (var group in groupedExercises)
             {
-                var groupHeader = new TextView(this)
+                var groupName = group.Key;
+                var groupExercises = group.OrderBy(e => e.Name, StringComparer.OrdinalIgnoreCase).ToList();
+
+                if (!_expandedGroups.ContainsKey(groupName))
+                    _expandedGroups[groupName] = true;
+
+                var isExpanded = _expandedGroups[groupName];
+
+                var panel = new LinearLayout(this)
                 {
-                    Text = group.Key,
-                    TextSize = 20
+                    Orientation = Orientation.Vertical
                 };
-                groupHeader.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.color_primary)));
-                groupHeader.SetTypeface(null, Android.Graphics.TypefaceStyle.Bold);
-                groupHeader.SetPadding(0, 16, 0, 8);
-                _exerciseListContainer.AddView(groupHeader);
+                var panelParams = new LinearLayout.LayoutParams(
+                    ViewGroup.LayoutParams.MatchParent,
+                    ViewGroup.LayoutParams.WrapContent);
+                panelParams.SetMargins(0, 0, 0, 14);
+                panel.LayoutParameters = panelParams;
+                panel.SetBackgroundResource(Resource.Drawable.bg_card_today_outer);
+                panel.SetPadding(18, 18, 18, 18);
 
-                foreach (var exercise in group)
+                var header = new LinearLayout(this)
                 {
-                    var exerciseTitle = new TextView(this)
-                    {
-                        Text = exercise.Name + (exercise.IsCustom ? " (Custom)" : ""),
-                        TextSize = 16
-                    };
-                    exerciseTitle.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.color_primary)));
-                    exerciseTitle.SetTypeface(null, Android.Graphics.TypefaceStyle.Bold);
-                    exerciseTitle.SetPadding(0, 2, 0, 6);
+                    Orientation = Orientation.Horizontal
+                };
+                header.SetGravity(GravityFlags.CenterVertical);
+                header.SetBackgroundResource(Resource.Drawable.bg_log_tab_inactive);
+                header.SetPadding(18, 14, 18, 14);
+                header.Clickable = true;
+                header.Focusable = true;
 
-                    var exerciseView = new LinearLayout(this)
+                var titleText = new TextView(this)
+                {
+                    Text = groupName,
+                    TextSize = 16
+                };
+                titleText.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.color_text_primary)));
+                titleText.SetTypeface(null, TypefaceStyle.Bold);
+                titleText.SetPadding(2, 0, 0, 0);
+                titleText.LayoutParameters = new LinearLayout.LayoutParams(0, ViewGroup.LayoutParams.WrapContent, 1f);
+
+                var arrowText = new TextView(this)
+                {
+                    Text = isExpanded ? "▼" : "▶",
+                    TextSize = 16
+                };
+                arrowText.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.color_text_secondary)));
+                arrowText.SetTypeface(null, TypefaceStyle.Bold);
+
+                header.AddView(titleText);
+                header.AddView(arrowText);
+                panel.AddView(header);
+
+                var body = new LinearLayout(this)
+                {
+                    Orientation = Orientation.Vertical
+                };
+                body.Visibility = isExpanded ? ViewStates.Visible : ViewStates.Gone;
+                body.SetPadding(0, 14, 0, 0);
+
+                foreach (var exercise in groupExercises)
+                {
+                    var itemCard = new LinearLayout(this)
+                    {
+                        Orientation = Orientation.Horizontal
+                    };
+                    itemCard.SetGravity(GravityFlags.CenterVertical);
+                    itemCard.SetBackgroundResource(Resource.Drawable.bg_card_today_outer);
+                    itemCard.SetPadding(28, 28, 28, 28);
+                    itemCard.Clickable = true;
+                    itemCard.Focusable = true;
+
+                    var itemParams = new LinearLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MatchParent,
+                        ViewGroup.LayoutParams.WrapContent);
+                    itemParams.SetMargins(0, 0, 0, 10);
+                    itemCard.LayoutParameters = itemParams;
+
+                    var thumbWrap = new FrameLayout(this);
+                    var thumbWrapParams = new LinearLayout.LayoutParams(308, 172);
+                    thumbWrap.LayoutParameters = thumbWrapParams;
+                    thumbWrap.SetBackgroundResource(Resource.Drawable.bg_exercise_thumbnail_frame);
+                    thumbWrap.ClipToOutline = true;
+
+                    var thumbnail = new ImageView(this);
+                    thumbnail.SetImageResource(ResolveExerciseThumbnailResource(exercise));
+                    thumbnail.SetScaleType(ImageView.ScaleType.CenterCrop);
+                    thumbnail.LayoutParameters = new FrameLayout.LayoutParams(
+                        ViewGroup.LayoutParams.MatchParent,
+                        ViewGroup.LayoutParams.MatchParent);
+                    thumbWrap.AddView(thumbnail);
+
+                    var textColumn = new LinearLayout(this)
                     {
                         Orientation = Orientation.Vertical
                     };
-                    
-                    var layoutParams = new LinearLayout.LayoutParams(
-                        ViewGroup.LayoutParams.MatchParent,
-                        ViewGroup.LayoutParams.WrapContent);
-                    layoutParams.SetMargins(0, 0, 0, 8);
-                    exerciseView.LayoutParameters = layoutParams;
-                    exerciseView.SetBackgroundResource(Resource.Drawable.bg_card);
-                    exerciseView.SetPadding(16, 12, 16, 12);
+                    var textParams = new LinearLayout.LayoutParams(
+                        0,
+                        ViewGroup.LayoutParams.WrapContent,
+                        1f);
+                    textParams.SetMargins(20, 0, 20, 0);
+                    textColumn.LayoutParameters = textParams;
 
-                    if (!string.IsNullOrEmpty(exercise.Description))
+                    var title = new TextView(this)
                     {
-                        var descText = new TextView(this)
-                        {
-                            Text = exercise.Description,
-                            TextSize = 14
-                        };
-                        descText.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.color_text_primary)));
-                        descText.SetPadding(0, 0, 0, 0);
-                        exerciseView.AddView(descText);
-                    }
-                    else
+                        Text = exercise.Name,
+                        TextSize = 16
+                    };
+                    title.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.color_text_primary)));
+                    title.SetTypeface(null, TypefaceStyle.Bold);
+
+                    var subtitle = new TextView(this)
                     {
-                        var descText = new TextView(this)
-                        {
-                            Text = "No description",
-                            TextSize = 14
-                        };
-                        descText.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.color_text_primary)));
-                        exerciseView.AddView(descText);
-                    }
+                        Text = string.IsNullOrWhiteSpace(exercise.Description) ? exercise.MuscleGroup : exercise.Description,
+                        TextSize = 13
+                    };
+                    subtitle.SetTextColor(new Android.Graphics.Color(GetColor(Resource.Color.color_text_secondary)));
+                    subtitle.SetSingleLine(true);
+                    subtitle.Ellipsize = Android.Text.TextUtils.TruncateAt.End;
+                    subtitle.SetPadding(0, 4, 0, 0);
 
-                    _exerciseListContainer.AddView(exerciseTitle);
-                    _exerciseListContainer.AddView(exerciseView);
+                    textColumn.AddView(title);
+                    textColumn.AddView(subtitle);
 
-                    exerciseTitle.Click += (s, e) => ShowLogExerciseDialog(exercise);
-                    exerciseView.Click += (s, e) => ShowLogExerciseDialog(exercise);
+                    var actionCircle = new FrameLayout(this);
+                    actionCircle.SetBackgroundResource(Resource.Drawable.bg_exercise_action_circle);
+                    actionCircle.Clickable = true;
+                    actionCircle.Focusable = true;
+                    var actionParams = new LinearLayout.LayoutParams(156, 156);
+                    actionCircle.LayoutParameters = actionParams;
+
+                    var actionIcon = new ImageView(this);
+                    actionIcon.SetImageResource(Resource.Drawable.ic_edit);
+                    actionIcon.SetColorFilter(new Android.Graphics.Color(GetColor(Resource.Color.color_on_primary)));
+                    actionIcon.LayoutParameters = new FrameLayout.LayoutParams(84, 84)
+                    {
+                        Gravity = GravityFlags.Center
+                    };
+                    actionCircle.AddView(actionIcon);
+
+                    itemCard.AddView(thumbWrap);
+                    itemCard.AddView(textColumn);
+                    itemCard.AddView(actionCircle);
+
+                    var clickedExercise = exercise;
+                    itemCard.Click += (s, e) => ShowLogExerciseDialog(clickedExercise);
+                    actionCircle.Click += (s, e) => ShowLogExerciseDialog(clickedExercise);
+
+                    body.AddView(itemCard);
                 }
+
+                panel.AddView(body);
+
+                header.Click += (s, e) =>
+                {
+                    _expandedGroups[groupName] = !_expandedGroups[groupName];
+                    LoadExercises();
+                };
+
+                _exerciseListContainer.AddView(panel);
             }
+        }
+
+        private static int GetGroupSortOrder(string groupName)
+        {
+            return groupName.ToLowerInvariant() switch
+            {
+                "chest" => 1,
+                "legs" => 2,
+                "back" => 3,
+                "shoulders" => 4,
+                "arms" => 5,
+                "core" => 6,
+                _ => 99
+            };
+        }
+
+        private static int ResolveExerciseIllustrationResource(Exercise exercise)
+        {
+            var text = $"{exercise.Name} {exercise.MuscleGroup} {(exercise.Description ?? string.Empty)}".ToLowerInvariant();
+
+            if (text.Contains("squat") || text.Contains("lunge") || text.Contains("leg") || text.Contains("calf"))
+                return Resource.Drawable.ic_accessibility_new;
+
+            if (text.Contains("plank") || text.Contains("crunch") || text.Contains("core") || text.Contains("abs") || text.Contains("situp") || text.Contains("sit-up"))
+                return Resource.Drawable.ic_body_stats_outline;
+
+            if (text.Contains("run") || text.Contains("cardio") || text.Contains("treadmill") || text.Contains("bike") || text.Contains("cycle"))
+                return Resource.Drawable.ic_nav_workout;
+
+            if (text.Contains("pull") || text.Contains("row") || text.Contains("deadlift") || text.Contains("chin"))
+                return Resource.Drawable.ic_dumbbell;
+
+            if (text.Contains("shoulder") || text.Contains("press") || text.Contains("bench") || text.Contains("push"))
+                return Resource.Drawable.ic_fitness_center;
+
+            return Resource.Drawable.ic_m3_person;
+        }
+
+        private static int ResolveExerciseThumbnailResource(Exercise exercise)
+        {
+            _ = exercise;
+            return Resource.Drawable.welcome_hero;
         }
 
         private WorkoutSession EnsureActiveWorkout()
