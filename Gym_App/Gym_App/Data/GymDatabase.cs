@@ -69,6 +69,12 @@ namespace Gym_App.Data
 
             // Replace only the current user's sessions; keep other users/guest data intact.
             var incoming = payload.WorkoutSessions ?? new List<WorkoutSession>();
+            var existingCurrentUserSessions = CurrentUserSessions().ToList();
+
+            // Guard against data loss when cloud state is empty but local already has history.
+            if (incoming.Count == 0 && existingCurrentUserSessions.Count > 0)
+                return false;
+
             foreach (var session in incoming)
             {
                 session.UserKey = _currentUserKey;

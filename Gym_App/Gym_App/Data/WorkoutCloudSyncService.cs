@@ -204,20 +204,51 @@ internal static class WorkoutCloudSyncService
             }
             catch
             {
-                return;
+                payload = null;
+            }
+
+            // Backward compatibility: older cloud data may be a raw array of sessions.
+            if (payload == null)
+            {
+                try
+                {
+                    var legacySessions = JsonSerializer.Deserialize<List<WorkoutSession>>(body, JsonOptions) ?? new List<WorkoutSession>();
+                    payload = new WorkoutSyncPayload
+                    {
+                        UpdatedAtUnixSeconds = 0,
+                        WorkoutSessions = legacySessions,
+                        NextWorkoutSessionId = 1,
+                        NextWorkoutExerciseId = 1,
+                        NextWorkoutSetId = 1
+                    };
+                }
+                catch
+                {
+                    return;
+                }
             }
 
             if (payload == null)
                 return;
 
-            if (payload.UpdatedAtUnixSeconds <= lastApplied)
+            // Some older payloads do not carry UpdatedAtUnixSeconds. In that case,
+            // apply once and stamp current time to avoid skipping valid remote logs.
+            var hasUpdatedAt = payload.UpdatedAtUnixSeconds > 0;
+            if (hasUpdatedAt && payload.UpdatedAtUnixSeconds <= lastApplied)
+                return;
+
+            if (!hasUpdatedAt && (payload.WorkoutSessions?.Count ?? 0) == 0)
                 return;
 
             var applied = database.TryApplyRemoteWorkoutSync(payload);
             if (!applied)
                 return;
 
-            prefs?.Edit()?.PutString(KeyLastAppliedUpdatedAt, payload.UpdatedAtUnixSeconds.ToString())?.Apply();
+            var appliedUpdatedAt = hasUpdatedAt
+                ? payload.UpdatedAtUnixSeconds
+                : DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+
+            prefs?.Edit()?.PutString(KeyLastAppliedUpdatedAt, appliedUpdatedAt.ToString())?.Apply();
         }
         finally
         {

@@ -1,0 +1,59 @@
+<?xml version="1.0" encoding="utf-8"?>
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="96dp"
+    android:height="74dp"
+    android:viewportWidth="96"
+    android:viewportHeight="74">
+
+    <path
+        android:fillColor="#101010"
+        android:pathData="M0,0h96v74h-96z" />
+
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="@color/home_cta_orange"
+        android:strokeWidth="2"
+        android:pathData="M7,5h82a7,7 0 0 1 7,7v50a7,7 0 0 1 -7,7h-82a7,7 0 0 1 -7,-7v-50a7,7 0 0 1 7,-7z" />
+
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="@color/home_cta_orange"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="2.6"
+        android:pathData="M27,46 C31,34 42,29 53,33 C60,36 63,43 61,50" />
+
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="@color/home_cta_orange"
+        android:strokeLineCap="round"
+        android:strokeLineJoin="round"
+        android:strokeWidth="2.3"
+        android:pathData="M34,45 C39,40 46,39 52,42 C56,44 58,49 56,54" />
+
+    <path
+        android:fillColor="@color/home_cta_orange"
+        android:pathData="M56,36h12v10h-12z" />
+    <path
+        android:fillColor="@color/home_cta_orange"
+        android:pathData="M68,34h4v14h-4z" />
+    <path
+        android:fillColor="@color/home_cta_orange"
+        android:pathData="M52,34h4v14h-4z" />
+
+    <path
+        android:fillColor="@color/home_cta_orange"
+        android:pathData="M20,48h10v8h-10z" />
+    <path
+        android:fillColor="@color/home_cta_orange"
+        android:pathData="M30,47h3v10h-3z" />
+    <path
+        android:fillColor="@color/home_cta_orange"
+        android:pathData="M17,47h3v10h-3z" />
+
+    <path
+        android:fillColor="#00000000"
+        android:strokeColor="#66D4AF37"
+        android:strokeWidth="1"
+        android:pathData="M9,58h78" />
+</vector>

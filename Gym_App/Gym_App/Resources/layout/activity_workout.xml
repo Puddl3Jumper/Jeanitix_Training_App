@@ -114,6 +114,7 @@
                                         android:layout_width="96dp"
                                         android:layout_height="74dp"
                                         android:background="@drawable/bg_exercise_thumbnail_frame"
+                                        android:clipToOutline="true"
                                         android:src="@drawable/welcome_hero"
                                         android:scaleType="centerCrop" />
 
@@ -146,6 +147,7 @@
                                         android:layout_width="96dp"
                                         android:layout_height="74dp"
                                         android:background="@drawable/bg_exercise_thumbnail_frame"
+                                        android:clipToOutline="true"
                                         android:src="@drawable/welcome_hero"
                                         android:scaleType="centerCrop" />
 
@@ -177,6 +179,7 @@
                                         android:layout_width="96dp"
                                         android:layout_height="74dp"
                                         android:background="@drawable/bg_exercise_thumbnail_frame"
+                                        android:clipToOutline="true"
                                         android:src="@drawable/welcome_hero"
                                         android:scaleType="centerCrop" />
 

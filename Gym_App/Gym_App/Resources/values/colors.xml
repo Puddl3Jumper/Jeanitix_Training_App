@@ -10,12 +10,12 @@
   <color name="md_theme_onSecondary">#FFFFFF</color>
   <color name="md_theme_secondaryContainer">#49454F</color>
   <color name="md_theme_onSecondaryContainer">#FFFFFF</color>
-  <color name="md_theme_background">#1E1E1E</color>
-  <color name="md_theme_background_deep">#1E1E1E</color>
+  <color name="md_theme_background">#1A1A1A</color>
+  <color name="md_theme_background_deep">#1A1A1A</color>
   <color name="md_theme_onBackground">#FFFFFF</color>
-  <color name="md_theme_surface">#1E1E1E</color>
-  <color name="md_theme_surface_container_low">#1E1E24</color>
-  <color name="md_theme_surface_card_outer">#23232B</color>
+  <color name="md_theme_surface">#1A1A1A</color>
+  <color name="md_theme_surface_container_low">#202026</color>
+  <color name="md_theme_surface_card_outer">#24242C</color>
   <color name="md_theme_onSurface">#FFFFFF</color>
   <color name="md_theme_surfaceVariant">#49454F</color>
   <color name="md_theme_onSurfaceVariant">#E0E0E0</color>

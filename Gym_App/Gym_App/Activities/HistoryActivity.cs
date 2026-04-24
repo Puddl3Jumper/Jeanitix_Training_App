@@ -304,9 +304,19 @@ namespace Gym_App.Activities
                 history.Insert(0, currentWorkout);
             }
 
-            history = FilterHistoryByRange(history)
+            var allHistory = history
                 .OrderByDescending(x => x.StartTime)
                 .ToList();
+
+            history = FilterHistoryByRange(allHistory)
+                .OrderByDescending(x => x.StartTime)
+                .ToList();
+
+            // If the selected range has no items but history exists, show all history instead of a blank state.
+            if (history.Count == 0 && allHistory.Count > 0)
+            {
+                history = allHistory;
+            }
 
             if (history.Count == 0)
             {

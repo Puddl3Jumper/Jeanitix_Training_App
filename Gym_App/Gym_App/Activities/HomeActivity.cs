@@ -76,6 +76,7 @@ namespace Gym_App.Activities
                 _hasShownWelcomePromptThisLaunch = true;
             }
             ShowFirstTimeOnboarding();
+            ShowWhatsNewAfterUpgrade();
             RenderTodayTrainingPlan();
 
             if (homeTab != null) homeTab.Selected = true;
@@ -857,6 +858,49 @@ namespace Gym_App.Activities
 
             dialog.Show();
             DialogThemeHelper.StyleShownDialog(this, dialog, styleButtons: false);
+        }
+
+        private void ShowWhatsNewAfterUpgrade()
+        {
+            var versionPrefs = GetSharedPreferences("app_release_notes", FileCreationMode.Private);
+            if (versionPrefs == null)
+                return;
+
+            var (_, versionCode) = ReleaseInfo.GetAppVersion(this);
+            if (versionCode <= 0)
+                return;
+
+            var lastSeenVersionCode = versionPrefs.GetLong("last_seen_version_code", 0);
+
+            if (lastSeenVersionCode <= 0)
+            {
+                versionPrefs.Edit()?.PutLong("last_seen_version_code", versionCode)?.Apply();
+                return;
+            }
+
+            if (versionCode <= lastSeenVersionCode)
+                return;
+
+            var onboardingPrefs = GetSharedPreferences("user_profile", FileCreationMode.Private);
+            var hasSeenOnboarding = onboardingPrefs?.GetBoolean("home_onboarding_seen", false) ?? false;
+            if (!hasSeenOnboarding)
+            {
+                versionPrefs.Edit()?.PutLong("last_seen_version_code", versionCode)?.Apply();
+                return;
+            }
+
+            var dialog = new MaterialAlertDialogBuilder(this)
+                .SetTitle("What's New")
+                .SetMessage("Workout rotation fixed, click \"finish\" button once you complete today's workout")
+                .SetPositiveButton("Got it", (s, e) =>
+                {
+                    versionPrefs.Edit()?.PutLong("last_seen_version_code", versionCode)?.Apply();
+                })
+                .SetCancelable(false)
+                .Create();
+
+            dialog.Show();
+            DialogThemeHelper.StyleShownDialog(this, dialog);
         }
 
         private void StartQuickExercise(Exercise exercise)

@@ -187,18 +187,25 @@ namespace Gym_App.Activities
 
         private void UpdateMuscleTimeViews()
         {
-            var plannedGroups = GetPlannedMuscleGroups();
-            var group1 = plannedGroups[0];
-            var group2 = plannedGroups[1];
-            var group3 = plannedGroups[2];
+            var focusExercises = GetHomeAlignedFocusLabels();
 
-            _muscleChip1Text?.SetText(GetExerciseForMuscle(group1), TextView.BufferType.Normal);
-            _muscleChip2Text?.SetText(GetExerciseForMuscle(group2), TextView.BufferType.Normal);
-            _muscleChip3Text?.SetText(GetExerciseForMuscle(group3), TextView.BufferType.Normal);
+            _muscleChip1Text?.SetText(focusExercises[0], TextView.BufferType.Normal);
+            _muscleChip2Text?.SetText(focusExercises[1], TextView.BufferType.Normal);
+            _muscleChip3Text?.SetText(focusExercises[2], TextView.BufferType.Normal);
 
-            ApplyFocusCardImage(_muscleChip1Image, group1);
-            ApplyFocusCardImage(_muscleChip2Image, group2);
-            ApplyFocusCardImage(_muscleChip3Image, group3);
+            ApplyFocusCardImage(_muscleChip1Image, focusExercises[0]);
+            ApplyFocusCardImage(_muscleChip2Image, focusExercises[1]);
+            ApplyFocusCardImage(_muscleChip3Image, focusExercises[2]);
+        }
+
+        private string[] GetHomeAlignedFocusLabels()
+        {
+            return GetTrainingDay() switch
+            {
+                1 => new[] { "Biceps", "Triceps", "Abs" },
+                2 => new[] { "Chest", "Delts", "Legs" },
+                _ => new[] { "Back", "Shoulder", "Cardio" }
+            };
         }
 
         private int GetMuscleSeconds(string muscle)
@@ -215,26 +222,38 @@ namespace Gym_App.Activities
         {
             if (string.Equals(muscle, "Cardio", StringComparison.OrdinalIgnoreCase))
                 muscle = "Core";
+            else if (string.Equals(muscle, "Abs", StringComparison.OrdinalIgnoreCase))
+                muscle = "Core";
+            else if (string.Equals(muscle, "Delts", StringComparison.OrdinalIgnoreCase) || string.Equals(muscle, "Shoulder", StringComparison.OrdinalIgnoreCase))
+                muscle = "Shoulders";
 
             return _exerciseByMuscle.TryGetValue(muscle, out var exercise)
                 ? exercise
                 : "Workout";
         }
 
-        private void ApplyFocusCardImage(ImageView? target, string muscle)
+        private void ApplyFocusCardImage(ImageView? target, string exerciseName)
         {
             if (target == null)
                 return;
 
-            target.SetImageResource(ResolveMuscleImageResource(muscle));
+            target.SetImageResource(ResolveMuscleImageResource(exerciseName));
             target.ClearColorFilter();
             target.SetScaleType(ImageView.ScaleType.CenterCrop);
         }
 
-        private static int ResolveMuscleImageResource(string muscle)
+        private static int ResolveMuscleImageResource(string exerciseName)
         {
-            _ = muscle;
-            return Resource.Drawable.welcome_hero;
+            var label = exerciseName?.Trim() ?? string.Empty;
+
+            if (string.Equals(label, "Biceps", StringComparison.OrdinalIgnoreCase))
+                return Resource.Drawable.biceps_focus;
+
+            if (string.Equals(label, "Triceps", StringComparison.OrdinalIgnoreCase) ||
+                string.Equals(label, "Trceps", StringComparison.OrdinalIgnoreCase))
+                return Resource.Drawable.triceps_focus;
+
+            return Resource.Drawable.ic_dumbbell;
         }
 
         private void AddSecondToSelectedMuscle()

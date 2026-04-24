@@ -378,6 +378,37 @@ public class GymDatabaseTests
         });
     }
 
+    [Fact]
+    public void EmptyRemotePayload_DoesNotWipeExistingLocalHistory()
+    {
+        RunInIsolatedDataHome(database =>
+        {
+            var workout = database.CreateWorkoutSession("Local Keeps Data");
+            var exercise = database.GetAllExercises().First(e => e.Name == "Bench Press");
+            database.AddExerciseToWorkout(workout.Id, exercise.Id);
+            var workoutExercise = database.GetWorkoutSession(workout.Id)!.Exercises.Single();
+            database.AddSetToExercise(workoutExercise.Id, reps: 10, weight: 60);
+            database.CompleteWorkout(workout.Id);
+
+            var emptyPayload = new WorkoutCloudSyncService.WorkoutSyncPayload
+            {
+                UpdatedAtUnixSeconds = DateTimeOffset.UtcNow.ToUnixTimeSeconds(),
+                WorkoutSessions = new List<WorkoutSession>(),
+                NextWorkoutSessionId = 100,
+                NextWorkoutExerciseId = 100,
+                NextWorkoutSetId = 100
+            };
+
+            var applied = database.TryApplyRemoteWorkoutSync(emptyPayload);
+            Assert.False(applied);
+
+            var history = database.GetWorkoutHistory(limit: 20);
+            var kept = Assert.Single(history);
+            Assert.Equal("Local Keeps Data", kept.Name);
+            Assert.True(kept.IsCompleted);
+        });
+    }
+
 
     private static void RunInIsolatedDataHome(Action<GymDatabase> action)
     {

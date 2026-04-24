@@ -24,9 +24,10 @@
     <AndroidEnableMarshalMethods>false</AndroidEnableMarshalMethods>
     <RunAOTCompilation>false</RunAOTCompilation>
 
-        <!-- Auto-increment Android versionCode on each Release build/publish.
-          Uses Unix time seconds to stay within 32-bit versionCode limits until 2038. -->
-        <ApplicationVersion>$([System.DateTimeOffset]::UtcNow.ToUnixTimeSeconds())</ApplicationVersion>
+            <!-- Standard Android approach: monotonic CI build number when available. -->
+            <ApplicationVersion Condition="'$(GITHUB_RUN_NUMBER)' != ''">$(GITHUB_RUN_NUMBER)</ApplicationVersion>
+              <!-- Local fallback: compact monotonic value (yy + day-of-year + hour), e.g. 2609107. -->
+              <ApplicationVersion Condition="'$(GITHUB_RUN_NUMBER)' == ''">$([System.DateTime]::UtcNow.ToString("yy"))$([System.DateTime]::UtcNow.DayOfYear.ToString("D3"))$([System.DateTime]::UtcNow.ToString("HH"))</ApplicationVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
