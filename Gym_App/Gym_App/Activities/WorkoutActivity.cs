@@ -14,20 +14,12 @@ namespace Gym_App.Activities
         private WorkoutSession? _currentWorkout;
 
         private TextView? _focusValueText;
-        private TextView? _muscleChip1Text;
-        private TextView? _muscleChip2Text;
-        private TextView? _muscleChip3Text;
-        private ImageView? _muscleChip1Image;
-        private ImageView? _muscleChip2Image;
-        private ImageView? _muscleChip3Image;
+        private ImageView? _upperBodyCardImage;
+        private TextView? _upperBodyWorkout1Text;
+        private TextView? _upperBodyWorkout2Text;
 
-        private TextView? _currentExerciseNameText;
-        private TextView? _currentElapsedTimeText;
-        private TextView? _set1RepsText;
-        private TextView? _set2RepsText;
-        private TextView? _set3RepsText;
-
-        private Button? _finishWorkoutButton;
+        private ImageView? _lowerBodyCardImage;
+        private TextView? _lowerBodyWorkout1Text;
 
         private readonly Dictionary<string, int> _muscleSecondsToday = new(StringComparer.OrdinalIgnoreCase)
         {
@@ -54,8 +46,6 @@ namespace Gym_App.Activities
         };
 
         private string _selectedFocus = "Chest";
-        private TimeSpan _elapsed = TimeSpan.Zero;
-        private System.Threading.Timer? _elapsedTimer;
 
         protected override void OnCreate(Bundle? savedInstanceState)
         {
@@ -71,7 +61,6 @@ namespace Gym_App.Activities
 
             BindViews();
             BindTopActions();
-            BindWorkoutActions();
             BindBottomNav();
             LoadTodayMuscleTimes();
 
@@ -81,7 +70,6 @@ namespace Gym_App.Activities
         protected override void OnDestroy()
         {
             SaveTodayMuscleTimes();
-            _elapsedTimer?.Dispose();
             base.OnDestroy();
         }
 
@@ -100,20 +88,12 @@ namespace Gym_App.Activities
         private void BindViews()
         {
             _focusValueText = FindViewById<TextView>(Resource.Id.focusValueText);
-            _muscleChip1Text = FindViewById<TextView>(Resource.Id.muscleChip1Text);
-            _muscleChip2Text = FindViewById<TextView>(Resource.Id.muscleChip2Text);
-            _muscleChip3Text = FindViewById<TextView>(Resource.Id.muscleChip3Text);
-            _muscleChip1Image = FindViewById<ImageView>(Resource.Id.muscleChip1Image);
-            _muscleChip2Image = FindViewById<ImageView>(Resource.Id.muscleChip2Image);
-            _muscleChip3Image = FindViewById<ImageView>(Resource.Id.muscleChip3Image);
+            _upperBodyCardImage = FindViewById<ImageView>(Resource.Id.upperBodyCardImage);
+            _upperBodyWorkout1Text = FindViewById<TextView>(Resource.Id.upperBodyWorkout1Text);
+            _upperBodyWorkout2Text = FindViewById<TextView>(Resource.Id.upperBodyWorkout2Text);
 
-            _currentExerciseNameText = FindViewById<TextView>(Resource.Id.currentExerciseNameText);
-            _currentElapsedTimeText = FindViewById<TextView>(Resource.Id.currentElapsedTimeText);
-            _set1RepsText = FindViewById<TextView>(Resource.Id.set1RepsText);
-            _set2RepsText = FindViewById<TextView>(Resource.Id.set2RepsText);
-            _set3RepsText = FindViewById<TextView>(Resource.Id.set3RepsText);
-
-            _finishWorkoutButton = FindViewById<Button>(Resource.Id.finishWorkoutButton);
+            _lowerBodyCardImage = FindViewById<ImageView>(Resource.Id.lowerBodyCardImage);
+            _lowerBodyWorkout1Text = FindViewById<TextView>(Resource.Id.lowerBodyWorkout1Text);
         }
 
         private void BindTopActions()
@@ -123,45 +103,9 @@ namespace Gym_App.Activities
             {
                 historyButton.Click += (s, e) => StartActivity(new Intent(this, typeof(HistoryActivity)));
             }
-
-            var logExerciseFab = FindViewById<View>(Resource.Id.logExerciseFab);
-            if (logExerciseFab != null)
-            {
-                logExerciseFab.Click += (s, e) =>
-                {
-                    var intent = new Intent(this, typeof(ExerciseLibraryActivity));
-                    if (_currentWorkout != null)
-                    {
-                        intent.PutExtra("workoutId", _currentWorkout.Id);
-                    }
-
-                    StartActivity(intent);
-                };
-            }
         }
 
-        private void BindWorkoutActions()
-        {
-            if (_finishWorkoutButton != null)
-            {
-                _finishWorkoutButton.Click += (s, e) =>
-                {
-                    _elapsedTimer?.Dispose();
-                    _elapsedTimer = null;
 
-                    if (_currentWorkout != null)
-                    {
-                        _database?.CompleteWorkout(_currentWorkout.Id);
-                    }
-
-                    SaveTodayMuscleTimes();
-
-                    Toast.MakeText(this, "Workout finished", ToastLength.Short)?.Show();
-                    StartActivity(new Intent(this, typeof(HomeActivity)));
-                    Finish();
-                };
-            }
-        }
 
         private void RefreshScreen()
         {
@@ -172,40 +116,36 @@ namespace Gym_App.Activities
             }
 
             UpdateMuscleTimeViews();
-
+            UpdateLowerBodyViews();
             UpdateTrainingHeader();
-            UpdateCurrentExerciseCard();
-            UpdateElapsedText();
             UpdateBottomNavSelection();
         }
 
         private void UpdateTrainingHeader()
         {
             if (_focusValueText != null)
-                _focusValueText.Text = "Workout Focus";
+                _focusValueText.Text = "Upper Body";
         }
 
         private void UpdateMuscleTimeViews()
         {
-            var focusExercises = GetHomeAlignedFocusLabels();
+            var plannedGroups = GetPlannedMuscleGroups();
 
-            _muscleChip1Text?.SetText(focusExercises[0], TextView.BufferType.Normal);
-            _muscleChip2Text?.SetText(focusExercises[1], TextView.BufferType.Normal);
-            _muscleChip3Text?.SetText(focusExercises[2], TextView.BufferType.Normal);
-
-            ApplyFocusCardImage(_muscleChip1Image, focusExercises[0]);
-            ApplyFocusCardImage(_muscleChip2Image, focusExercises[1]);
-            ApplyFocusCardImage(_muscleChip3Image, focusExercises[2]);
+            if (plannedGroups.Length >= 2)
+            {
+                _upperBodyWorkout1Text?.SetText(plannedGroups[0], TextView.BufferType.Normal);
+                _upperBodyWorkout2Text?.SetText(plannedGroups[1], TextView.BufferType.Normal);
+            }
         }
 
-        private string[] GetHomeAlignedFocusLabels()
+        private void UpdateLowerBodyViews()
         {
-            return GetTrainingDay() switch
+            var plannedGroups = GetPlannedMuscleGroups();
+
+            if (plannedGroups.Length >= 3)
             {
-                1 => new[] { "Biceps", "Triceps", "Abs" },
-                2 => new[] { "Chest", "Delts", "Legs" },
-                _ => new[] { "Back", "Shoulder", "Cardio" }
-            };
+                _lowerBodyWorkout1Text?.SetText(plannedGroups[2], TextView.BufferType.Normal);
+            }
         }
 
         private int GetMuscleSeconds(string muscle)
@@ -246,28 +186,19 @@ namespace Gym_App.Activities
         {
             var label = exerciseName?.Trim() ?? string.Empty;
 
+            if (string.Equals(label, "Chest", StringComparison.OrdinalIgnoreCase))
+                return Resource.Drawable.chest_focus;
+
             if (string.Equals(label, "Biceps", StringComparison.OrdinalIgnoreCase))
                 return Resource.Drawable.biceps_focus;
 
-            if (string.Equals(label, "Triceps", StringComparison.OrdinalIgnoreCase) ||
-                string.Equals(label, "Trceps", StringComparison.OrdinalIgnoreCase))
-                return Resource.Drawable.triceps_focus;
+            if (string.Equals(label, "Legs", StringComparison.OrdinalIgnoreCase))
+                return Resource.Drawable.squats;
 
             return Resource.Drawable.ic_dumbbell;
         }
 
-        private void AddSecondToSelectedMuscle()
-        {
-            if (!_muscleSecondsToday.ContainsKey(_selectedFocus))
-                _muscleSecondsToday[_selectedFocus] = 0;
 
-            _muscleSecondsToday[_selectedFocus]++;
-
-            if (_muscleSecondsToday[_selectedFocus] % 10 == 0)
-            {
-                SaveTodayMuscleTimes();
-            }
-        }
 
         private void LoadTodayMuscleTimes()
         {
@@ -304,74 +235,18 @@ namespace Gym_App.Activities
 
         private string GetPlannedFocusText()
         {
-            var trainingDay = GetTrainingDay();
-
-            return trainingDay switch
-            {
-                1 => "Biceps/Triceps + Abs",
-                2 => "Chest/Delts + Legs",
-                _ => "Back/Shoulder + Cardio"
-            };
-        }
-
-        private int GetTrainingDay()
-        {
-            return _database?.GetNextTrainingDay() ?? 1;
+            var groups = GetPlannedMuscleGroups();
+            return $"{groups[0]}/{groups[1]} + {groups[2]}";
         }
 
         private string[] GetPlannedMuscleGroups()
         {
-            return GetTrainingDay() switch
-            {
-                1 => new[] { "Biceps", "Triceps", "Core" },
-                2 => new[] { "Chest", "Shoulders", "Legs" },
-                _ => new[] { "Back", "Shoulders", "Cardio" }
-            };
+            return _database?.GetDailyWorkoutGroups() ?? new[] { "Chest", "Back", "Legs" };
         }
 
-        private void UpdateCurrentExerciseCard()
-        {
-            if (_currentExerciseNameText != null)
-                _currentExerciseNameText.Text = "Workout Groups";
 
-            if (_set1RepsText != null)
-                _set1RepsText.Text = BuildCircuitSummary("Circuit A");
 
-            if (_set2RepsText != null)
-                _set2RepsText.Text = BuildCircuitSummary("Circuit B");
 
-            if (_set3RepsText != null)
-            {
-                _set3RepsText.Visibility = ViewStates.Visible;
-                _set3RepsText.Text = BuildCircuitSummary("Circuit C");
-            }
-        }
-
-        private string BuildCircuitSummary(string circuitName)
-        {
-            var items = _currentWorkout?.Exercises
-                .Where(ex => string.Equals(ex.CircuitName, circuitName, StringComparison.OrdinalIgnoreCase))
-                .OrderBy(ex => ex.CircuitOrder)
-                .ToList() ?? new List<WorkoutExercise>();
-
-            if (items.Count == 0)
-                return $"{circuitName}: waiting for contents";
-
-            var parts = items.Select(ex =>
-            {
-                var exerciseName = ex.Exercise?.Name ?? "Exercise";
-                var doneCount = Math.Max(0, ex.Sets.Count);
-                return $"{exerciseName} x{doneCount}";
-            });
-
-            return $"{circuitName}: {string.Join(" / ", parts)}";
-        }
-
-        private void UpdateElapsedText()
-        {
-            if (_currentElapsedTimeText != null)
-                _currentElapsedTimeText.Text = $"Elapsed Time: {_elapsed:mm\\:ss}";
-        }
 
         private void BindBottomNav()
         {

@@ -1,10 +1,14 @@
 using Android.Content;
+using Android.Content.PM;
 using Android.Graphics;
 using Android.Graphics.Drawables;
+using Android.Locations;
+using Android.Runtime;
 using Android.Text;
 using Android.Text.Style;
 using Android.Views;
 using Android.Widget;
+using AndroidX.Core.App;
 using AndroidX.Core.Content;
 using Gym_App;
 using Gym_App.Data;
@@ -23,6 +27,7 @@ namespace Gym_App.Activities
         private TextView? _lowerBodyLabelText;
         private TextView? _lowerBodyPlanText;
         private LinearLayout? _weeklyProgressChart;
+
         private TextView? _weeklyAvgValueText;
         private TextView? _weeklyAvgLabelText;
         private TextView? _weeklyGoalSummaryText;
@@ -31,6 +36,8 @@ namespace Gym_App.Activities
         private LinearLayout? _todayExercisesContainer;
         private ImageView? _noRecordsIcon;
         private TextView? _noRecordsText;
+        private LocationManager? _locationManager;
+        private const int LocationPermissionRequestCode = 1002;
         private readonly SemaphoreSlim _cloudPullLock = new(1, 1);
 
         protected override void OnCreate(Bundle? savedInstanceState)
@@ -69,6 +76,7 @@ namespace Gym_App.Activities
             }
 
             UpdateWelcomeHeader(name);
+            RequestLocationPermissionAndRefreshGreeting(name);
 
             if (!_hasShownWelcomePromptThisLaunch)
             {
@@ -154,12 +162,13 @@ namespace Gym_App.Activities
             var profilePrefs = GetSharedPreferences("user_profile", FileCreationMode.Private);
             var name = profilePrefs?.GetString("full_name", "User") ?? "User";
             UpdateWelcomeHeader(name);
+            RequestLocationPermissionAndRefreshGreeting(name);
             RenderTodayTrainingPlan();
             LoadTodayRecords();
             _ = TryPullWorkoutsAndRefreshAsync();
         }
 
-        private void UpdateWelcomeHeader(string? rawName)
+        private void UpdateWelcomeHeader(string? rawName, bool? isAtGym = null)
         {
             if (_homeWelcomeText == null)
                 return;
@@ -171,7 +180,88 @@ namespace Gym_App.Activities
                 return;
             }
 
+            if (isAtGym == true)
+            {
+                _homeWelcomeText.Text = $"You are here, {GetLowercaseFirstName(name)} !";
+                return;
+            }
+
             _homeWelcomeText.Text = $"Welcome, {name}!";
+        }
+
+        private static string GetLowercaseFirstName(string name)
+        {
+            var firstSpace = name.IndexOf(' ');
+            var firstName = firstSpace > 0 ? name[..firstSpace] : name;
+            return firstName.ToLowerInvariant();
+        }
+
+        private void RequestLocationPermissionAndRefreshGreeting(string name)
+        {
+            _locationManager ??= (LocationManager)GetSystemService(LocationService);
+
+            if (ContextCompat.CheckSelfPermission(this, Android.Manifest.Permission.AccessFineLocation) == Permission.Granted)
+            {
+                UpdateWelcomeHeader(name, IsAtGymLocation());
+                return;
+            }
+
+            ActivityCompat.RequestPermissions(this, new[]
+            {
+                Android.Manifest.Permission.AccessFineLocation,
+                Android.Manifest.Permission.AccessCoarseLocation
+            }, LocationPermissionRequestCode);
+        }
+
+        public override void OnRequestPermissionsResult(int requestCode, string[] permissions, [GeneratedEnum] Permission[] grantResults)
+        {
+            base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
+            if (requestCode != LocationPermissionRequestCode)
+                return;
+
+            if (grantResults.Length > 0 && grantResults[0] == Permission.Granted)
+            {
+                var profilePrefs = GetSharedPreferences("user_profile", FileCreationMode.Private);
+                var name = profilePrefs?.GetString("full_name", "User") ?? "User";
+                UpdateWelcomeHeader(name, IsAtGymLocation());
+            }
+        }
+
+        private bool IsAtGymLocation()
+        {
+            if (_locationManager == null)
+            {
+                _locationManager = (LocationManager)GetSystemService(LocationService);
+                if (_locationManager == null)
+                    return false;
+            }
+
+            var location = GetBestLastKnownLocation();
+            if (location == null)
+                return false;
+
+            const double gymLatitude = 32.966413;
+            const double gymLongitude = -96.713223;
+            const float gymRadiusMeters = 150f;
+
+            var gymLocation = new Location(LocationManager.GpsProvider)
+            {
+                Latitude = gymLatitude,
+                Longitude = gymLongitude
+            };
+
+            return location.DistanceTo(gymLocation) <= gymRadiusMeters;
+        }
+
+        private Location? GetBestLastKnownLocation()
+        {
+            if (_locationManager == null)
+                return null;
+
+            var criteria = new Criteria { Accuracy = Accuracy.Fine };
+            var bestProvider = _locationManager.GetBestProvider(criteria, true);
+            var lastLocation = bestProvider == null ? null : _locationManager.GetLastKnownLocation(bestProvider);
+            return lastLocation ?? _locationManager.GetLastKnownLocation(LocationManager.GpsProvider) ?? _locationManager.GetLastKnownLocation(LocationManager.NetworkProvider);
         }
 
         private void RenderTodayTrainingPlan()
@@ -179,35 +269,12 @@ namespace Gym_App.Activities
             if (_upperBodyLabelText == null || _upperBodyPlanText == null || _lowerBodyLabelText == null || _lowerBodyPlanText == null)
                 return;
 
-            var trainingDay = _database?.GetNextTrainingDay() ?? 1;
-
-            string upperBodyValue;
-            string lowerBodyLabel;
-            string lowerBodyValue;
-
-            switch (trainingDay)
-            {
-                case 1:
-                    upperBodyValue = "Biceps/Triceps";
-                    lowerBodyLabel = "Lower Body";
-                    lowerBodyValue = "Abs";
-                    break;
-                case 2:
-                    upperBodyValue = "Chest/Delts";
-                    lowerBodyLabel = "Lower Body";
-                    lowerBodyValue = "Legs";
-                    break;
-                default:
-                    upperBodyValue = "Back/Shoulder";
-                    lowerBodyLabel = "Lower Body";
-                    lowerBodyValue = "Cardio";
-                    break;
-            }
+            var groups = _database?.GetDailyWorkoutGroups() ?? new[] { "Chest", "Back", "Legs" };
 
             _upperBodyLabelText.Text = "Upper Body";
-            _upperBodyPlanText.Text = upperBodyValue;
-            _lowerBodyLabelText.Text = lowerBodyLabel;
-            _lowerBodyPlanText.Text = lowerBodyValue;
+            _upperBodyPlanText.Text = $"{groups[0]}/{groups[1]}";
+            _lowerBodyLabelText.Text = "Lower Body";
+            _lowerBodyPlanText.Text = groups[2];
         }
 
         private async Task TryPullWorkoutsAndRefreshAsync()

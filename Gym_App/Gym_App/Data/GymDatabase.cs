@@ -20,6 +20,47 @@ namespace Gym_App.Data
         private readonly string _currentUserKey;
         private const string GuestUserKey = "__guest__";
 
+        private const string TrainingRoutinePrefsName = "training_routine_prefs";
+        private const string TrainingRoutineOffsetKey = "training_routine_offset";
+        private const string TrainingRoutineTimestampKey = "training_routine_timestamp";
+        private const string TrainingRoutineUpperPairIndexKey = "training_routine_upper_pair_index";
+
+        private static readonly string[] UpperBodyMuscles =
+        {
+            "Biceps",
+            "Chest",
+            "Back",
+            "Shoulder",
+            "Triceps",
+            "Delts"
+        };
+
+        private static readonly string[] LowerBodyMuscles =
+        {
+            "Legs",
+            "Abs",
+            "Cardio"
+        };
+
+        private static readonly string[][] UpperBodyPairs =
+        {
+            new[] { "Biceps", "Chest" },
+            new[] { "Biceps", "Back" },
+            new[] { "Biceps", "Shoulder" },
+            new[] { "Biceps", "Triceps" },
+            new[] { "Biceps", "Delts" },
+            new[] { "Chest", "Back" },
+            new[] { "Chest", "Shoulder" },
+            new[] { "Chest", "Triceps" },
+            new[] { "Chest", "Delts" },
+            new[] { "Back", "Shoulder" },
+            new[] { "Back", "Triceps" },
+            new[] { "Back", "Delts" },
+            new[] { "Shoulder", "Triceps" },
+            new[] { "Shoulder", "Delts" },
+            new[] { "Triceps", "Delts" }
+        };
+
         internal bool IsGuestUser => _currentUserKey == GuestUserKey;
 
         public GymDatabase()
@@ -590,8 +631,81 @@ namespace Gym_App.Data
 
         public int GetNextTrainingDay()
         {
-            var completedCount = CurrentUserSessions().Count(s => s.IsCompleted);
-            return (completedCount % 3) + 1;
+            var rotationIndex = GetTrainingRotationIndex();
+            return (rotationIndex % 3) + 1;
+        }
+
+        public int GetTrainingRotationIndex()
+        {
+            var prefs = Android.App.Application.Context.GetSharedPreferences(TrainingRoutinePrefsName, FileCreationMode.Private);
+            var offset = prefs.GetInt(TrainingRoutineOffsetKey, 0);
+            var timestampString = prefs.GetString(TrainingRoutineTimestampKey, null);
+            var lastTimestamp = DateTime.MinValue;
+
+            if (!string.IsNullOrWhiteSpace(timestampString) && DateTime.TryParse(timestampString, out var parsedTimestamp))
+            {
+                lastTimestamp = parsedTimestamp;
+            }
+            else
+            {
+                lastTimestamp = DateTime.Now;
+                prefs.Edit()
+                    .PutString(TrainingRoutineTimestampKey, lastTimestamp.ToString("o"))
+                    .PutInt(TrainingRoutineOffsetKey, offset)
+                    .Apply();
+            }
+
+            var elapsed = DateTime.Now - lastTimestamp;
+            var advanceDays = (int)(elapsed.TotalHours / 24);
+            if (advanceDays > 0)
+            {
+                offset += advanceDays;
+                prefs.Edit()
+                    .PutInt(TrainingRoutineOffsetKey, offset)
+                    .PutString(TrainingRoutineTimestampKey, DateTime.Now.ToString("o"))
+                    .Apply();
+            }
+
+            return offset;
+        }
+
+        public string[] GetDailyWorkoutGroups()
+        {
+            var rotationIndex = GetTrainingRotationIndex();
+            var prefs = Android.App.Application.Context.GetSharedPreferences(TrainingRoutinePrefsName, FileCreationMode.Private);
+            
+            // Get the previously saved upper body pair index
+            var prevUpperPairIndex = prefs.GetInt(TrainingRoutineUpperPairIndexKey, -1);
+            
+            // Select a random upper body pair that's different from yesterday's
+            var random = new Random();
+            int selectedUpperPairIndex;
+            do
+            {
+                selectedUpperPairIndex = random.Next(UpperBodyPairs.Length);
+            } while (selectedUpperPairIndex == prevUpperPairIndex && UpperBodyPairs.Length > 1);
+            
+            // Save today's upper body pair index for tomorrow's check
+            prefs.Edit()
+                .PutInt(TrainingRoutineUpperPairIndexKey, selectedUpperPairIndex)
+                .Apply();
+            
+            // Build and return workout groups
+            var upperPair = UpperBodyPairs[selectedUpperPairIndex];
+            var lower = LowerBodyMuscles[rotationIndex % LowerBodyMuscles.Length];
+            return new[] { upperPair[0], upperPair[1], lower };
+        }
+
+        private static string[] BuildDailyWorkoutGroups(int rotationIndex)
+        {
+            var upperPair = UpperBodyPairs[rotationIndex % UpperBodyPairs.Length];
+            var lower = LowerBodyMuscles[rotationIndex % LowerBodyMuscles.Length];
+            return new[] { upperPair[0], upperPair[1], lower };
+        }
+
+        public int GetCompletedWorkoutCount()
+        {
+            return CurrentUserSessions().Count(s => s.IsCompleted);
         }
 
         public List<WorkoutSession> GetWorkoutHistory(int limit = 20)

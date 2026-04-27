@@ -61,144 +61,67 @@
                     android:padding="16dp"
                     android:layout_marginBottom="12dp">
 
-                    <TextView
-                        android:id="@+id/focusValueText"
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Workout Focus"
-                        android:textColor="@color/color_text_primary"
-                        android:textSize="24sp"
-                        android:textStyle="bold"
-                        android:layout_marginBottom="12dp" />
-
                     <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
-                        android:gravity="top">
+                        android:layout_marginBottom="12dp">
 
-                        <LinearLayout
-                            android:layout_width="0dp"
+                        <View
+                            android:layout_width="4dp"
+                            android:layout_height="match_parent"
+                            android:background="@color/home_cta_orange"
+                            android:layout_marginEnd="8dp" />
+
+                        <TextView
+                            android:id="@+id/focusValueText"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
+                            android:text="Upper Body"
+                            android:textColor="@color/color_text_primary"
+                            android:textSize="24sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
 
-                            <TextView
-                                android:id="@+id/focusSubtitleText"
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:text="Today focus distribution"
-                                android:textColor="@color/color_text_secondary"
-                                android:textSize="13sp"
-                                android:layout_marginBottom="8dp"
-                                android:visibility="gone" />
+                    <ImageView
+                        android:id="@+id/upperBodyCardImage"
+                        android:layout_width="match_parent"
+                        android:layout_height="200dp"
+                        android:src="@drawable/chest_focus"
+                        android:scaleType="centerCrop"
+                        android:contentDescription="Upper Body Focus Image"
+                        android:layout_marginBottom="16dp" />
 
-                            <LinearLayout
-                                android:layout_width="match_parent"
-                                android:layout_height="wrap_content"
-                                android:orientation="horizontal"
-                                android:gravity="center_vertical"
-                                android:weightSum="3">
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="vertical"
+                        android:padding="4dp">
 
-                                <LinearLayout
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_weight="1"
-                                    android:orientation="vertical"
-                                    android:gravity="center_horizontal"
-                                    android:padding="8dp"
-                                    android:layout_marginEnd="6dp">
+                        <TextView
+                            android:id="@+id/upperBodyWorkout1Text"
+                            android:layout_width="match_parent"
+                            android:layout_height="48dp"
+                            android:background="@drawable/bg_card_m3_elevated"
+                            android:gravity="center_vertical"
+                            android:paddingStart="16dp"
+                            android:text="Barbell Bench Press"
+                            android:textColor="@color/color_text_primary"
+                            android:textSize="16sp"
+                            android:textStyle="bold"
+                            android:layout_marginBottom="8dp" />
 
-                                    <ImageView
-                                        android:id="@+id/muscleChip1Image"
-                                        android:layout_width="96dp"
-                                        android:layout_height="74dp"
-                                        android:background="@drawable/bg_exercise_thumbnail_frame"
-                                        android:clipToOutline="true"
-                                        android:src="@drawable/welcome_hero"
-                                        android:scaleType="centerCrop" />
-
-                                    <TextView
-                                        android:id="@+id/muscleChip1Text"
-                                        android:layout_width="match_parent"
-                                        android:layout_height="34dp"
-                                        android:text="Dumbbell Curl"
-                                        android:textColor="@color/color_text_primary"
-                                        android:textSize="13sp"
-                                        android:textStyle="bold"
-                                        android:layout_marginTop="8dp"
-                                        android:gravity="center"
-                                        android:maxLines="2"
-                                        android:ellipsize="end" />
-                                </LinearLayout>
-
-                                <LinearLayout
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_weight="1"
-                                    android:orientation="vertical"
-                                    android:gravity="center_horizontal"
-                                    android:padding="8dp"
-                                    android:layout_marginStart="3dp"
-                                    android:layout_marginEnd="3dp">
-
-                                    <ImageView
-                                        android:id="@+id/muscleChip2Image"
-                                        android:layout_width="96dp"
-                                        android:layout_height="74dp"
-                                        android:background="@drawable/bg_exercise_thumbnail_frame"
-                                        android:clipToOutline="true"
-                                        android:src="@drawable/welcome_hero"
-                                        android:scaleType="centerCrop" />
-
-                                    <TextView
-                                        android:id="@+id/muscleChip2Text"
-                                        android:layout_width="match_parent"
-                                        android:layout_height="34dp"
-                                        android:text="Cable Pushdown"
-                                        android:textColor="@color/color_text_primary"
-                                        android:textSize="13sp"
-                                        android:textStyle="bold"
-                                        android:layout_marginTop="8dp"
-                                        android:gravity="center"
-                                        android:maxLines="2"
-                                        android:ellipsize="end" />
-                                </LinearLayout>
-
-                                <LinearLayout
-                                    android:layout_width="0dp"
-                                    android:layout_height="wrap_content"
-                                    android:layout_weight="1"
-                                    android:orientation="vertical"
-                                    android:gravity="center_horizontal"
-                                    android:padding="8dp"
-                                    android:layout_marginStart="6dp">
-
-                                    <ImageView
-                                        android:id="@+id/muscleChip3Image"
-                                        android:layout_width="96dp"
-                                        android:layout_height="74dp"
-                                        android:background="@drawable/bg_exercise_thumbnail_frame"
-                                        android:clipToOutline="true"
-                                        android:src="@drawable/welcome_hero"
-                                        android:scaleType="centerCrop" />
-
-                                    <TextView
-                                        android:id="@+id/muscleChip3Text"
-                                        android:layout_width="match_parent"
-                                        android:layout_height="34dp"
-                                        android:text="Plank"
-                                        android:textColor="@color/color_text_primary"
-                                        android:textSize="13sp"
-                                        android:textStyle="bold"
-                                        android:layout_marginTop="8dp"
-                                        android:gravity="center"
-                                        android:maxLines="2"
-                                        android:ellipsize="end" />
-                                </LinearLayout>
-                            </LinearLayout>
-                        </LinearLayout>
-
+                        <TextView
+                            android:id="@+id/upperBodyWorkout2Text"
+                            android:layout_width="match_parent"
+                            android:layout_height="48dp"
+                            android:background="@drawable/bg_card_m3_elevated"
+                            android:gravity="center_vertical"
+                            android:paddingStart="16dp"
+                            android:text="Weighted Pull-Ups"
+                            android:textColor="@color/color_text_primary"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
                     </LinearLayout>
 
                 </LinearLayout>
@@ -215,157 +138,56 @@
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:layout_marginBottom="10dp">
-
-                        <TextView
-                            android:id="@+id/currentExerciseNameText"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Workout Groups"
-                            android:textColor="@color/color_text_primary"
-                            android:textSize="18sp"
-                            android:textStyle="bold" />
-
-                        <TextView
-                            android:id="@+id/currentElapsedTimeText"
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="Elapsed Time: 12:35"
-                            android:textColor="@color/color_primary"
-                            android:textSize="15sp"
-                            android:textStyle="bold"
-                            android:gravity="end"
-                            android:visibility="gone" />
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:minHeight="52dp"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:background="@drawable/bg_log_tab_inactive"
-                        android:paddingStart="14dp"
-                        android:paddingEnd="12dp"
-                        android:paddingTop="12dp"
-                        android:paddingBottom="12dp"
-                        android:layout_marginBottom="8dp">
-
-                        <TextView
-                            android:id="@+id/set1RepsText"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Circuit A: waiting for contents"
-                            android:textColor="@color/color_text_primary"
-                            android:textSize="14sp"
-                            android:maxLines="2"
-                            android:ellipsize="end" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="›"
-                            android:textColor="@color/color_text_secondary"
-                            android:textStyle="bold"
-                            android:textSize="24sp" />
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:minHeight="52dp"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:background="@drawable/bg_log_tab_inactive"
-                        android:paddingStart="14dp"
-                        android:paddingEnd="12dp"
-                        android:paddingTop="12dp"
-                        android:paddingBottom="12dp"
-                        android:layout_marginBottom="8dp">
-
-                        <TextView
-                            android:id="@+id/set2RepsText"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Circuit B: waiting for contents"
-                            android:textColor="@color/color_text_primary"
-                            android:textSize="14sp"
-                            android:maxLines="2"
-                            android:ellipsize="end" />
-
-                        <TextView
-                            android:layout_width="wrap_content"
-                            android:layout_height="wrap_content"
-                            android:text="›"
-                            android:textColor="@color/color_text_secondary"
-                            android:textStyle="bold"
-                            android:textSize="24sp" />
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:minHeight="52dp"
-                        android:orientation="horizontal"
-                        android:gravity="center_vertical"
-                        android:background="@drawable/bg_log_tab_inactive"
-                        android:paddingStart="14dp"
-                        android:paddingEnd="12dp"
-                        android:paddingTop="12dp"
-                        android:paddingBottom="12dp"
                         android:layout_marginBottom="12dp">
 
-                        <TextView
-                            android:id="@+id/set3RepsText"
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="Circuit C: waiting for contents"
-                            android:textColor="@color/color_text_primary"
-                            android:textSize="14sp"
-                            android:maxLines="2"
-                            android:ellipsize="end" />
+                        <View
+                            android:layout_width="4dp"
+                            android:layout_height="match_parent"
+                            android:background="@color/home_cta_orange"
+                            android:layout_marginEnd="8dp" />
 
                         <TextView
-                            android:layout_width="wrap_content"
+                            android:layout_width="match_parent"
                             android:layout_height="wrap_content"
-                            android:text="›"
-                            android:textColor="@color/color_text_secondary"
-                            android:textStyle="bold"
-                            android:textSize="24sp" />
+                            android:text="Lower Body"
+                            android:textColor="@color/color_text_primary"
+                            android:textSize="24sp"
+                            android:textStyle="bold" />
                     </LinearLayout>
 
-                    <Button
-                        android:id="@+id/finishWorkoutButton"
+                    <ImageView
+                        android:id="@+id/lowerBodyCardImage"
+                        android:layout_width="match_parent"
+                        android:layout_height="200dp"
+                        android:src="@drawable/squats"
+                        android:scaleType="centerCrop"
+                        android:contentDescription="Lower Body Focus Image"
+                        android:layout_marginBottom="16dp" />
+
+                    <LinearLayout
                         android:layout_width="match_parent"
                         android:layout_height="wrap_content"
-                        android:minHeight="@dimen/gym_primary_button_height"
-                        android:text="Finish"
-                        android:textAllCaps="false"
-                        android:textStyle="bold"
-                        android:textColor="@color/color_on_primary"
-                        android:background="@drawable/bg_button_train_action" />
+                        android:orientation="vertical"
+                        android:padding="4dp">
+
+                        <TextView
+                            android:id="@+id/lowerBodyWorkout1Text"
+                            android:layout_width="match_parent"
+                            android:layout_height="48dp"
+                            android:background="@drawable/bg_card_m3_elevated"
+                            android:gravity="center_vertical"
+                            android:paddingStart="16dp"
+                            android:text="Back Squat"
+                            android:textColor="@color/color_text_primary"
+                            android:textSize="16sp"
+                            android:textStyle="bold" />
+                    </LinearLayout>
+
                 </LinearLayout>
 
             </LinearLayout>
         </ScrollView>
 
-        <com.google.android.material.floatingactionbutton.ExtendedFloatingActionButton
-            android:id="@+id/logExerciseFab"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|center_horizontal"
-            android:layout_marginBottom="16dp"
-            android:text="Log Exercise"
-            android:textStyle="bold"
-            app:icon="@drawable/ic_fitness_center"
-            app:iconTint="@color/color_on_primary"
-            android:textColor="@color/color_on_primary"
-            android:backgroundTint="@color/color_primary" />
     </FrameLayout>
 
     <include layout="@layout/layout_bottom_bar" />
