@@ -14,6 +14,9 @@
     <AndroidUseIntermediateDesignerFile>true</AndroidUseIntermediateDesignerFile>
     <TrimMode>copy</TrimMode>
     <Platforms>AnyCPU;ARM64</Platforms>
+    <!-- Ensure Android versionCode is monotonic for every build. -->
+    <ApplicationVersion Condition="'$(GITHUB_RUN_NUMBER)' != ''">$(GITHUB_RUN_NUMBER)</ApplicationVersion>
+    <ApplicationVersion Condition="'$(GITHUB_RUN_NUMBER)' == ''">$([System.DateTimeOffset]::UtcNow.ToUnixTimeSeconds())</ApplicationVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
@@ -23,15 +26,9 @@
     <AndroidUseManagedCodeTrampolines>false</AndroidUseManagedCodeTrampolines>
     <AndroidEnableMarshalMethods>false</AndroidEnableMarshalMethods>
     <RunAOTCompilation>false</RunAOTCompilation>
-
-            <!-- Standard Android approach: monotonic CI build number when available. -->
-            <ApplicationVersion Condition="'$(GITHUB_RUN_NUMBER)' != ''">$(GITHUB_RUN_NUMBER)</ApplicationVersion>
-              <!-- Local fallback: compact monotonic value (yy + day-of-year + hour), e.g. 2609107. -->
-              <ApplicationVersion Condition="'$(GITHUB_RUN_NUMBER)' == ''">$([System.DateTime]::UtcNow.ToString("yy"))$([System.DateTime]::UtcNow.DayOfYear.ToString("D3"))$([System.DateTime]::UtcNow.ToString("HH"))</ApplicationVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
-    <ApplicationVersion>2</ApplicationVersion>
     <AndroidFastDeploymentType>None</AndroidFastDeploymentType>
     <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
   </PropertyGroup>
