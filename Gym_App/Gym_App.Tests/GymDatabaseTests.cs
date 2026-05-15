@@ -272,6 +272,33 @@ public class GymDatabaseTests
     }
 
     [Fact]
+    public void BuildDailyWorkoutGroups_UsesExpectedUpperPairAndLowerMuscle()
+    {
+        var day1 = GymDatabase.BuildDailyWorkoutGroups(upperPairIndex: 0, lowerBodyIndex: 0);
+        var day2 = GymDatabase.BuildDailyWorkoutGroups(upperPairIndex: 1, lowerBodyIndex: 1);
+        var day3 = GymDatabase.BuildDailyWorkoutGroups(upperPairIndex: 2, lowerBodyIndex: 2);
+
+        Assert.Equal(new[] { "Biceps", "Triceps", "Legs" }, day1);
+        Assert.Equal(new[] { "Chest", "Delts", "Abs" }, day2);
+        Assert.Equal(new[] { "Back", "Shoulder", "Cardio" }, day3);
+    }
+
+    [Fact]
+    public void LowerBodyRandomSelection_DoesNotRepeatConsecutiveDay()
+    {
+        const int lowerChoices = 3;
+        for (int previousLowerIndex = 0; previousLowerIndex < lowerChoices; previousLowerIndex++)
+        {
+            for (int attempt = 0; attempt < 100; attempt++)
+            {
+                var selected = GymDatabase.GetRandomIndexDifferentFromPrevious(lowerChoices, previousLowerIndex);
+                Assert.InRange(selected, 0, lowerChoices - 1);
+                Assert.NotEqual(previousLowerIndex, selected);
+            }
+        }
+    }
+
+    [Fact]
     public void LoginPullFromServer_AppliesRemoteWorkoutsToLocalLog()
     {
         RunInIsolatedDataHome(database =>
