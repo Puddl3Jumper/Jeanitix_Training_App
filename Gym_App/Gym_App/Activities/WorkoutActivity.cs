@@ -193,7 +193,7 @@ namespace Gym_App.Activities
                 return Resource.Drawable.biceps_focus;
 
             if (string.Equals(label, "Legs", StringComparison.OrdinalIgnoreCase))
-                return Resource.Drawable.squats;
+                return Resource.Drawable.squats_focus_no_bg;
 
             return Resource.Drawable.ic_dumbbell;
         }

@@ -674,21 +674,37 @@ namespace Gym_App.Data
             var rotationIndex = GetTrainingRotationIndex();
             var prefs = Android.App.Application.Context.GetSharedPreferences(TrainingRoutinePrefsName, FileCreationMode.Private);
             
+            // Get today's date to ensure we only select once per day
+            var today = DateTime.Today.ToString("yyyyMMdd");
+            var lastSelectionDate = prefs.GetString("training_routine_last_selection_date", null);
+            
             // Get the previously saved upper body pair index
             var prevUpperPairIndex = prefs.GetInt(TrainingRoutineUpperPairIndexKey, -1);
             
-            // Select a random upper body pair that's different from yesterday's
-            var random = new Random();
             int selectedUpperPairIndex;
-            do
-            {
-                selectedUpperPairIndex = random.Next(UpperBodyPairs.Length);
-            } while (selectedUpperPairIndex == prevUpperPairIndex && UpperBodyPairs.Length > 1);
             
-            // Save today's upper body pair index for tomorrow's check
-            prefs.Edit()
-                .PutInt(TrainingRoutineUpperPairIndexKey, selectedUpperPairIndex)
-                .Apply();
+            if (lastSelectionDate != today)
+            {
+                // Select a random upper body pair that's different from yesterday's
+                var random = new Random();
+                do
+                {
+                    selectedUpperPairIndex = random.Next(UpperBodyPairs.Length);
+                } while (selectedUpperPairIndex == prevUpperPairIndex && UpperBodyPairs.Length > 1);
+                
+                // Save today's selection
+                prefs.Edit()
+                    .PutString("training_routine_last_selection_date", today)
+                    .PutInt(TrainingRoutineUpperPairIndexKey, selectedUpperPairIndex)
+                    .Apply();
+            }
+            else
+            {
+                // Use the previously selected pair for today
+                selectedUpperPairIndex = prevUpperPairIndex >= 0 && prevUpperPairIndex < UpperBodyPairs.Length 
+                    ? prevUpperPairIndex 
+                    : 0; // fallback to first pair
+            }
             
             // Build and return workout groups
             var upperPair = UpperBodyPairs[selectedUpperPairIndex];
