@@ -7,7 +7,18 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationId>com.leiyu.GymJournal</ApplicationId>
     <!-- Version format: major=year, minor=ISO week, patch=compile count (resets each week). -->
-    <ApplicationDisplayVersion>0.0.0</ApplicationDisplayVersion>
+    <VersionStampFile>$(MSBuildProjectDirectory)/build.weekstamp</VersionStampFile>
+    <VersionPatchFile>$(MSBuildProjectDirectory)/build.patch</VersionPatchFile>
+    <VersionMajor>$([System.DateTime]::UtcNow.Year)</VersionMajor>
+    <VersionMinor>$([System.Globalization.CultureInfo]::InvariantCulture.Calendar.GetWeekOfYear($([System.DateTime]::UtcNow), $([System.Globalization.CalendarWeekRule]::FirstFourDayWeek), $([System.DayOfWeek]::Monday))</VersionMinor>
+    <_CurrentStamp>$(VersionMajor).$(VersionMinor)</_CurrentStamp>
+    <_StoredStamp Condition="Exists('$(VersionStampFile)')">$([System.String]::Copy($([System.IO.File]::ReadAllText('$(VersionStampFile)'))).Trim())</_StoredStamp>
+    <_StoredPatch Condition="Exists('$(VersionPatchFile)')">$([System.String]::Copy($([System.IO.File]::ReadAllText('$(VersionPatchFile)'))).Trim())</_StoredPatch>
+    <_StoredPatch Condition="!Exists('$(VersionPatchFile)')">0</_StoredPatch>
+    <VersionPatch Condition="'$(_StoredStamp)' == '$(_CurrentStamp)'">$([MSBuild]::Add($(_StoredPatch), 1))</VersionPatch>
+    <VersionPatch Condition="'$(_StoredStamp)' != '$(_CurrentStamp)'">1</VersionPatch>
+    <ApplicationDisplayVersion>$(VersionMajor).$(VersionMinor).$(VersionPatch)</ApplicationDisplayVersion>
+    <ApplicationVersion>$([MSBuild]::Add($([MSBuild]::Multiply($(VersionMajor), 1000000)), $([MSBuild]::Add($([MSBuild]::Multiply($(VersionMinor), 10000)), $(VersionPatch))))</ApplicationVersion>
     <AndroidManifest>AndroidManifest.xml</AndroidManifest>
     <AndroidEnableMultiDex>true</AndroidEnableMultiDex>
     <AndroidUseAapt2Daemon>false</AndroidUseAapt2Daemon>
@@ -18,6 +29,10 @@
   </PropertyGroup>
 
   <Import Project="Versioning.targets" />
+
+  <PropertyGroup Condition="'$(GITHUB_RUN_NUMBER)' != ''">
+    <ApplicationVersion>$(GITHUB_RUN_NUMBER)</ApplicationVersion>
+  </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
     <PublishTrimmed>false</PublishTrimmed>

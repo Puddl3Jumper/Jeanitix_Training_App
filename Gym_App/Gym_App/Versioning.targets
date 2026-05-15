@@ -1,37 +1,9 @@
 <Project>
-  <!-- major=year, minor=ISO week, patch=compile count (resets when week changes). Pure MSBuild (no Roslyn task). -->
+  <!-- Persist patch/weekstamp after build. Version is computed at project evaluation (see Gym_App.csproj). -->
   <Target
-    Name="_IncrementAndroidVersion"
-    BeforeTargets="PrepareForBuild"
+    Name="_PersistAndroidVersion"
+    AfterTargets="Build"
     Condition="'$(DesignTimeBuild)' != 'true'">
-    <PropertyGroup>
-      <VersionStampFile>$(MSBuildProjectDirectory)\build.weekstamp</VersionStampFile>
-      <VersionPatchFile>$(MSBuildProjectDirectory)\build.patch</VersionPatchFile>
-      <VersionMajor>$([System.DateTime]::UtcNow.Year)</VersionMajor>
-      <VersionMinor>$([System.Globalization.CultureInfo]::InvariantCulture.Calendar.GetWeekOfYear($([System.DateTime]::UtcNow), $([System.Globalization.CalendarWeekRule]::FirstFourDayWeek), $([System.DayOfWeek]::Monday))</VersionMinor>
-      <_CurrentStamp>$(VersionMajor).$(VersionMinor)</_CurrentStamp>
-    </PropertyGroup>
-
-    <ReadLinesFromFile File="$(VersionStampFile)" Condition="Exists('$(VersionStampFile)')">
-      <Output TaskParameter="Lines" PropertyName="_StoredStamp" />
-    </ReadLinesFromFile>
-
-    <ReadLinesFromFile File="$(VersionPatchFile)" Condition="Exists('$(VersionPatchFile)')">
-      <Output TaskParameter="Lines" PropertyName="_StoredPatchLine" />
-    </ReadLinesFromFile>
-
-    <PropertyGroup>
-      <_StoredPatch>$([MSBuild]::ValueOrDefault($(_StoredPatchLine), 0))</_StoredPatch>
-      <VersionPatch Condition="'$(_StoredStamp)' == '$(_CurrentStamp)'">$([MSBuild]::Add($(_StoredPatch), 1))</VersionPatch>
-      <VersionPatch Condition="'$(_StoredStamp)' != '$(_CurrentStamp)'">1</VersionPatch>
-      <ApplicationDisplayVersion>$(VersionMajor).$(VersionMinor).$(VersionPatch)</ApplicationDisplayVersion>
-      <ApplicationVersion>$([MSBuild]::Add($([MSBuild]::Multiply($(VersionMajor), 1000000)), $([MSBuild]::Add($([MSBuild]::Multiply($(VersionMinor), 10000)), $(VersionPatch))))</ApplicationVersion>
-    </PropertyGroup>
-
-    <PropertyGroup Condition="'$(GITHUB_RUN_NUMBER)' != ''">
-      <ApplicationVersion>$(GITHUB_RUN_NUMBER)</ApplicationVersion>
-    </PropertyGroup>
-
     <WriteLinesToFile File="$(VersionStampFile)" Lines="$(_CurrentStamp)" Overwrite="true" />
     <WriteLinesToFile File="$(VersionPatchFile)" Lines="$(VersionPatch)" Overwrite="true" />
   </Target>
