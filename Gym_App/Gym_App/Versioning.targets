@@ -1,13 +1,14 @@
 <Project>
-  <!-- Write ISO week version for in-app display; persist patch counters after build. -->
+  <!-- Embed compile patch for in-app display; persist counters after build. -->
   <Target
-    Name="_WriteAppVersionAsset"
+    Name="_WriteBuildPatchAsset"
     BeforeTargets="PrepareForBuild"
     Condition="'$(DesignTimeBuild)' != 'true'">
     <MakeDir Directories="$(MSBuildProjectDirectory)/Assets" Condition="!Exists('$(MSBuildProjectDirectory)/Assets')" />
-    <Exec
-      WorkingDirectory="$(MSBuildProjectDirectory)"
-      Command="sh -c 'printf &quot;%s.%s.%s\n&quot; &quot;$(/usr/bin/date -u +%Y)&quot; &quot;$(/usr/bin/date -u +%V)&quot; &quot;$(VersionPatch)&quot; > Assets/app_version.txt'" />
+    <WriteLinesToFile
+      File="$(MSBuildProjectDirectory)/Assets/build_patch.txt"
+      Lines="$(VersionPatch)"
+      Overwrite="true" />
   </Target>
 
   <Target

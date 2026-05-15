@@ -7,20 +7,15 @@ namespace Gym_App;
 
 public static class ReleaseInfo
 {
-    private const string VersionAssetFileName = "app_version.txt";
+    private const string BuildPatchAssetFileName = "build_patch.txt";
 
     public static string GetDisplayVersion(Context context)
     {
-        var fromAsset = TryReadVersionAsset(context);
-        if (IsValidDisplayVersion(fromAsset))
-            return fromAsset!;
-
-        var (versionName, _) = GetAppVersion(context);
-        if (IsValidDisplayVersion(versionName))
-            return versionName!;
-
         var utc = DateTime.UtcNow;
-        return $"{utc.Year}.{ISOWeek.GetWeekOfYear(utc)}.1";
+        var year = utc.Year;
+        var week = ISOWeek.GetWeekOfYear(utc);
+        var patch = ReadBuildPatch(context);
+        return $"{year}.{week}.{patch}";
     }
 
     public static (string VersionName, long VersionCode) GetAppVersion(Context context)
@@ -75,29 +70,21 @@ public static class ReleaseInfo
         }
     }
 
-    private static string? TryReadVersionAsset(Context context)
+    private static int ReadBuildPatch(Context context)
     {
         try
         {
-            using var stream = context.Assets?.Open(VersionAssetFileName);
+            using var stream = context.Assets?.Open(BuildPatchAssetFileName);
             if (stream == null)
-                return null;
+                return 1;
 
             using var reader = new StreamReader(stream);
-            return reader.ReadToEnd().Trim();
+            var text = reader.ReadToEnd().Trim();
+            return int.TryParse(text, out var patch) && patch > 0 ? patch : 1;
         }
         catch
         {
-            return null;
+            return 1;
         }
-    }
-
-    private static bool IsValidDisplayVersion(string? value)
-    {
-        if (string.IsNullOrWhiteSpace(value))
-            return false;
-
-        return !value.Contains("$([", StringComparison.Ordinal)
-            && !value.Contains("GetWeekOfYear", StringComparison.OrdinalIgnoreCase);
     }
 }

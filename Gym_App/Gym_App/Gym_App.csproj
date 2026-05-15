@@ -63,6 +63,6 @@
 
   <ItemGroup>
     <AndroidAsset Include="google-services.json" />
-    <AndroidAsset Include="Assets/app_version.txt" />
+    <AndroidAsset Include="Assets/build_patch.txt" />
   </ItemGroup>
 </Project>
