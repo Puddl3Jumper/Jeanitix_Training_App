@@ -19,6 +19,10 @@
 packages/
 
 # Xamarin / Android
+Gym_App/Gym_App/Gym_App.csproj.lscache
+Gym_App/Gym_App/build.patch
+Gym_App/Gym_App/build.weekstamp
+Gym_App/Gym_App/Assets/build_patch.txt
 *.apk
 *.aab
 *.apks
