@@ -24,6 +24,8 @@ namespace Gym_App.Data
         private const string TrainingRoutineOffsetKey = "training_routine_offset";
         private const string TrainingRoutineTimestampKey = "training_routine_timestamp";
         private const string TrainingRoutineUpperPairIndexKey = "training_routine_upper_pair_index";
+        private const string TrainingRoutineLastSelectionDateKey = "training_routine_last_selection_date";
+        private readonly Dictionary<string, string> _nonAndroidTrainingRoutinePrefs = new(StringComparer.Ordinal);
 
         private static readonly string[] UpperBodyMuscles =
         {
@@ -625,9 +627,8 @@ namespace Gym_App.Data
 
         public int GetTrainingRotationIndex()
         {
-            var prefs = Android.App.Application.Context.GetSharedPreferences(TrainingRoutinePrefsName, FileCreationMode.Private);
-            var offset = prefs.GetInt(TrainingRoutineOffsetKey, 0);
-            var timestampString = prefs.GetString(TrainingRoutineTimestampKey, null);
+            var offset = GetTrainingRoutineOffset();
+            var timestampString = GetTrainingRoutineTimestamp();
             var lastTimestamp = DateTime.MinValue;
 
             if (!string.IsNullOrWhiteSpace(timestampString) && DateTime.TryParse(timestampString, out var parsedTimestamp))
@@ -637,21 +638,16 @@ namespace Gym_App.Data
             else
             {
                 lastTimestamp = DateTime.Now;
-                prefs.Edit()
-                    .PutString(TrainingRoutineTimestampKey, lastTimestamp.ToString("o"))
-                    .PutInt(TrainingRoutineOffsetKey, offset)
-                    .Apply();
+                SaveTrainingRoutineOffsetAndTimestamp(offset, lastTimestamp);
             }
 
             var elapsed = DateTime.Now - lastTimestamp;
             var advanceDays = (int)(elapsed.TotalHours / 24);
             if (advanceDays > 0)
             {
-                offset += advanceDays;
-                prefs.Edit()
-                    .PutInt(TrainingRoutineOffsetKey, offset)
-                    .PutString(TrainingRoutineTimestampKey, DateTime.Now.ToString("o"))
-                    .Apply();
+                var updatedOffset = offset + advanceDays;
+                SaveTrainingRoutineOffsetAndTimestamp(updatedOffset, DateTime.Now);
+                return updatedOffset;
             }
 
             return offset;
@@ -660,51 +656,111 @@ namespace Gym_App.Data
         public string[] GetDailyWorkoutGroups()
         {
             var rotationIndex = GetTrainingRotationIndex();
-            var prefs = Android.App.Application.Context.GetSharedPreferences(TrainingRoutinePrefsName, FileCreationMode.Private);
-            
-            // Get today's date to ensure we only select once per day
             var today = DateTime.Today.ToString("yyyyMMdd");
-            var lastSelectionDate = prefs.GetString("training_routine_last_selection_date", null);
-            
-            // Get the previously saved upper body pair index
-            var prevUpperPairIndex = prefs.GetInt(TrainingRoutineUpperPairIndexKey, -1);
-            
+            var lastSelectionDate = GetTrainingRoutineLastSelectionDate();
+            var prevUpperPairIndex = GetTrainingRoutineUpperPairIndex();
             int selectedUpperPairIndex;
-            
+
             if (lastSelectionDate != today)
             {
-                // Select a random upper body pair that's different from yesterday's
                 var random = new Random();
                 do
                 {
                     selectedUpperPairIndex = random.Next(UpperBodyPairs.Length);
                 } while (selectedUpperPairIndex == prevUpperPairIndex && UpperBodyPairs.Length > 1);
-                
-                // Save today's selection
-                prefs.Edit()
-                    .PutString("training_routine_last_selection_date", today)
-                    .PutInt(TrainingRoutineUpperPairIndexKey, selectedUpperPairIndex)
-                    .Apply();
+
+                SaveTrainingRoutineDailySelection(today, selectedUpperPairIndex);
             }
             else
             {
-                // Use the previously selected pair for today
                 selectedUpperPairIndex = prevUpperPairIndex >= 0 && prevUpperPairIndex < UpperBodyPairs.Length 
-                    ? prevUpperPairIndex 
-                    : 0; // fallback to first pair
+                    ? prevUpperPairIndex
+                    : 0;
             }
-            
-            // Build and return workout groups
-            var upperPair = UpperBodyPairs[selectedUpperPairIndex];
-            var lower = LowerBodyMuscles[rotationIndex % LowerBodyMuscles.Length];
+
+            return BuildDailyWorkoutGroups(rotationIndex, selectedUpperPairIndex);
+        }
+
+        internal static string[] BuildDailyWorkoutGroups(int rotationIndex, int upperPairIndex)
+        {
+            var normalizedUpperPairIndex = ((upperPairIndex % UpperBodyPairs.Length) + UpperBodyPairs.Length) % UpperBodyPairs.Length;
+            var normalizedLowerRotationIndex = ((rotationIndex % LowerBodyMuscles.Length) + LowerBodyMuscles.Length) % LowerBodyMuscles.Length;
+
+            var upperPair = UpperBodyPairs[normalizedUpperPairIndex];
+            var lower = LowerBodyMuscles[normalizedLowerRotationIndex];
             return new[] { upperPair[0], upperPair[1], lower };
         }
 
-        private static string[] BuildDailyWorkoutGroups(int rotationIndex)
+        private int GetTrainingRoutineOffset()
         {
-            var upperPair = UpperBodyPairs[rotationIndex % UpperBodyPairs.Length];
-            var lower = LowerBodyMuscles[rotationIndex % LowerBodyMuscles.Length];
-            return new[] { upperPair[0], upperPair[1], lower };
+#if ANDROID
+            var prefs = Android.App.Application.Context.GetSharedPreferences(TrainingRoutinePrefsName, FileCreationMode.Private);
+            return prefs.GetInt(TrainingRoutineOffsetKey, 0);
+#else
+            return _nonAndroidTrainingRoutinePrefs.TryGetValue(TrainingRoutineOffsetKey, out var value) && int.TryParse(value, out var parsed)
+                ? parsed
+                : 0;
+#endif
+        }
+
+        private string? GetTrainingRoutineTimestamp()
+        {
+#if ANDROID
+            var prefs = Android.App.Application.Context.GetSharedPreferences(TrainingRoutinePrefsName, FileCreationMode.Private);
+            return prefs.GetString(TrainingRoutineTimestampKey, null);
+#else
+            return _nonAndroidTrainingRoutinePrefs.TryGetValue(TrainingRoutineTimestampKey, out var value) ? value : null;
+#endif
+        }
+
+        private int GetTrainingRoutineUpperPairIndex()
+        {
+#if ANDROID
+            var prefs = Android.App.Application.Context.GetSharedPreferences(TrainingRoutinePrefsName, FileCreationMode.Private);
+            return prefs.GetInt(TrainingRoutineUpperPairIndexKey, -1);
+#else
+            return _nonAndroidTrainingRoutinePrefs.TryGetValue(TrainingRoutineUpperPairIndexKey, out var value) && int.TryParse(value, out var parsed)
+                ? parsed
+                : -1;
+#endif
+        }
+
+        private string? GetTrainingRoutineLastSelectionDate()
+        {
+#if ANDROID
+            var prefs = Android.App.Application.Context.GetSharedPreferences(TrainingRoutinePrefsName, FileCreationMode.Private);
+            return prefs.GetString(TrainingRoutineLastSelectionDateKey, null);
+#else
+            return _nonAndroidTrainingRoutinePrefs.TryGetValue(TrainingRoutineLastSelectionDateKey, out var value) ? value : null;
+#endif
+        }
+
+        private void SaveTrainingRoutineOffsetAndTimestamp(int offset, DateTime timestamp)
+        {
+#if ANDROID
+            var prefs = Android.App.Application.Context.GetSharedPreferences(TrainingRoutinePrefsName, FileCreationMode.Private);
+            prefs.Edit()
+                .PutInt(TrainingRoutineOffsetKey, offset)
+                .PutString(TrainingRoutineTimestampKey, timestamp.ToString("o"))
+                .Apply();
+#else
+            _nonAndroidTrainingRoutinePrefs[TrainingRoutineOffsetKey] = offset.ToString();
+            _nonAndroidTrainingRoutinePrefs[TrainingRoutineTimestampKey] = timestamp.ToString("o");
+#endif
+        }
+
+        private void SaveTrainingRoutineDailySelection(string selectionDate, int upperPairIndex)
+        {
+#if ANDROID
+            var prefs = Android.App.Application.Context.GetSharedPreferences(TrainingRoutinePrefsName, FileCreationMode.Private);
+            prefs.Edit()
+                .PutString(TrainingRoutineLastSelectionDateKey, selectionDate)
+                .PutInt(TrainingRoutineUpperPairIndexKey, upperPairIndex)
+                .Apply();
+#else
+            _nonAndroidTrainingRoutinePrefs[TrainingRoutineLastSelectionDateKey] = selectionDate;
+            _nonAndroidTrainingRoutinePrefs[TrainingRoutineUpperPairIndexKey] = upperPairIndex.ToString();
+#endif
         }
 
         public int GetCompletedWorkoutCount()

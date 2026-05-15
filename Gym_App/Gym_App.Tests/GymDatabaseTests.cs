@@ -272,6 +272,18 @@ public class GymDatabaseTests
     }
 
     [Fact]
+    public void DailyWorkoutGroups_Day1Day2Day3_MatchExpectedRotation()
+    {
+        var day1 = GymDatabase.BuildDailyWorkoutGroups(rotationIndex: 0, upperPairIndex: 0);
+        var day2 = GymDatabase.BuildDailyWorkoutGroups(rotationIndex: 1, upperPairIndex: 1);
+        var day3 = GymDatabase.BuildDailyWorkoutGroups(rotationIndex: 2, upperPairIndex: 2);
+
+        Assert.Equal(new[] { "Biceps", "Triceps", "Legs" }, day1);
+        Assert.Equal(new[] { "Chest", "Delts", "Abs" }, day2);
+        Assert.Equal(new[] { "Back", "Shoulder", "Cardio" }, day3);
+    }
+
+    [Fact]
     public void LoginPullFromServer_AppliesRemoteWorkoutsToLocalLog()
     {
         RunInIsolatedDataHome(database =>
