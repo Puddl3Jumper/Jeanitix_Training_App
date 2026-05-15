@@ -677,7 +677,7 @@ namespace Gym_App.Data
             if (lastSelectionDate != today)
             {
                 // Lower-body is randomized daily, but cannot repeat yesterday's selection.
-                selectedLowerIndex = GetRandomIndexDifferentFromPrevious(LowerBodyMuscles.Length, previousLowerIndex);
+                selectedLowerIndex = SelectLowerBodyIndex(upperPairIndex, previousLowerIndex);
                 prefs.Edit()
                     .PutString(TrainingRoutineLowerSelectionDateKey, today)
                     .PutInt(TrainingRoutineLowerMuscleIndexKey, selectedLowerIndex)
@@ -685,9 +685,9 @@ namespace Gym_App.Data
             }
             else
             {
-                selectedLowerIndex = previousLowerIndex >= 0 && previousLowerIndex < LowerBodyMuscles.Length
+                selectedLowerIndex = IsLowerBodyAllowedForUpperPair(upperPairIndex, previousLowerIndex)
                     ? previousLowerIndex
-                    : 0;
+                    : SelectLowerBodyIndex(upperPairIndex, previousLowerIndex);
             }
 #else
             var selectedLowerIndex = NormalizeIndex(rotationIndex, LowerBodyMuscles.Length);
@@ -713,19 +713,46 @@ namespace Gym_App.Data
             return ((index % length) + length) % length;
         }
 
-        internal static int GetRandomIndexDifferentFromPrevious(int length, int previousIndex)
+        internal static int SelectLowerBodyIndex(int upperPairIndex, int previousLowerIndex)
         {
-            if (length <= 1)
+            var eligibleLowerIndexes = GetEligibleLowerBodyIndexes(upperPairIndex);
+            return GetRandomIndexDifferentFromPrevious(eligibleLowerIndexes, previousLowerIndex);
+        }
+
+        internal static bool IsLowerBodyAllowedForUpperPair(int upperPairIndex, int lowerBodyIndex)
+        {
+            if (lowerBodyIndex < 0 || lowerBodyIndex >= LowerBodyMuscles.Length)
+                return false;
+
+            return GetEligibleLowerBodyIndexes(upperPairIndex).Contains(lowerBodyIndex);
+        }
+
+        internal static int[] GetEligibleLowerBodyIndexes(int upperPairIndex)
+        {
+            var normalizedUpperPairIndex = NormalizeIndex(upperPairIndex, UpperBodyPairs.Length);
+            // Keep harder legs day only when upper workload is lighter (Biceps/Triceps).
+            return normalizedUpperPairIndex == 0
+                ? new[] { 0, 1, 2 }
+                : new[] { 1, 2 };
+        }
+
+        internal static int GetRandomIndexDifferentFromPrevious(int[] candidateIndexes, int previousIndex)
+        {
+            if (candidateIndexes == null || candidateIndexes.Length == 0)
                 return 0;
 
-            var random = new Random();
-            int selectedIndex;
-            do
-            {
-                selectedIndex = random.Next(length);
-            } while (selectedIndex == previousIndex);
+            if (candidateIndexes.Length == 1)
+                return candidateIndexes[0];
 
-            return selectedIndex;
+            var nonRepeatingCandidates = candidateIndexes
+                .Where(index => index != previousIndex)
+                .ToArray();
+
+            var source = nonRepeatingCandidates.Length > 0
+                ? nonRepeatingCandidates
+                : candidateIndexes;
+
+            return source[Random.Shared.Next(source.Length)];
         }
 
         public int GetCompletedWorkoutCount()

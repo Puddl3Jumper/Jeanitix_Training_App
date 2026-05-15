@@ -286,15 +286,31 @@ public class GymDatabaseTests
     [Fact]
     public void LowerBodyRandomSelection_DoesNotRepeatConsecutiveDay()
     {
-        const int lowerChoices = 3;
-        for (int previousLowerIndex = 0; previousLowerIndex < lowerChoices; previousLowerIndex++)
+        for (int upperPairIndex = 0; upperPairIndex < 3; upperPairIndex++)
         {
-            for (int attempt = 0; attempt < 100; attempt++)
+            for (int previousLowerIndex = 0; previousLowerIndex < 3; previousLowerIndex++)
             {
-                var selected = GymDatabase.GetRandomIndexDifferentFromPrevious(lowerChoices, previousLowerIndex);
-                Assert.InRange(selected, 0, lowerChoices - 1);
-                Assert.NotEqual(previousLowerIndex, selected);
+                for (int attempt = 0; attempt < 100; attempt++)
+                {
+                    var selected = GymDatabase.SelectLowerBodyIndex(upperPairIndex, previousLowerIndex);
+                    Assert.InRange(selected, 0, 2);
+                    Assert.True(GymDatabase.IsLowerBodyAllowedForUpperPair(upperPairIndex, selected));
+                    Assert.NotEqual(previousLowerIndex, selected);
+                }
             }
+        }
+    }
+
+    [Fact]
+    public void LowerBodySelection_OnlyAllowsLegsOnBicepsTricepsDay()
+    {
+        for (int attempt = 0; attempt < 100; attempt++)
+        {
+            var selectedForChestDelts = GymDatabase.SelectLowerBodyIndex(upperPairIndex: 1, previousLowerIndex: 0);
+            var selectedForBackShoulder = GymDatabase.SelectLowerBodyIndex(upperPairIndex: 2, previousLowerIndex: 0);
+
+            Assert.NotEqual(0, selectedForChestDelts);
+            Assert.NotEqual(0, selectedForBackShoulder);
         }
     }
 
