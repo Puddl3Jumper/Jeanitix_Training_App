@@ -1,60 +1,38 @@
 <Project>
-  <UsingTask
-    TaskName="GymAppVersionTask"
-    TaskFactory="RoslynCodeTaskFactory"
-    AssemblyFile="$(MSBuildToolsPath)\Microsoft.Build.Tasks.Core.dll">
-    <ParameterGroup>
-      <VersionFile ParameterType="System.String" Required="true" />
-      <DisplayVersion ParameterType="System.String" Output="true" />
-      <VersionCode ParameterType="System.Int32" Output="true" />
-    </ParameterGroup>
-    <Task>
-      <Reference Include="System.Globalization" />
-      <Code Type="Fragment" Language="cs"><![CDATA[
-        var utc = DateTime.UtcNow;
-        var major = utc.Year;
-        var minor = ISOWeek.GetWeekOfYear(utc);
-        var stamp = $"{major}.{minor}";
-
-        var path = VersionFile;
-        var directory = Path.GetDirectoryName(path);
-        if (!string.IsNullOrEmpty(directory))
-        {
-          Directory.CreateDirectory(directory);
-        }
-
-        var patch = 0;
-        if (File.Exists(path))
-        {
-          var lines = File.ReadAllLines(path);
-          if (lines.Length >= 2
-              && string.Equals(lines[0].Trim(), stamp, StringComparison.Ordinal)
-              && int.TryParse(lines[1].Trim(), out var storedPatch))
-          {
-            patch = storedPatch;
-          }
-        }
-
-        patch++;
-        File.WriteAllLines(path, new[] { stamp, patch.ToString() });
-
-        DisplayVersion = $"{major}.{minor}.{patch}";
-        VersionCode = (major * 1000000) + (minor * 10000) + patch;
-      ]]></Code>
-    </Task>
-  </UsingTask>
-
+  <!-- major=year, minor=ISO week, patch=compile count (resets when week changes). Pure MSBuild (no Roslyn task). -->
   <Target
     Name="_IncrementAndroidVersion"
     BeforeTargets="PrepareForBuild"
     Condition="'$(DesignTimeBuild)' != 'true'">
-    <GymAppVersionTask VersionFile="$(VersionFile)">
-      <Output TaskParameter="DisplayVersion" PropertyName="ApplicationDisplayVersion" />
-      <Output TaskParameter="VersionCode" PropertyName="ApplicationVersion" />
-    </GymAppVersionTask>
+    <PropertyGroup>
+      <VersionStampFile>$(MSBuildProjectDirectory)\build.weekstamp</VersionStampFile>
+      <VersionPatchFile>$(MSBuildProjectDirectory)\build.patch</VersionPatchFile>
+      <VersionMajor>$([System.DateTime]::UtcNow.Year)</VersionMajor>
+      <VersionMinor>$([System.Globalization.CultureInfo]::InvariantCulture.Calendar.GetWeekOfYear($([System.DateTime]::UtcNow), $([System.Globalization.CalendarWeekRule]::FirstFourDayWeek), $([System.DayOfWeek]::Monday))</VersionMinor>
+      <_CurrentStamp>$(VersionMajor).$(VersionMinor)</_CurrentStamp>
+    </PropertyGroup>
+
+    <ReadLinesFromFile File="$(VersionStampFile)" Condition="Exists('$(VersionStampFile)')">
+      <Output TaskParameter="Lines" PropertyName="_StoredStamp" />
+    </ReadLinesFromFile>
+
+    <ReadLinesFromFile File="$(VersionPatchFile)" Condition="Exists('$(VersionPatchFile)')">
+      <Output TaskParameter="Lines" PropertyName="_StoredPatchLine" />
+    </ReadLinesFromFile>
+
+    <PropertyGroup>
+      <_StoredPatch>$([MSBuild]::ValueOrDefault($(_StoredPatchLine), 0))</_StoredPatch>
+      <VersionPatch Condition="'$(_StoredStamp)' == '$(_CurrentStamp)'">$([MSBuild]::Add($(_StoredPatch), 1))</VersionPatch>
+      <VersionPatch Condition="'$(_StoredStamp)' != '$(_CurrentStamp)'">1</VersionPatch>
+      <ApplicationDisplayVersion>$(VersionMajor).$(VersionMinor).$(VersionPatch)</ApplicationDisplayVersion>
+      <ApplicationVersion>$([MSBuild]::Add($([MSBuild]::Multiply($(VersionMajor), 1000000)), $([MSBuild]::Add($([MSBuild]::Multiply($(VersionMinor), 10000)), $(VersionPatch))))</ApplicationVersion>
+    </PropertyGroup>
 
     <PropertyGroup Condition="'$(GITHUB_RUN_NUMBER)' != ''">
       <ApplicationVersion>$(GITHUB_RUN_NUMBER)</ApplicationVersion>
     </PropertyGroup>
+
+    <WriteLinesToFile File="$(VersionStampFile)" Lines="$(_CurrentStamp)" Overwrite="true" />
+    <WriteLinesToFile File="$(VersionPatchFile)" Lines="$(VersionPatch)" Overwrite="true" />
   </Target>
 </Project>

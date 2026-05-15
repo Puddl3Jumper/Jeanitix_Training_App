@@ -8,7 +8,6 @@
     <ApplicationId>com.leiyu.GymJournal</ApplicationId>
     <!-- Version format: major=year, minor=ISO week, patch=compile count (resets each week). -->
     <ApplicationDisplayVersion>0.0.0</ApplicationDisplayVersion>
-    <VersionFile>$(MSBuildProjectDirectory)\build.version</VersionFile>
     <AndroidManifest>AndroidManifest.xml</AndroidManifest>
     <AndroidEnableMultiDex>true</AndroidEnableMultiDex>
     <AndroidUseAapt2Daemon>false</AndroidUseAapt2Daemon>
@@ -30,7 +29,6 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
-    <AndroidFastDeploymentType>None</AndroidFastDeploymentType>
     <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
   </PropertyGroup>
 
