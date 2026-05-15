@@ -18,7 +18,11 @@
     <VersionPatch Condition="'$(_StoredStamp)' == '$(_CurrentStamp)'">$([MSBuild]::Add($(_StoredPatch), 1))</VersionPatch>
     <VersionPatch Condition="'$(_StoredStamp)' != '$(_CurrentStamp)'">1</VersionPatch>
     <ApplicationDisplayVersion>$(VersionMajor).$(VersionMinor).$(VersionPatch)</ApplicationDisplayVersion>
-    <ApplicationVersion>$([MSBuild]::Add($([MSBuild]::Multiply($(VersionMajor), 1000000)), $([MSBuild]::Add($([MSBuild]::Multiply($(VersionMinor), 10000)), $(VersionPatch))))</ApplicationVersion>
+  </PropertyGroup>
+
+  <!-- Android versionCode must be a plain integer (no nested MSBuild::Add/Multiply — XA0003). -->
+  <PropertyGroup>
+    <ApplicationVersion>$([System.DateTimeOffset]::UtcNow.ToUnixTimeSeconds())</ApplicationVersion>
     <AndroidManifest>AndroidManifest.xml</AndroidManifest>
     <AndroidEnableMultiDex>true</AndroidEnableMultiDex>
     <AndroidUseAapt2Daemon>false</AndroidUseAapt2Daemon>
