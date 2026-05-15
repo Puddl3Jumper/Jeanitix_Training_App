@@ -44,21 +44,9 @@ namespace Gym_App.Data
 
         private static readonly string[][] UpperBodyPairs =
         {
-            new[] { "Biceps", "Chest" },
-            new[] { "Biceps", "Back" },
-            new[] { "Biceps", "Shoulder" },
             new[] { "Biceps", "Triceps" },
-            new[] { "Biceps", "Delts" },
-            new[] { "Chest", "Back" },
-            new[] { "Chest", "Shoulder" },
-            new[] { "Chest", "Triceps" },
             new[] { "Chest", "Delts" },
-            new[] { "Back", "Shoulder" },
-            new[] { "Back", "Triceps" },
-            new[] { "Back", "Delts" },
-            new[] { "Shoulder", "Triceps" },
-            new[] { "Shoulder", "Delts" },
-            new[] { "Triceps", "Delts" }
+            new[] { "Back", "Shoulder" }
         };
 
         internal bool IsGuestUser => _currentUserKey == GuestUserKey;
