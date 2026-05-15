@@ -6,10 +6,8 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationId>com.leiyu.GymJournal</ApplicationId>
-    <!-- Tesla-style semver: major.minor.patch (e.g. 4.57.0) -->
-    <VersionMajor>1</VersionMajor>
-    <VersionMinor>0</VersionMinor>
-    <ApplicationDisplayVersion>$(VersionMajor).$(VersionMinor).0</ApplicationDisplayVersion>
+    <!-- Version format: major=year, minor=ISO week, patch=compile count (resets each week). -->
+    <ApplicationDisplayVersion>0.0.0</ApplicationDisplayVersion>
     <VersionFile>$(MSBuildProjectDirectory)\build.version</VersionFile>
     <AndroidManifest>AndroidManifest.xml</AndroidManifest>
     <AndroidEnableMultiDex>true</AndroidEnableMultiDex>
@@ -20,28 +18,7 @@
     <Platforms>AnyCPU;ARM64</Platforms>
   </PropertyGroup>
 
-  <!-- Bump versionCode + visible version on every real build (not design-time). -->
-  <Target Name="_IncrementAndroidVersion" BeforeTargets="PrepareForBuild" Condition="'$(DesignTimeBuild)' != 'true'">
-    <ReadLinesFromFile File="$(VersionFile)" Condition="Exists('$(VersionFile)')">
-      <Output TaskParameter="Lines" PropertyName="_VersionFileLine" />
-    </ReadLinesFromFile>
-
-    <PropertyGroup>
-      <_StoredPatch>$([MSBuild]::ValueOrDefault($(_VersionFileLine), 0))</_StoredPatch>
-      <VersionPatch>$([MSBuild]::Add($(_StoredPatch), 1))</VersionPatch>
-      <ApplicationDisplayVersion>$(VersionMajor).$(VersionMinor).$(VersionPatch)</ApplicationDisplayVersion>
-      <ApplicationVersion>$([MSBuild]::Add($([MSBuild]::Multiply($([MSBuild]::Add($([MSBuild]::Multiply($(VersionMajor), 1000)), $(VersionMinor))), 100)), $(VersionPatch)))</ApplicationVersion>
-    </PropertyGroup>
-
-    <PropertyGroup Condition="'$(GITHUB_RUN_NUMBER)' != ''">
-      <ApplicationVersion>$(GITHUB_RUN_NUMBER)</ApplicationVersion>
-    </PropertyGroup>
-
-    <WriteLinesToFile
-      File="$(VersionFile)"
-      Lines="$(VersionPatch)"
-      Overwrite="true" />
-  </Target>
+  <Import Project="Versioning.targets" />
 
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
     <PublishTrimmed>false</PublishTrimmed>
