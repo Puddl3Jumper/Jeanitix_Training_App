@@ -1,5 +1,15 @@
 <Project>
-  <!-- Persist patch/weekstamp after build. Version is computed at project evaluation (see Gym_App.csproj). -->
+  <!-- Write ISO week version for in-app display; persist patch counters after build. -->
+  <Target
+    Name="_WriteAppVersionAsset"
+    BeforeTargets="PrepareForBuild"
+    Condition="'$(DesignTimeBuild)' != 'true'">
+    <MakeDir Directories="$(MSBuildProjectDirectory)/Assets" Condition="!Exists('$(MSBuildProjectDirectory)/Assets')" />
+    <Exec
+      WorkingDirectory="$(MSBuildProjectDirectory)"
+      Command="sh -c 'printf &quot;%s.%s.%s\n&quot; &quot;$(/usr/bin/date -u +%Y)&quot; &quot;$(/usr/bin/date -u +%V)&quot; &quot;$(VersionPatch)&quot; > Assets/app_version.txt'" />
+  </Target>
+
   <Target
     Name="_PersistAndroidVersion"
     AfterTargets="Build"

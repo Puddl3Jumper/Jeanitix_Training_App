@@ -10,7 +10,8 @@
     <VersionStampFile>$(MSBuildProjectDirectory)/build.weekstamp</VersionStampFile>
     <VersionPatchFile>$(MSBuildProjectDirectory)/build.patch</VersionPatchFile>
     <VersionMajor>$([System.DateTime]::UtcNow.Year)</VersionMajor>
-    <VersionMinor>$([System.Globalization.CultureInfo]::InvariantCulture.Calendar.GetWeekOfYear($([System.DateTime]::UtcNow), $([System.Globalization.CalendarWeekRule]::FirstFourDayWeek), $([System.DayOfWeek]::Monday))</VersionMinor>
+    <!-- MSBuild cannot evaluate System.Globalization; ISO week is written to Assets/app_version.txt at build time. -->
+    <VersionMinor>$([MSBuild]::Divide($([System.DateTime]::UtcNow.DayOfYear), 7))</VersionMinor>
     <_CurrentStamp>$(VersionMajor).$(VersionMinor)</_CurrentStamp>
     <_StoredStamp Condition="Exists('$(VersionStampFile)')">$([System.String]::Copy($([System.IO.File]::ReadAllText('$(VersionStampFile)'))).Trim())</_StoredStamp>
     <_StoredPatch Condition="Exists('$(VersionPatchFile)')">$([System.String]::Copy($([System.IO.File]::ReadAllText('$(VersionPatchFile)'))).Trim())</_StoredPatch>
@@ -62,5 +63,6 @@
 
   <ItemGroup>
     <AndroidAsset Include="google-services.json" />
+    <AndroidAsset Include="Assets/app_version.txt" />
   </ItemGroup>
 </Project>

@@ -71,7 +71,7 @@ namespace Gym_App.Activities
 
             if (appVersionText != null)
             {
-                var (versionName, _) = ReleaseInfo.GetAppVersion(this);
+                var versionName = ReleaseInfo.GetDisplayVersion(this);
                 var versionLine = GetString(
                     Resource.String.settings_release_text,
                     new Java.Lang.Object[]
