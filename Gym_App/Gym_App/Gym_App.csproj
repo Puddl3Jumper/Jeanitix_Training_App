@@ -6,6 +6,7 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationId>com.leiyu.GymJournal</ApplicationId>
+    <ApplicationTitle>Jeanetix</ApplicationTitle>
     <!-- Version format: major=year, minor=ISO week, patch=compile count (resets each week). -->
     <VersionStampFile>$(MSBuildProjectDirectory)/build.weekstamp</VersionStampFile>
     <VersionPatchFile>$(MSBuildProjectDirectory)/build.patch</VersionPatchFile>
