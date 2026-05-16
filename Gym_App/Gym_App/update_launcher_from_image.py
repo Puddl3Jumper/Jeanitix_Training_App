@@ -17,8 +17,8 @@ For an exact match to your official artwork, save a transparent PNG as:
   Resources/drawable/jeanetix_launcher_source.png
 Then run: python3 update_launcher_from_image.py --welcome-only --no-chroma
 
-Default search order: jeanetix_launcher_source.png, Jeanetix_logo.png, jeanetix_logo.png,
-  jeanetix_launcher_foreground.png
+Default search order: Jeanetix_source.png, jeanetix_launcher_source.png, Jeanetix_logo.png,
+  jeanetix_logo.png, jeanetix_launcher_foreground.png
 """
 
 from __future__ import annotations
@@ -41,6 +41,7 @@ RES_ROOT = SCRIPT_DIR / "Resources"
 def _default_logo_path() -> Path:
     """First existing candidate in drawable (Option A: jeanetix_launcher_source.png)."""
     candidates = [
+        DRAWABLE / "Jeanetix_source.png",
         DRAWABLE / "jeanetix_launcher_source.png",
         DRAWABLE / "Jeanetix_logo.png",
         DRAWABLE / "jeanetix_logo.png",
