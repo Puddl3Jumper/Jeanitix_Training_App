@@ -140,7 +140,6 @@ def _write_ic_launcher_background_xml(hex_color: str) -> None:
 
 
 def main() -> None:
-    default_path = _default_logo_path()
     parser = argparse.ArgumentParser(description="Build launcher mipmap PNGs from one source image.")
     parser.add_argument(
         "image",
