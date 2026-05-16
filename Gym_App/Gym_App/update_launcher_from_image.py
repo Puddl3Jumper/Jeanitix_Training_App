@@ -11,7 +11,7 @@ Apply your own logo to Android launcher icons.
 
 Requires: pip install pillow
 
-Default file search (first match wins — Option A is first):
+Also writes Resources/drawable/welcome_hero.png (splash on MainActivity) from the same file.
   Resources/drawable/jeanetix_launcher_source.png
   Resources/drawable/Jeanetix_logo.png
   Resources/drawable/jeanetix_logo.png
@@ -125,6 +125,21 @@ def _hex_color(rgb: tuple[int, int, int]) -> str:
     return f"#{rgb[0]:02X}{rgb[1]:02X}{rgb[2]:02X}"
 
 
+def _resize_max_width(im: Image.Image, max_w: int) -> Image.Image:
+    w, h = im.size
+    if w <= max_w:
+        return im
+    new_h = max(1, int(round(h * max_w / w)))
+    return im.resize((max_w, new_h), Image.Resampling.LANCZOS)
+
+
+def _save_welcome_hero(hero_rgba: Image.Image, max_width: int = 1400) -> None:
+    out = _resize_max_width(hero_rgba, max_width)
+    path = DRAWABLE / "welcome_hero.png"
+    out.save(path, "PNG", optimize=True)
+    print(f"Wrote welcome splash: {path} ({out.size[0]}x{out.size[1]})")
+
+
 def _write_ic_launcher_background_xml(hex_color: str) -> None:
     path = RES_ROOT / "values" / "ic_launcher_background.xml"
     path.write_text(
@@ -164,16 +179,22 @@ def main() -> None:
         )
         sys.exit(1)
 
-    im = Image.open(src).convert("RGB")
-    im = _center_square_crop(im)
-    bg_rgb = _sample_background_rgb(im)
+    full_rgb = Image.open(src).convert("RGB")
+    bg_rgb = _sample_background_rgb(full_rgb)
+    square_rgb = _center_square_crop(full_rgb)
 
     if args.no_chroma:
-        fore_src = Image.open(src).convert("RGBA")
-        fore_src = _center_square_crop(fore_src)
+        fore_src = _center_square_crop(Image.open(src).convert("RGBA"))
     else:
-        im_rgba = im.convert("RGBA")
-        fore_src = _apply_chroma_key(im_rgba, bg_rgb)
+        fore_src = _apply_chroma_key(square_rgb.convert("RGBA"), bg_rgb)
+
+    # Splash / welcome hero: full artwork (not square), transparent where background was
+    full_rgba = full_rgb.convert("RGBA")
+    if args.no_chroma:
+        hero_rgba = full_rgba
+    else:
+        hero_rgba = _apply_chroma_key(full_rgba, bg_rgb)
+    _save_welcome_hero(hero_rgba)
 
     back_color = (*bg_rgb, 255)
     hex_bg = _hex_color(bg_rgb)
