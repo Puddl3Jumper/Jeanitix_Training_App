@@ -11,10 +11,10 @@ Apply your own logo to Android launcher icons.
 
 Requires: pip install pillow
 
-Default file search (first match wins):
+Default file search (first match wins — Option A is first):
+  Resources/drawable/jeanetix_launcher_source.png
   Resources/drawable/Jeanetix_logo.png
   Resources/drawable/jeanetix_logo.png
-  Resources/drawable/jeanetix_launcher_source.png
 """
 
 from __future__ import annotations
@@ -35,13 +35,14 @@ RES_ROOT = SCRIPT_DIR / "Resources"
 
 
 def _default_logo_path() -> Path:
-    """First existing candidate in drawable (case variants for macOS/Linux)."""
+    """First existing candidate in drawable (Option A: jeanetix_launcher_source.png)."""
     candidates = [
+        DRAWABLE / "jeanetix_launcher_source.png",
         DRAWABLE / "Jeanetix_logo.png",
         DRAWABLE / "jeanetix_logo.png",
+        DRAWABLE / "jeanetix_launcher_source.jpg",
         DRAWABLE / "Jeanetix_logo.jpg",
         DRAWABLE / "jeanetix_logo.jpg",
-        DRAWABLE / "jeanetix_launcher_source.png",
     ]
     for p in candidates:
         if p.is_file():
@@ -145,7 +146,7 @@ def main() -> None:
         "image",
         nargs="?",
         default=None,
-        help="Logo file (default: Jeanetix_logo.png or jeanetix_launcher_source.png in Resources/drawable/)",
+        help="Logo file (default: jeanetix_launcher_source.png in Resources/drawable/)",
     )
     parser.add_argument(
         "--no-chroma",
@@ -157,10 +158,9 @@ def main() -> None:
     if not src.is_file():
         print(f"File not found: {src}", file=sys.stderr)
         print(
-            "Place your logo as one of:\n"
-            f"  {DRAWABLE / 'Jeanetix_logo.png'}\n"
-            f"  {DRAWABLE / 'jeanetix_logo.png'}\n"
-            "Or pass the path: python3 update_launcher_from_image.py /path/to/logo.png",
+            "Option A: save your logo as:\n"
+            f"  {DRAWABLE / 'jeanetix_launcher_source.png'}\n"
+            "Or pass the path: python3 update_launcher_from_image.py Resources/drawable/Jeanetix_logo.png",
             file=sys.stderr,
         )
         sys.exit(1)
