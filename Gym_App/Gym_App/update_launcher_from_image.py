@@ -11,10 +11,14 @@ Apply your own logo to Android launcher icons.
 
 Requires: pip install pillow
 
-Default file search (first match wins — Option A is first):
+Also writes Resources/drawable/welcome_hero.png (splash on MainActivity) from the same file.
+
+For an exact match to your official artwork, save a transparent PNG as:
   Resources/drawable/jeanetix_launcher_source.png
-  Resources/drawable/Jeanetix_logo.png
-  Resources/drawable/jeanetix_logo.png
+Then run: python3 update_launcher_from_image.py --welcome-only --no-chroma
+
+Default search order: Jeanetix_source.png, jeanetix_launcher_source.png, Jeanetix_logo.png,
+  jeanetix_logo.png, jeanetix_launcher_foreground.png
 """
 
 from __future__ import annotations
@@ -37,9 +41,11 @@ RES_ROOT = SCRIPT_DIR / "Resources"
 def _default_logo_path() -> Path:
     """First existing candidate in drawable (Option A: jeanetix_launcher_source.png)."""
     candidates = [
+        DRAWABLE / "Jeanetix_source.png",
         DRAWABLE / "jeanetix_launcher_source.png",
         DRAWABLE / "Jeanetix_logo.png",
         DRAWABLE / "jeanetix_logo.png",
+        DRAWABLE / "jeanetix_launcher_foreground.png",
         DRAWABLE / "jeanetix_launcher_source.jpg",
         DRAWABLE / "Jeanetix_logo.jpg",
         DRAWABLE / "jeanetix_logo.jpg",
@@ -125,6 +131,38 @@ def _hex_color(rgb: tuple[int, int, int]) -> str:
     return f"#{rgb[0]:02X}{rgb[1]:02X}{rgb[2]:02X}"
 
 
+def _has_significant_alpha(im: Image.Image, min_fraction: float = 0.02) -> bool:
+    """True when the image already has a meaningful transparent region."""
+    rgba = im.convert("RGBA")
+    alpha = rgba.getchannel("A")
+    transparent = sum(1 for a in alpha.getdata() if a < 128)
+    return transparent / max(1, alpha.size[0] * alpha.size[1]) >= min_fraction
+
+
+def _load_hero_rgba(src: Path, no_chroma: bool) -> Image.Image:
+    """Load splash artwork; preserve pixels when source already has transparency."""
+    im = Image.open(src).convert("RGBA")
+    if no_chroma or _has_significant_alpha(im):
+        return im
+    bg_rgb = _sample_background_rgb(im.convert("RGB"))
+    return _apply_chroma_key(im, bg_rgb)
+
+
+def _resize_max_width(im: Image.Image, max_w: int) -> Image.Image:
+    w, h = im.size
+    if w <= max_w:
+        return im
+    new_h = max(1, int(round(h * max_w / w)))
+    return im.resize((max_w, new_h), Image.Resampling.LANCZOS)
+
+
+def _save_welcome_hero(hero_rgba: Image.Image, max_width: int = 1400) -> None:
+    out = _resize_max_width(hero_rgba, max_width)
+    path = DRAWABLE / "welcome_hero.png"
+    out.save(path, "PNG", optimize=True)
+    print(f"Wrote welcome splash: {path} ({out.size[0]}x{out.size[1]})")
+
+
 def _write_ic_launcher_background_xml(hex_color: str) -> None:
     path = RES_ROOT / "values" / "ic_launcher_background.xml"
     path.write_text(
@@ -148,9 +186,14 @@ def main() -> None:
         help="Logo file (default: jeanetix_launcher_source.png in Resources/drawable/)",
     )
     parser.add_argument(
+        "--welcome-only",
+        action="store_true",
+        help="Only write Resources/drawable/welcome_hero.png (skip launcher mipmaps and ic_launcher_background).",
+    )
+    parser.add_argument(
         "--no-chroma",
         action="store_true",
-        help="Do not remove background; use image alpha only (for PNG with transparency).",
+        help="Keep original background in splash/launcher (no transparency from edge color).",
     )
     args = parser.parse_args()
     src = Path(args.image).expanduser().resolve() if args.image else _default_logo_path()
@@ -164,16 +207,21 @@ def main() -> None:
         )
         sys.exit(1)
 
-    im = Image.open(src).convert("RGB")
-    im = _center_square_crop(im)
-    bg_rgb = _sample_background_rgb(im)
+    hero_rgba = _load_hero_rgba(src, args.no_chroma)
+    _save_welcome_hero(hero_rgba)
+
+    if args.welcome_only:
+        print("Done (--welcome-only: launcher mipmaps unchanged). Rebuild and reinstall the APK.")
+        return
+
+    full_rgb = Image.open(src).convert("RGB")
+    bg_rgb = _sample_background_rgb(full_rgb)
+    square_rgb = _center_square_crop(full_rgb)
 
     if args.no_chroma:
-        fore_src = Image.open(src).convert("RGBA")
-        fore_src = _center_square_crop(fore_src)
+        fore_src = _center_square_crop(Image.open(src).convert("RGBA"))
     else:
-        im_rgba = im.convert("RGBA")
-        fore_src = _apply_chroma_key(im_rgba, bg_rgb)
+        fore_src = _apply_chroma_key(square_rgb.convert("RGBA"), bg_rgb)
 
     back_color = (*bg_rgb, 255)
     hex_bg = _hex_color(bg_rgb)
