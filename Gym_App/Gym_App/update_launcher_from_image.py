@@ -2,24 +2,24 @@
 """
 Apply your own logo to Android launcher icons.
 
-1. Save your image as PNG or JPG (square or wide — script center-crops to square).
-2. Default input path: Resources/drawable/jeanetix_launcher_source.png
-3. Run from this directory (Gym_App/Gym_App):
+1. Save your image as PNG or JPG under Resources/drawable/ (e.g. Jeanetix_logo.png).
+2. Run from this directory (Gym_App/Gym_App):
 
    python3 update_launcher_from_image.py
-   python3 update_launcher_from_image.py /path/to/your/logo.png
+
+   python3 update_launcher_from_image.py Resources/drawable/other.png
 
 Requires: pip install pillow
 
-Makes solid adaptive background from sampled edge color and removes similar pixels
-from the foreground so the icon works as Android adaptive-icon layers.
+Default file search (first match wins):
+  Resources/drawable/Jeanetix_logo.png
+  Resources/drawable/jeanetix_logo.png
+  Resources/drawable/jeanetix_launcher_source.png
 """
 
 from __future__ import annotations
 
 import argparse
-import os
-import re
 import sys
 from pathlib import Path
 
@@ -30,8 +30,24 @@ except ImportError:
     sys.exit(1)
 
 SCRIPT_DIR = Path(__file__).resolve().parent
-DEFAULT_INPUT = SCRIPT_DIR / "Resources" / "drawable" / "jeanetix_launcher_source.png"
+DRAWABLE = SCRIPT_DIR / "Resources" / "drawable"
 RES_ROOT = SCRIPT_DIR / "Resources"
+
+
+def _default_logo_path() -> Path:
+    """First existing candidate in drawable (case variants for macOS/Linux)."""
+    candidates = [
+        DRAWABLE / "Jeanetix_logo.png",
+        DRAWABLE / "jeanetix_logo.png",
+        DRAWABLE / "Jeanetix_logo.jpg",
+        DRAWABLE / "jeanetix_logo.jpg",
+        DRAWABLE / "jeanetix_launcher_source.png",
+    ]
+    for p in candidates:
+        if p.is_file():
+            return p
+    return candidates[0]
+
 
 # Android adaptive icon layer sizes per density (108dp base)
 DENSITIES = {
@@ -123,12 +139,13 @@ def _write_ic_launcher_background_xml(hex_color: str) -> None:
 
 
 def main() -> None:
+    default_path = _default_logo_path()
     parser = argparse.ArgumentParser(description="Build launcher mipmap PNGs from one source image.")
     parser.add_argument(
         "image",
         nargs="?",
-        default=str(DEFAULT_INPUT),
-        help=f"Logo file (default: {DEFAULT_INPUT})",
+        default=None,
+        help="Logo file (default: Jeanetix_logo.png or jeanetix_launcher_source.png in Resources/drawable/)",
     )
     parser.add_argument(
         "--no-chroma",
@@ -136,10 +153,16 @@ def main() -> None:
         help="Do not remove background; use image alpha only (for PNG with transparency).",
     )
     args = parser.parse_args()
-    src = Path(args.image).expanduser().resolve()
+    src = Path(args.image).expanduser().resolve() if args.image else _default_logo_path()
     if not src.is_file():
         print(f"File not found: {src}", file=sys.stderr)
-        print(f"Copy your logo to:\n  {DEFAULT_INPUT}", file=sys.stderr)
+        print(
+            "Place your logo as one of:\n"
+            f"  {DRAWABLE / 'Jeanetix_logo.png'}\n"
+            f"  {DRAWABLE / 'jeanetix_logo.png'}\n"
+            "Or pass the path: python3 update_launcher_from_image.py /path/to/logo.png",
+            file=sys.stderr,
+        )
         sys.exit(1)
 
     im = Image.open(src).convert("RGB")
