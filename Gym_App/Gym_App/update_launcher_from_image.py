@@ -163,9 +163,9 @@ def main() -> None:
         help="Logo file (default: jeanetix_launcher_source.png in Resources/drawable/)",
     )
     parser.add_argument(
-        "--no-chroma",
+        "--welcome-only",
         action="store_true",
-        help="Do not remove background; use image alpha only (for PNG with transparency).",
+        help="Only write Resources/drawable/welcome_hero.png (skip launcher mipmaps and ic_launcher_background).",
     )
     args = parser.parse_args()
     src = Path(args.image).expanduser().resolve() if args.image else _default_logo_path()
@@ -195,6 +195,10 @@ def main() -> None:
     else:
         hero_rgba = _apply_chroma_key(full_rgba, bg_rgb)
     _save_welcome_hero(hero_rgba)
+
+    if args.welcome_only:
+        print("Done (--welcome-only: launcher mipmaps unchanged). Rebuild and reinstall the APK.")
+        return
 
     back_color = (*bg_rgb, 255)
     hex_bg = _hex_color(bg_rgb)
