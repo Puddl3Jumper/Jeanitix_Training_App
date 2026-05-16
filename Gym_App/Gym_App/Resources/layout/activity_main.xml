@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
-<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<Gym_App.Views.InsetsAwareWelcomeRoot xmlns:android="http://schemas.android.com/apk/res/android"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:fitsSystemWindows="true"
     android:paddingStart="20dp"
     android:paddingEnd="20dp"
-    android:paddingTop="@dimen/welcome_screen_top_inset"
+    android:paddingTop="0dp"
     android:paddingBottom="44dp"
-    android:background="@drawable/bg_screen">
+    android:background="@drawable/bg_screen"
+    android:clipToPadding="false">
 
     <ImageView
         android:id="@+id/welcomeHeroImage"
@@ -113,4 +113,4 @@
         android:paddingEnd="18dp"
         android:layout_marginBottom="8dp" />
 
-</LinearLayout>
+</Gym_App.Views.InsetsAwareWelcomeRoot>
