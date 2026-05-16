@@ -1,4 +1,5 @@
 using Android.Content;
+using Android.OS;
 using Android.Widget;
 using Android.Views;
 using Gym_App.Activities;
@@ -34,6 +35,7 @@ namespace Gym_App
                 }
 
                 SetContentView(Resource.Layout.activity_main);
+                ApplyWelcomeWindowInsets();
 
                 _startWorkoutButton = FindViewById(Resource.Id.startWorkoutMainButton);
                 _continueWorkoutButton = FindViewById(Resource.Id.continueWorkoutMainButton);
@@ -74,6 +76,17 @@ namespace Gym_App
 
         private void UpdateUI()
         {
+        }
+
+        private void ApplyWelcomeWindowInsets()
+        {
+            // Let InsetsAwareWelcomeRoot receive status-bar and cutout insets (not consumed by the window).
+            if (OperatingSystem.IsAndroidVersionAtLeast(30))
+            {
+                Window?.SetDecorFitsSystemWindows(false);
+            }
+
+            Window?.DecorView?.RequestApplyInsets();
         }
 
         private void StartWorkoutButton_Click(object? sender, EventArgs e)
