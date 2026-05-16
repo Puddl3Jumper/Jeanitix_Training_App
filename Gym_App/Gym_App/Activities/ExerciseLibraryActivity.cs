@@ -346,7 +346,7 @@ namespace Gym_App.Activities
         private static int ResolveExerciseThumbnailResource(Exercise exercise)
         {
             _ = exercise;
-            return Resource.Drawable.jeanetix_welcome_hero;
+            return Resource.Drawable.welcome_hero;
         }
 
         private WorkoutSession EnsureActiveWorkout()
