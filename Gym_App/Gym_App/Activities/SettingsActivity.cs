@@ -71,13 +71,12 @@ namespace Gym_App.Activities
 
             if (appVersionText != null)
             {
-                var (versionName, versionCode) = ReleaseInfo.GetAppVersion(this);
+                var versionName = ReleaseInfo.GetDisplayVersion(this);
                 var versionLine = GetString(
                     Resource.String.settings_release_text,
                     new Java.Lang.Object[]
                     {
-                        new Java.Lang.String(versionName),
-                        Long.ValueOf(versionCode)
+                        new Java.Lang.String(versionName)
                     });
 
                 var spannable = new SpannableString(versionLine);

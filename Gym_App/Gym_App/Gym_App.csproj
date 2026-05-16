@@ -6,7 +6,25 @@
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationId>com.leiyu.GymJournal</ApplicationId>
-    <ApplicationDisplayVersion>2026.17.0</ApplicationDisplayVersion>
+    <ApplicationTitle>Jeanetix</ApplicationTitle>
+    <!-- Version format: major=year, minor=ISO week, patch=compile count (resets each week). -->
+    <VersionStampFile>$(MSBuildProjectDirectory)/build.weekstamp</VersionStampFile>
+    <VersionPatchFile>$(MSBuildProjectDirectory)/build.patch</VersionPatchFile>
+    <VersionMajor>$([System.DateTime]::UtcNow.Year)</VersionMajor>
+    <!-- MSBuild cannot evaluate System.Globalization; ISO week is written to Assets/app_version.txt at build time. -->
+    <VersionMinor>$([MSBuild]::Divide($([System.DateTime]::UtcNow.DayOfYear), 7))</VersionMinor>
+    <_CurrentStamp>$(VersionMajor).$(VersionMinor)</_CurrentStamp>
+    <_StoredStamp Condition="Exists('$(VersionStampFile)')">$([System.String]::Copy($([System.IO.File]::ReadAllText('$(VersionStampFile)'))).Trim())</_StoredStamp>
+    <_StoredPatch Condition="Exists('$(VersionPatchFile)')">$([System.String]::Copy($([System.IO.File]::ReadAllText('$(VersionPatchFile)'))).Trim())</_StoredPatch>
+    <_StoredPatch Condition="!Exists('$(VersionPatchFile)')">0</_StoredPatch>
+    <VersionPatch Condition="'$(_StoredStamp)' == '$(_CurrentStamp)'">$([MSBuild]::Add($(_StoredPatch), 1))</VersionPatch>
+    <VersionPatch Condition="'$(_StoredStamp)' != '$(_CurrentStamp)'">1</VersionPatch>
+    <ApplicationDisplayVersion>$(VersionMajor).$(VersionMinor).$(VersionPatch)</ApplicationDisplayVersion>
+  </PropertyGroup>
+
+  <!-- Android versionCode must be a plain integer (no nested MSBuild::Add/Multiply — XA0003). -->
+  <PropertyGroup>
+    <ApplicationVersion>$([System.DateTimeOffset]::UtcNow.ToUnixTimeSeconds())</ApplicationVersion>
     <AndroidManifest>AndroidManifest.xml</AndroidManifest>
     <AndroidEnableMultiDex>true</AndroidEnableMultiDex>
     <AndroidUseAapt2Daemon>false</AndroidUseAapt2Daemon>
@@ -16,6 +34,12 @@
     <Platforms>AnyCPU;ARM64</Platforms>
   </PropertyGroup>
 
+  <Import Project="Versioning.targets" />
+
+  <PropertyGroup Condition="'$(GITHUB_RUN_NUMBER)' != ''">
+    <ApplicationVersion>$(GITHUB_RUN_NUMBER)</ApplicationVersion>
+  </PropertyGroup>
+
   <PropertyGroup Condition="'$(Configuration)' == 'Release'">
     <PublishTrimmed>false</PublishTrimmed>
     <TrimMode>copy</TrimMode>
@@ -23,16 +47,9 @@
     <AndroidUseManagedCodeTrampolines>false</AndroidUseManagedCodeTrampolines>
     <AndroidEnableMarshalMethods>false</AndroidEnableMarshalMethods>
     <RunAOTCompilation>false</RunAOTCompilation>
-
-            <!-- Standard Android approach: monotonic CI build number when available. -->
-            <ApplicationVersion Condition="'$(GITHUB_RUN_NUMBER)' != ''">$(GITHUB_RUN_NUMBER)</ApplicationVersion>
-              <!-- Local fallback: compact monotonic value (yy + day-of-year + hour), e.g. 2609107. -->
-              <ApplicationVersion Condition="'$(GITHUB_RUN_NUMBER)' == ''">$([System.DateTime]::UtcNow.ToString("yy"))$([System.DateTime]::UtcNow.DayOfYear.ToString("D3"))$([System.DateTime]::UtcNow.ToString("HH"))</ApplicationVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
-    <ApplicationVersion>2</ApplicationVersion>
-    <AndroidFastDeploymentType>None</AndroidFastDeploymentType>
     <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
   </PropertyGroup>
 
@@ -47,5 +64,6 @@
 
   <ItemGroup>
     <AndroidAsset Include="google-services.json" />
+    <AndroidAsset Include="Assets/build_patch.txt" />
   </ItemGroup>
 </Project>

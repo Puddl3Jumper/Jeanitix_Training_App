@@ -1,0 +1,21 @@
+<Project>
+  <!-- Embed compile patch for in-app display; persist counters after build. -->
+  <Target
+    Name="_WriteBuildPatchAsset"
+    BeforeTargets="PrepareForBuild"
+    Condition="'$(DesignTimeBuild)' != 'true'">
+    <MakeDir Directories="$(MSBuildProjectDirectory)/Assets" Condition="!Exists('$(MSBuildProjectDirectory)/Assets')" />
+    <WriteLinesToFile
+      File="$(MSBuildProjectDirectory)/Assets/build_patch.txt"
+      Lines="$(VersionPatch)"
+      Overwrite="true" />
+  </Target>
+
+  <Target
+    Name="_PersistAndroidVersion"
+    AfterTargets="Build"
+    Condition="'$(DesignTimeBuild)' != 'true'">
+    <WriteLinesToFile File="$(VersionStampFile)" Lines="$(_CurrentStamp)" Overwrite="true" />
+    <WriteLinesToFile File="$(VersionPatchFile)" Lines="$(VersionPatch)" Overwrite="true" />
+  </Target>
+</Project>
