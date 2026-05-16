@@ -11,7 +11,7 @@ Apply your own logo to Android launcher icons.
 
 Requires: pip install pillow
 
-Also writes Resources/drawable/welcome_hero.png (splash on MainActivity) from the same file.
+Also writes Resources/drawable/jeanetix_welcome_hero.png (splash on MainActivity) from the same file.
   Resources/drawable/jeanetix_launcher_source.png
   Resources/drawable/Jeanetix_logo.png
   Resources/drawable/jeanetix_logo.png
@@ -133,11 +133,11 @@ def _resize_max_width(im: Image.Image, max_w: int) -> Image.Image:
     return im.resize((max_w, new_h), Image.Resampling.LANCZOS)
 
 
-def _save_welcome_hero(hero_rgba: Image.Image, max_width: int = 1400) -> None:
+def _save_jeanetix_welcome_hero(hero_rgba: Image.Image, max_width: int = 1400) -> None:
     out = _resize_max_width(hero_rgba, max_width)
-    path = DRAWABLE / "welcome_hero.png"
+    path = DRAWABLE / "jeanetix_welcome_hero.png"
     out.save(path, "PNG", optimize=True)
-    print(f"Wrote welcome splash: {path} ({out.size[0]}x{out.size[1]})")
+    print(f"Wrote Jeanetix welcome splash: {path} ({out.size[0]}x{out.size[1]})")
 
 
 def _write_ic_launcher_background_xml(hex_color: str) -> None:
@@ -165,7 +165,7 @@ def main() -> None:
     parser.add_argument(
         "--welcome-only",
         action="store_true",
-        help="Only write Resources/drawable/welcome_hero.png (skip launcher mipmaps and ic_launcher_background).",
+        help="Only write Resources/drawable/jeanetix_welcome_hero.png (skip launcher mipmaps and ic_launcher_background).",
     )
     args = parser.parse_args()
     src = Path(args.image).expanduser().resolve() if args.image else _default_logo_path()
@@ -194,7 +194,7 @@ def main() -> None:
         hero_rgba = full_rgba
     else:
         hero_rgba = _apply_chroma_key(full_rgba, bg_rgb)
-    _save_welcome_hero(hero_rgba)
+    _save_jeanetix_welcome_hero(hero_rgba)
 
     if args.welcome_only:
         print("Done (--welcome-only: launcher mipmaps unchanged). Rebuild and reinstall the APK.")

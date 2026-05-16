@@ -17,7 +17,7 @@
         android:adjustViewBounds="true"
         android:contentDescription="@string/app_name"
         android:scaleType="fitCenter"
-        android:src="@drawable/welcome_hero" />
+        android:src="@drawable/jeanetix_welcome_hero" />
 
     <TextView
         android:layout_width="match_parent"
