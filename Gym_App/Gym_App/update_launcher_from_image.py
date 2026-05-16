@@ -127,6 +127,33 @@ def _center_square_crop(im: Image.Image) -> Image.Image:
     return im.crop((left, top, left + side, top + side))
 
 
+def _fit_adaptive_foreground(im: Image.Image, size: int, safe_fraction: float = 0.68) -> Image.Image:
+    """Scale logo to fit inside the Android adaptive-icon safe zone (avoids circle clipping)."""
+    rgba = im.convert("RGBA")
+    bbox = rgba.getbbox()
+    if bbox:
+        rgba = rgba.crop(bbox)
+    w, h = rgba.size
+    if w == 0 or h == 0:
+        return Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    target = max(1, int(round(size * safe_fraction)))
+    scale = min(target / w, target / h)
+    new_w = max(1, int(round(w * scale)))
+    new_h = max(1, int(round(h * scale)))
+    scaled = rgba.resize((new_w, new_h), Image.Resampling.LANCZOS)
+    canvas = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    canvas.paste(scaled, ((size - new_w) // 2, (size - new_h) // 2), scaled)
+    return canvas
+
+
+def _launcher_foreground_from_source(src: Path, size: int, no_chroma: bool) -> Image.Image:
+    rgba = Image.open(src).convert("RGBA")
+    if not no_chroma and not _has_significant_alpha(rgba):
+        bg_rgb = _sample_background_rgb(rgba.convert("RGB"))
+        rgba = _apply_chroma_key(rgba, bg_rgb)
+    return _fit_adaptive_foreground(rgba, size)
+
+
 def _hex_color(rgb: tuple[int, int, int]) -> str:
     return f"#{rgb[0]:02X}{rgb[1]:02X}{rgb[2]:02X}"
 
@@ -191,6 +218,11 @@ def main() -> None:
         help="Only write Resources/drawable/welcome_hero.png (skip launcher mipmaps and ic_launcher_background).",
     )
     parser.add_argument(
+        "--launcher-only",
+        action="store_true",
+        help="Only update launcher mipmaps (skip welcome_hero.png).",
+    )
+    parser.add_argument(
         "--no-chroma",
         action="store_true",
         help="Keep original background in splash/launcher (no transparency from edge color).",
@@ -207,8 +239,9 @@ def main() -> None:
         )
         sys.exit(1)
 
-    hero_rgba = _load_hero_rgba(src, args.no_chroma)
-    _save_welcome_hero(hero_rgba)
+    if not args.launcher_only:
+        hero_rgba = _load_hero_rgba(src, args.no_chroma)
+        _save_welcome_hero(hero_rgba)
 
     if args.welcome_only:
         print("Done (--welcome-only: launcher mipmaps unchanged). Rebuild and reinstall the APK.")
@@ -216,24 +249,22 @@ def main() -> None:
 
     full_rgb = Image.open(src).convert("RGB")
     bg_rgb = _sample_background_rgb(full_rgb)
-    square_rgb = _center_square_crop(full_rgb)
-
-    if args.no_chroma:
-        fore_src = _center_square_crop(Image.open(src).convert("RGBA"))
-    else:
-        fore_src = _apply_chroma_key(square_rgb.convert("RGBA"), bg_rgb)
-
     back_color = (*bg_rgb, 255)
     hex_bg = _hex_color(bg_rgb)
     _write_ic_launcher_background_xml(hex_bg)
     print(f"Background sample: {hex_bg} (written to values/ic_launcher_background.xml)")
+
+    preview_size = DENSITIES["xxxhdpi"]
+    preview_fore = _launcher_foreground_from_source(src, preview_size, args.no_chroma)
+    preview_fore.save(DRAWABLE / "jeanetix_launcher_foreground.png", "PNG", optimize=True)
+    print(f"Wrote preview: {DRAWABLE / 'jeanetix_launcher_foreground.png'} ({preview_size}x{preview_size})")
 
     for density, size in DENSITIES.items():
         mipmap_dir = RES_ROOT / f"mipmap-{density}"
         mipmap_dir.mkdir(parents=True, exist_ok=True)
 
         back = Image.new("RGBA", (size, size), back_color)
-        fore = fore_src.resize((size, size), Image.Resampling.LANCZOS)
+        fore = _launcher_foreground_from_source(src, size, args.no_chroma)
 
         back_path = mipmap_dir / "ic_launcher_adaptive_back.png"
         fore_path = mipmap_dir / "ic_launcher_adaptive_fore.png"
