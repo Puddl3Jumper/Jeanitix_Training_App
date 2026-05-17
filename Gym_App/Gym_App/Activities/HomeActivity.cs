@@ -40,6 +40,7 @@ namespace Gym_App.Activities
         private LocationManager? _locationManager;
         private const int LocationPermissionRequestCode = 1002;
         private readonly SemaphoreSlim _cloudPullLock = new(1, 1);
+        private bool? _lastKnownAtGym;
 
         protected override void OnCreate(Bundle? savedInstanceState)
         {
