@@ -13,6 +13,7 @@ using AndroidX.Core.Content;
 using Gym_App;
 using Gym_App.Data;
 using Gym_App.Models;
+using Gym_App.Services;
 using Google.Android.Material.Dialog;
 
 namespace Gym_App.Activities
@@ -75,7 +76,7 @@ namespace Gym_App.Activities
                 name = "User";
             }
 
-            UpdateWelcomeHeader(name);
+            UpdateWelcomeHeader(name, isAtGym: null);
             RequestLocationPermissionAndRefreshGreeting(name);
 
             if (!_hasShownWelcomePromptThisLaunch)
@@ -161,7 +162,6 @@ namespace Gym_App.Activities
             base.OnResume();
             var profilePrefs = GetSharedPreferences("user_profile", FileCreationMode.Private);
             var name = profilePrefs?.GetString("full_name", "User") ?? "User";
-            UpdateWelcomeHeader(name);
             RequestLocationPermissionAndRefreshGreeting(name);
             RenderTodayTrainingPlan();
             LoadTodayRecords();
@@ -200,17 +200,35 @@ namespace Gym_App.Activities
         {
             _locationManager ??= (LocationManager)GetSystemService(LocationService);
 
-            if (ContextCompat.CheckSelfPermission(this, Android.Manifest.Permission.AccessFineLocation) == Permission.Granted)
+            if (ContextCompat.CheckSelfPermission(this, Android.Manifest.Permission.AccessFineLocation) != Permission.Granted)
             {
-                UpdateWelcomeHeader(name, IsAtGymLocation());
+                ActivityCompat.RequestPermissions(this, new[]
+                {
+                    Android.Manifest.Permission.AccessFineLocation,
+                    Android.Manifest.Permission.AccessCoarseLocation
+                }, LocationPermissionRequestCode);
                 return;
             }
 
-            ActivityCompat.RequestPermissions(this, new[]
+            RefreshGreetingFromLocation(name);
+        }
+
+        private void RefreshGreetingFromLocation(string name)
+        {
+            var cached = GetBestLastKnownLocation();
+            if (cached != null && GymProximity.IsFreshEnough(cached, GymProximity.CachedLocationMaxAge))
             {
-                Android.Manifest.Permission.AccessFineLocation,
-                Android.Manifest.Permission.AccessCoarseLocation
-            }, LocationPermissionRequestCode);
+                UpdateWelcomeHeader(name, GymProximity.IsWithinGymRadius(cached));
+            }
+
+            GymLocationRefresh.Request(this, location =>
+            {
+                if (IsDestroyed)
+                    return;
+
+                var atGym = location != null && GymProximity.IsWithinGymRadius(location);
+                UpdateWelcomeHeader(name, atGym);
+            });
         }
 
         public override void OnRequestPermissionsResult(int requestCode, string[] permissions, [GeneratedEnum] Permission[] grantResults)
@@ -223,34 +241,8 @@ namespace Gym_App.Activities
             {
                 var profilePrefs = GetSharedPreferences("user_profile", FileCreationMode.Private);
                 var name = profilePrefs?.GetString("full_name", "User") ?? "User";
-                UpdateWelcomeHeader(name, IsAtGymLocation());
+                RefreshGreetingFromLocation(name);
             }
-        }
-
-        private bool IsAtGymLocation()
-        {
-            if (_locationManager == null)
-            {
-                _locationManager = (LocationManager)GetSystemService(LocationService);
-                if (_locationManager == null)
-                    return false;
-            }
-
-            var location = GetBestLastKnownLocation();
-            if (location == null)
-                return false;
-
-            const double gymLatitude = 32.966413;
-            const double gymLongitude = -96.713223;
-            const float gymRadiusMeters = 150f;
-
-            var gymLocation = new Location(LocationManager.GpsProvider)
-            {
-                Latitude = gymLatitude,
-                Longitude = gymLongitude
-            };
-
-            return location.DistanceTo(gymLocation) <= gymRadiusMeters;
         }
 
         private Location? GetBestLastKnownLocation()
