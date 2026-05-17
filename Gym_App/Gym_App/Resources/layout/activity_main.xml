@@ -6,7 +6,7 @@
     android:paddingStart="20dp"
     android:paddingEnd="20dp"
     android:paddingTop="0dp"
-    android:paddingBottom="44dp"
+    android:paddingBottom="@dimen/welcome_screen_bottom_base"
     android:background="@drawable/bg_screen"
     android:clipToPadding="false">
 
@@ -90,7 +90,7 @@
         android:minHeight="@dimen/gym_primary_button_height"
         android:paddingStart="18dp"
         android:paddingEnd="18dp"
-        android:layout_marginBottom="12dp" />
+        android:layout_marginBottom="16dp" />
 
     <Button
         android:id="@+id/continueWorkoutMainButton"
@@ -111,6 +111,6 @@
         android:minHeight="@dimen/gym_primary_button_height"
         android:paddingStart="18dp"
         android:paddingEnd="18dp"
-        android:layout_marginBottom="8dp" />
+        android:layout_marginBottom="0dp" />
 
 </Gym_App.Views.InsetsAwareWelcomeRoot>

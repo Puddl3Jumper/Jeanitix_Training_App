@@ -11,4 +11,6 @@
   <dimen name="gym_text_size_dialog_title">20sp</dimen>
   <!-- Added below status bar + cutout on MainActivity (see InsetsAwareWelcomeRoot) -->
   <dimen name="welcome_screen_top_extra">96dp</dimen>
+  <dimen name="welcome_screen_bottom_base">24dp</dimen>
+  <dimen name="welcome_screen_bottom_extra">16dp</dimen>
 </resources>
