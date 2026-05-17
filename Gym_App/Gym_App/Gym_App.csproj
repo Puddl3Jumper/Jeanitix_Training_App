@@ -55,8 +55,10 @@
 
   <ItemGroup>
     <PackageReference Include="Xamarin.Google.Android.Material" Version="1.12.0.2" />
-    <PackageReference Include="Xamarin.GooglePlayServices.Auth" Version="119.0.0" />
-    <PackageReference Include="Xamarin.GooglePlayServices.Location" Version="118.0.0.2" />
+    <!-- Keep Play Services packages on the same Base (118.10.x) to avoid APT missing googleg_* drawables. -->
+    <PackageReference Include="Xamarin.GooglePlayServices.Base" Version="118.10.0.1" />
+    <PackageReference Include="Xamarin.GooglePlayServices.Auth" Version="121.5.1.1" />
+    <PackageReference Include="Xamarin.GooglePlayServices.Location" Version="121.3.0.9" />
   </ItemGroup>
 
   <ItemGroup>
