@@ -48,4 +48,6 @@
     <string name="oauth_scope">openid profile email</string>
     <string name="settings_release_placeholder">Release</string>
     <string name="settings_release_text">Jeanetix for Android v%1$s</string>
+    <string name="gym_arrival_channel_name">Gym arrival</string>
+    <string name="gym_arrival_channel_description">Notifies you when you arrive at the gym</string>
 </resources>

@@ -38,7 +38,6 @@ namespace Gym_App.Activities
         private ImageView? _noRecordsIcon;
         private TextView? _noRecordsText;
         private LocationManager? _locationManager;
-        private const int LocationPermissionRequestCode = 1002;
         private readonly SemaphoreSlim _cloudPullLock = new(1, 1);
         private bool? _lastKnownAtGym;
 
@@ -197,21 +196,38 @@ namespace Gym_App.Activities
             return firstName.ToLowerInvariant();
         }
 
+        private static string GetDisplayFirstName(string name)
+        {
+            var trimmed = name.Trim();
+            var firstSpace = trimmed.IndexOf(' ');
+            var firstName = firstSpace > 0 ? trimmed[..firstSpace] : trimmed;
+            if (firstName.Length == 0)
+                return "there";
+
+            return char.ToUpperInvariant(firstName[0]) + firstName[1..].ToLowerInvariant();
+        }
+
+        private void ApplyGymProximityState(string name, bool atGym)
+        {
+            if (atGym && _lastKnownAtGym != true)
+            {
+                var firstName = GetDisplayFirstName(name);
+                Toast.MakeText(this, $"Hi {firstName}, You are here", ToastLength.Long)?.Show();
+            }
+
+            _lastKnownAtGym = atGym;
+            UpdateWelcomeHeader(name, atGym);
+        }
+
         private void RequestLocationPermissionAndRefreshGreeting(string name)
         {
             _locationManager ??= (LocationManager)GetSystemService(LocationService);
 
-            if (ContextCompat.CheckSelfPermission(this, Android.Manifest.Permission.AccessFineLocation) != Permission.Granted)
+            GymGeofencePermissions.EnsureReady(this, () =>
             {
-                ActivityCompat.RequestPermissions(this, new[]
-                {
-                    Android.Manifest.Permission.AccessFineLocation,
-                    Android.Manifest.Permission.AccessCoarseLocation
-                }, LocationPermissionRequestCode);
-                return;
-            }
-
-            RefreshGreetingFromLocation(name);
+                RefreshGreetingFromLocation(name);
+                GymGeofenceRegistrar.TryRegister(this);
+            });
         }
 
         private void RefreshGreetingFromLocation(string name)
@@ -219,7 +235,7 @@ namespace Gym_App.Activities
             var cached = GetBestLastKnownLocation();
             if (cached != null && GymProximity.IsFreshEnough(cached, GymProximity.CachedLocationMaxAge))
             {
-                UpdateWelcomeHeader(name, GymProximity.IsWithinGymRadius(cached));
+                ApplyGymProximityState(name, GymProximity.IsWithinGymRadius(cached));
             }
 
             GymLocationRefresh.Request(this, location =>
@@ -228,22 +244,21 @@ namespace Gym_App.Activities
                     return;
 
                 var atGym = location != null && GymProximity.IsWithinGymRadius(location);
-                UpdateWelcomeHeader(name, atGym);
+                RunOnUiThread(() => ApplyGymProximityState(name, atGym));
             });
         }
 
         public override void OnRequestPermissionsResult(int requestCode, string[] permissions, [GeneratedEnum] Permission[] grantResults)
         {
             base.OnRequestPermissionsResult(requestCode, permissions, grantResults);
-            if (requestCode != LocationPermissionRequestCode)
-                return;
 
-            if (grantResults.Length > 0 && grantResults[0] == Permission.Granted)
+            GymGeofencePermissions.OnPermissionsResult(this, requestCode, () =>
             {
                 var profilePrefs = GetSharedPreferences("user_profile", FileCreationMode.Private);
                 var name = profilePrefs?.GetString("full_name", "User") ?? "User";
                 RefreshGreetingFromLocation(name);
-            }
+                GymGeofenceRegistrar.TryRegister(this);
+            });
         }
 
         private Location? GetBestLastKnownLocation()
