@@ -29,7 +29,6 @@
     <string name="home_greeting_hi_placeholder">Hi, there</string>
     <string name="home_greeting_ready">Ready for today\'s session?</string>
     <string name="home_greeting_at_gym">You\'re at the gym — ready to train?</string>
-    <string name="home_today_section_label">TODAY</string>
     <string name="home_today_workout">Today\'s workout</string>
     <string name="home_today_meta_format">%1$d muscle groups · ~%2$d min</string>
     <string name="home_last_workout_format">Last workout: %1$s · %2$s</string>
