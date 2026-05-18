@@ -23,10 +23,10 @@ namespace Gym_App.Activities
     {
         private static bool _hasShownWelcomePromptThisLaunch;
         private GymDatabase? _database;
-        private TextView? _upperBodyLabelText;
-        private TextView? _upperBodyPlanText;
-        private TextView? _lowerBodyLabelText;
-        private TextView? _lowerBodyPlanText;
+        private TextView? _todayPlanSummaryText;
+        private TextView? _todayPlanMetaText;
+        private TextView? _todayLastWorkoutText;
+        private Button? _startWorkoutHomeButton;
         private LinearLayout? _weeklyProgressChart;
 
         private TextView? _weeklyAvgValueText;
@@ -34,6 +34,7 @@ namespace Gym_App.Activities
         private TextView? _weeklyGoalSummaryText;
         private TextView? _insightText;
         private TextView? _homeWelcomeText;
+        private TextView? _homeGreetingSubtext;
         private LinearLayout? _todayExercisesContainer;
         private ImageView? _noRecordsIcon;
         private TextView? _noRecordsText;
@@ -49,21 +50,22 @@ namespace Gym_App.Activities
 
             _database = new GymDatabase();
 
-            _upperBodyLabelText = FindViewById<TextView>(Resource.Id.upperBodyLabelText);
-            _upperBodyPlanText = FindViewById<TextView>(Resource.Id.upperBodyPlanText);
-            _lowerBodyLabelText = FindViewById<TextView>(Resource.Id.lowerBodyLabelText);
-            _lowerBodyPlanText = FindViewById<TextView>(Resource.Id.lowerBodyPlanText);
+            _todayPlanSummaryText = FindViewById<TextView>(Resource.Id.todayPlanSummaryText);
+            _todayPlanMetaText = FindViewById<TextView>(Resource.Id.todayPlanMetaText);
+            _todayLastWorkoutText = FindViewById<TextView>(Resource.Id.todayLastWorkoutText);
             _weeklyProgressChart = FindViewById<LinearLayout>(Resource.Id.weeklyProgressChart);
             _weeklyAvgValueText = FindViewById<TextView>(Resource.Id.weeklyAvgValueText);
             _weeklyAvgLabelText = FindViewById<TextView>(Resource.Id.weeklyAvgLabelText);
             _weeklyGoalSummaryText = FindViewById<TextView>(Resource.Id.weeklyGoalSummaryText);
             _insightText = FindViewById<TextView>(Resource.Id.insightText);
             _homeWelcomeText = FindViewById<TextView>(Resource.Id.homeWelcomeText);
+            _homeGreetingSubtext = FindViewById<TextView>(Resource.Id.homeGreetingSubtext);
             _todayExercisesContainer = FindViewById<LinearLayout>(Resource.Id.todayExercisesContainer);
             _noRecordsIcon = FindViewById<ImageView>(Resource.Id.noRecordsIcon);
             _noRecordsText = FindViewById<TextView>(Resource.Id.noRecordsText);
 
-            var startWorkoutButton = FindViewById(Resource.Id.startWorkoutHomeButton);
+            _startWorkoutHomeButton = FindViewById<Button>(Resource.Id.startWorkoutHomeButton);
+            var startWorkoutButton = _startWorkoutHomeButton;
             var homeTab = FindViewById<LinearLayout>(Resource.Id.homeTab);
             var diaryTab = FindViewById<LinearLayout>(Resource.Id.diaryTab);
             var workoutTab = FindViewById<LinearLayout>(Resource.Id.workoutTab);
@@ -176,24 +178,24 @@ namespace Gym_App.Activities
             var name = rawName?.Trim();
             if (string.IsNullOrWhiteSpace(name) || string.Equals(name, "User", StringComparison.OrdinalIgnoreCase))
             {
-                _homeWelcomeText.Text = "Welcome, [Name]!";
+                _homeWelcomeText.Text = GetString(Resource.String.home_greeting_hi_placeholder);
+                if (_homeGreetingSubtext != null)
+                    _homeGreetingSubtext.Text = GetString(Resource.String.home_greeting_ready);
                 return;
             }
 
+            var firstName = GetDisplayFirstName(name);
             if (isAtGym == true)
             {
-                _homeWelcomeText.Text = $"You are here, {GetLowercaseFirstName(name)} !";
+                _homeWelcomeText.Text = GetString(Resource.String.home_greeting_hi, firstName);
+                if (_homeGreetingSubtext != null)
+                    _homeGreetingSubtext.Text = GetString(Resource.String.home_greeting_at_gym);
                 return;
             }
 
-            _homeWelcomeText.Text = $"Welcome, {name}!";
-        }
-
-        private static string GetLowercaseFirstName(string name)
-        {
-            var firstSpace = name.IndexOf(' ');
-            var firstName = firstSpace > 0 ? name[..firstSpace] : name;
-            return firstName.ToLowerInvariant();
+            _homeWelcomeText.Text = GetString(Resource.String.home_greeting_hi, firstName);
+            if (_homeGreetingSubtext != null)
+                _homeGreetingSubtext.Text = GetString(Resource.String.home_greeting_ready);
         }
 
         private static string GetDisplayFirstName(string name)
@@ -274,15 +276,93 @@ namespace Gym_App.Activities
 
         private void RenderTodayTrainingPlan()
         {
-            if (_upperBodyLabelText == null || _upperBodyPlanText == null || _lowerBodyLabelText == null || _lowerBodyPlanText == null)
+            if (_todayPlanSummaryText == null || _todayPlanMetaText == null)
                 return;
 
             var groups = _database?.GetDailyWorkoutGroups() ?? new[] { "Chest", "Back", "Legs" };
+            _todayPlanSummaryText.Text = string.Join(" · ", groups);
 
-            _upperBodyLabelText.Text = "Upper Body";
-            _upperBodyPlanText.Text = $"{groups[0]}/{groups[1]}";
-            _lowerBodyLabelText.Text = "Lower Body";
-            _lowerBodyPlanText.Text = groups[2];
+            var estimatedMinutes = Math.Max(30, groups.Length * 15);
+            if (_todayPlanMetaText != null)
+            {
+                _todayPlanMetaText.Text = GetString(
+                    Resource.String.home_today_meta_format,
+                    groups.Length,
+                    estimatedMinutes);
+            }
+
+            RenderLastWorkoutFooter();
+            UpdateStartWorkoutButtonLabel();
+        }
+
+        private void RenderLastWorkoutFooter()
+        {
+            if (_todayLastWorkoutText == null)
+                return;
+
+            if (_database == null)
+            {
+                _todayLastWorkoutText.Text = GetString(Resource.String.home_last_workout_none);
+                return;
+            }
+
+            var today = DateTime.Today;
+            var history = _database.GetWorkoutHistory(100);
+            var lastSession = history
+                .Where(s => s.StartTime.Date < today && s.Exercises.Any(e => e.Sets.Count > 0))
+                .OrderByDescending(s => s.StartTime)
+                .FirstOrDefault();
+
+            if (lastSession == null)
+            {
+                _todayLastWorkoutText.Text = GetString(Resource.String.home_last_workout_none);
+                return;
+            }
+
+            var whenLabel = FormatRelativeWorkoutDay(lastSession.StartTime.Date, today);
+            var focusLabel = SummarizeSessionFocus(lastSession);
+            _todayLastWorkoutText.Text = GetString(
+                Resource.String.home_last_workout_format,
+                whenLabel,
+                focusLabel);
+        }
+
+        private void UpdateStartWorkoutButtonLabel()
+        {
+            if (_startWorkoutHomeButton == null)
+                return;
+
+            var hasActiveSession = _database?.GetCurrentWorkout() != null;
+            _startWorkoutHomeButton.Text = GetString(
+                hasActiveSession ? Resource.String.home_continue_workout : Resource.String.home_start_workout);
+        }
+
+        private static string FormatRelativeWorkoutDay(DateTime workoutDate, DateTime today)
+        {
+            var days = (today - workoutDate).Days;
+            if (days == 1)
+                return "Yesterday";
+
+            if (days < 7)
+                return $"{days} days ago";
+
+            return workoutDate.ToString("MMM d");
+        }
+
+        private static string SummarizeSessionFocus(WorkoutSession session)
+        {
+            var exerciseNames = session.Exercises
+                .Where(e => e.Sets.Count > 0 && e.Exercise != null)
+                .Select(e => e.Exercise!.Name)
+                .Where(name => !string.IsNullOrWhiteSpace(name))
+                .Distinct(StringComparer.OrdinalIgnoreCase)
+                .Take(2)
+                .ToList();
+
+            if (exerciseNames.Count > 0)
+                return string.Join(" · ", exerciseNames);
+
+            return string.IsNullOrWhiteSpace(session.Name) ? "Workout" : session.Name.Trim();
         }
 
         private async Task TryPullWorkoutsAndRefreshAsync()
@@ -361,6 +441,8 @@ namespace Gym_App.Activities
             if (exerciseRecords.Count == 0)
             {
                 RenderSmartEmptyState(completedToday);
+                RenderLastWorkoutFooter();
+                UpdateStartWorkoutButtonLabel();
                 return;
             }
 
@@ -422,6 +504,9 @@ namespace Gym_App.Activities
                 row.AddView(countView);
                 _todayExercisesContainer.AddView(row);
             }
+
+            RenderLastWorkoutFooter();
+            UpdateStartWorkoutButtonLabel();
         }
 
         private void UpdateProgressWidget(int workoutsThisWeek, int weeklyGoal)

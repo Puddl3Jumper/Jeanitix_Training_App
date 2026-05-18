@@ -26,20 +26,24 @@
                 android:id="@+id/homeWelcomeText"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
-                android:text="Welcome, [Name]!"
-                android:textSize="38sp"
+                android:text="@string/home_greeting_hi_placeholder"
+                android:textSize="28sp"
                 android:lineSpacingExtra="1dp"
                 android:fontFamily="sans-serif"
-                android:textFontWeight="900"
-                android:textColor="@color/color_primary"
+                android:textFontWeight="700"
+                android:textColor="@color/md_theme_onSurface"
                 android:maxLines="2"
-                android:breakStrategy="balanced"
-                android:hyphenationFrequency="none"
-                android:autoSizeTextType="uniform"
-                android:autoSizeMinTextSize="28sp"
-                android:autoSizeMaxTextSize="42sp"
-                android:autoSizeStepGranularity="1sp"
-                android:layout_marginBottom="14dp" />
+                android:layout_marginBottom="4dp" />
+
+            <TextView
+                android:id="@+id/homeGreetingSubtext"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="@string/home_greeting_ready"
+                android:textSize="15sp"
+                android:fontFamily="sans-serif"
+                android:textColor="@color/color_text_secondary"
+                android:layout_marginBottom="16dp" />
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -47,132 +51,66 @@
                 android:orientation="vertical"
                 android:background="@drawable/bg_card_today_outer"
                 android:elevation="4dp"
-                android:paddingStart="16dp"
-                android:paddingEnd="16dp"
-                android:paddingTop="24dp"
-                android:paddingBottom="24dp">
+                android:paddingStart="20dp"
+                android:paddingEnd="20dp"
+                android:paddingTop="20dp"
+                android:paddingBottom="20dp">
+
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="@string/home_today_section_label"
+                    android:textSize="12sp"
+                    android:letterSpacing="0.08"
+                    android:fontFamily="sans-serif-medium"
+                    android:textColor="@color/color_text_secondary"
+                    android:layout_marginBottom="6dp" />
 
                 <TextView
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
                     android:text="@string/home_today_workout"
-                    android:textSize="20sp"
+                    android:textSize="22sp"
                     android:fontFamily="sans-serif"
-                    android:textFontWeight="900"
+                    android:textFontWeight="700"
                     android:textColor="@color/md_theme_onSurface"
-                    android:layout_marginBottom="16dp" />
+                    android:layout_marginBottom="12dp" />
 
-                <LinearLayout
+                <TextView
+                    android:id="@+id/todayPlanSummaryText"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:orientation="vertical"
-                    android:layout_marginBottom="12dp">
+                    android:textSize="18sp"
+                    android:fontFamily="sans-serif"
+                    android:textFontWeight="600"
+                    android:textColor="@color/md_theme_onSurface"
+                    android:text="Chest · Back · Legs" />
 
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:background="@drawable/bg_card_today_outer"
-                        android:elevation="2dp"
-                        android:padding="16dp"
-                        android:layout_marginBottom="12dp">
+                <TextView
+                    android:id="@+id/todayPlanMetaText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:layout_marginTop="6dp"
+                    android:textSize="14sp"
+                    android:fontFamily="sans-serif"
+                    android:textColor="@color/color_text_secondary"
+                    android:text="3 muscle groups · ~45 min" />
 
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical">
+                <View
+                    android:layout_width="match_parent"
+                    android:layout_height="1dp"
+                    android:layout_marginTop="16dp"
+                    android:layout_marginBottom="12dp"
+                    android:background="@drawable/bg_divider_subtle" />
 
-                            <ImageView
-                                android:layout_width="20dp"
-                                android:layout_height="20dp"
-                                android:src="@drawable/ic_fitness_center"
-                                android:tint="@color/color_text_primary"
-                                android:contentDescription="@string/home_today_workout" />
-
-                            <LinearLayout
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:orientation="vertical"
-                                android:layout_marginStart="8dp">
-
-                                <TextView
-                                    android:id="@+id/upperBodyLabelText"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="Upper Body"
-                                    android:textColor="@color/md_theme_onSurfaceVariant"
-                                    android:textSize="16sp"
-                                    android:fontFamily="sans-serif"
-                                    android:textFontWeight="600" />
-
-                                <TextView
-                                    android:id="@+id/upperBodyPlanText"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginTop="2dp"
-                                    android:textColor="@color/color_primary"
-                                    android:textSize="14sp"
-                                    android:fontFamily="sans-serif"
-                                    android:textFontWeight="400"
-                                    android:text="Biceps/Triceps" />
-                            </LinearLayout>
-                        </LinearLayout>
-                    </LinearLayout>
-
-                    <LinearLayout
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:orientation="vertical"
-                        android:background="@drawable/bg_card_today_outer"
-                        android:elevation="2dp"
-                        android:padding="16dp">
-
-                        <LinearLayout
-                            android:layout_width="match_parent"
-                            android:layout_height="wrap_content"
-                            android:orientation="horizontal"
-                            android:gravity="center_vertical">
-
-                            <ImageView
-                                android:layout_width="20dp"
-                                android:layout_height="20dp"
-                                android:src="@drawable/ic_accessibility_new"
-                                android:tint="@color/color_text_primary"
-                                android:contentDescription="@string/home_today_workout" />
-
-                            <LinearLayout
-                                android:layout_width="0dp"
-                                android:layout_height="wrap_content"
-                                android:layout_weight="1"
-                                android:orientation="vertical"
-                                android:layout_marginStart="8dp">
-
-                                <TextView
-                                    android:id="@+id/lowerBodyLabelText"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:text="Lower Body"
-                                    android:textColor="@color/md_theme_onSurfaceVariant"
-                                    android:textSize="16sp"
-                                    android:fontFamily="sans-serif"
-                                    android:textFontWeight="600" />
-
-                                <TextView
-                                    android:id="@+id/lowerBodyPlanText"
-                                    android:layout_width="wrap_content"
-                                    android:layout_height="wrap_content"
-                                    android:layout_marginTop="2dp"
-                                    android:textColor="@color/color_primary"
-                                    android:textSize="14sp"
-                                    android:fontFamily="sans-serif"
-                                    android:textFontWeight="400"
-                                    android:text="Abs" />
-                            </LinearLayout>
-                        </LinearLayout>
-                    </LinearLayout>
-                </LinearLayout>
+                <TextView
+                    android:id="@+id/todayLastWorkoutText"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:textSize="13sp"
+                    android:fontFamily="sans-serif"
+                    android:textColor="@color/color_text_secondary"
+                    android:text="@string/home_last_workout_none" />
 
                 <Button
                     android:id="@+id/startWorkoutHomeButton"
@@ -188,7 +126,7 @@
                     android:stateListAnimator="@animator/edit_button_elevation"
                     android:elevation="2dp"
                     android:fontFamily="sans-serif-medium"
-                    android:layout_marginTop="14dp" />
+                    android:layout_marginTop="18dp" />
             </LinearLayout>
 
             <LinearLayout
