@@ -28,7 +28,7 @@ namespace Gym_App.Receivers
                 return;
             }
 
-            if (geofencingEvent.GeofenceTransition != (int)GeofenceTransitionType.Enter)
+            if (geofencingEvent.GeofenceTransition != Geofence.GeofenceTransitionEnter)
                 return;
 
             if (!GymGeofencePreferences.IsEnabled(context))

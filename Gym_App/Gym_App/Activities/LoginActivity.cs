@@ -1,3 +1,4 @@
+#pragma warning disable CS0618 // Google Sign-In types are obsolete in Play Services Auth 121.x; still required until Credential Manager migration.
 using Android.Widget;
 using Android.Content;
 using Android.App;
