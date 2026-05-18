@@ -63,14 +63,14 @@ namespace Gym_App.Services
                     // First registration may have nothing to remove.
                 }
 
-                var geofence = new Geofence.Builder()
+                var geofence = new GeofenceBuilder()
                     .SetRequestId(GeofenceRequestId)
                     .SetCircularRegion(
                         GymProximityMath.DefaultGymLatitude,
                         GymProximityMath.DefaultGymLongitude,
                         GymProximityMath.DefaultGymRadiusMeters)
                     .SetExpirationDuration(Geofence.NeverExpire)
-                    .SetTransitionTypes((int)GeofenceTransitionType.Enter)
+                    .SetTransitionTypes(Geofence.GeofenceTransitionEnter)
                     .Build();
 
                 var request = new GeofencingRequest.Builder()
