@@ -1,4 +1,5 @@
 using Android.Content;
+using Android.Graphics;
 using Android.OS;
 using Android.Widget;
 using Android.Views;
@@ -81,13 +82,24 @@ namespace Gym_App
 
         private void ApplyWelcomeWindowInsets()
         {
-            // Edge-to-edge so InsetsAwareWelcomeRoot can pad for status bar + gesture navigation bar.
+            if (Window == null)
+                return;
+
+            // Edge-to-edge: welcome root draws bg_screen behind bars; bottom bar gets inset padding.
             if (OperatingSystem.IsAndroidVersionAtLeast(30))
             {
-                Window?.SetDecorFitsSystemWindows(false);
+                Window.SetDecorFitsSystemWindows(false);
             }
 
-            Window?.DecorView?.RequestApplyInsets();
+            Window.SetStatusBarColor(Color.Transparent);
+            Window.SetNavigationBarColor(Color.Transparent);
+
+            if (OperatingSystem.IsAndroidVersionAtLeast(29))
+            {
+                Window.NavigationBarContrastEnforced = false;
+            }
+
+            Window.DecorView?.RequestApplyInsets();
             var welcomeRoot = FindViewById<Gym_App.Views.InsetsAwareWelcomeRoot>(Resource.Id.welcomeRoot);
             welcomeRoot?.RequestApplyInsets();
         }
