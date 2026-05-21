@@ -70,8 +70,9 @@ public class WorkoutRotationTests
     {
         Assert.False(GymDatabase.VisitPlanDiffersFromPrevious(0, 1, 0, 1));
         Assert.False(GymDatabase.VisitPlanDiffersFromPrevious(1, 2, 1, 2));
+        Assert.False(GymDatabase.VisitPlanDiffersFromPrevious(0, 1, 2, 1));
         Assert.True(GymDatabase.VisitPlanDiffersFromPrevious(0, 1, 1, 2));
-        Assert.True(GymDatabase.VisitPlanDiffersFromPrevious(0, 1, 2, 1));
+        Assert.True(GymDatabase.VisitPlanDiffersFromPrevious(0, 1, 2, 0));
     }
 
     [Fact]
