@@ -76,6 +76,14 @@ public class WorkoutRotationTests
     }
 
     [Fact]
+    public void ShouldSelectNewPlanForCalendarDay_OnlyWhenDateChanges()
+    {
+        Assert.True(GymDatabase.ShouldSelectNewPlanForCalendarDay(null, "20260520"));
+        Assert.True(GymDatabase.ShouldSelectNewPlanForCalendarDay("20260519", "20260520"));
+        Assert.False(GymDatabase.ShouldSelectNewPlanForCalendarDay("20260520", "20260520"));
+    }
+
+    [Fact]
     public void AdvanceRotationOffset_AdvancesAfter24Hours()
     {
         var last = new DateTime(2026, 5, 1, 10, 0, 0);

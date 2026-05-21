@@ -26,8 +26,6 @@ namespace Gym_App.Data
         private const string TrainingRoutineUpperPairIndexKey = "training_routine_upper_pair_index";
         private const string TrainingRoutineLowerMuscleIndexKey = "training_routine_lower_muscle_index";
         private const string TrainingRoutineLastSelectionDateKey = "training_routine_last_selection_date";
-        private const string TrainingRoutineLastPlanTimestampKey = "training_routine_last_plan_timestamp";
-        internal static readonly TimeSpan MinHoursBetweenVisitPlans = TimeSpan.FromHours(24);
 
         private static readonly string[] UpperBodyMuscles =
         {
@@ -686,19 +684,7 @@ namespace Gym_App.Data
             var previousUpper = prefs.GetInt(TrainingRoutineUpperPairIndexKey, -1);
             var previousLower = prefs.GetInt(TrainingRoutineLowerMuscleIndexKey, -1);
 
-            var lastPlanTime = DateTime.MinValue;
-            var lastPlanTimestamp = prefs.GetString(TrainingRoutineLastPlanTimestampKey, null);
-            if (!string.IsNullOrWhiteSpace(lastPlanTimestamp)
-                && DateTime.TryParse(lastPlanTimestamp, out var parsedPlanTime))
-            {
-                lastPlanTime = parsedPlanTime;
-            }
-
-            var isNewCalendarDay = !string.Equals(lastSelectionDate, today, StringComparison.Ordinal);
-            var isNewVisitWindow = lastPlanTime == DateTime.MinValue
-                || (now - lastPlanTime) >= MinHoursBetweenVisitPlans;
-
-            if (!isNewCalendarDay && !isNewVisitWindow)
+            if (!ShouldSelectNewPlanForCalendarDay(lastSelectionDate, today))
             {
                 var upper = previousUpper >= 0 && previousUpper < UpperBodyPairs.Length ? previousUpper : 0;
                 var lower = previousLower >= 0 && previousLower < LowerBodyMuscles.Length ? previousLower : 0;
@@ -708,7 +694,6 @@ namespace Gym_App.Data
             var (selectedUpper, selectedLower) = SelectRandomVisitPlanDifferentFrom(previousUpper, previousLower, random);
             prefs.Edit()
                 .PutString(TrainingRoutineLastSelectionDateKey, today)
-                .PutString(TrainingRoutineLastPlanTimestampKey, now.ToString("o"))
                 .PutInt(TrainingRoutineUpperPairIndexKey, selectedUpper)
                 .PutInt(TrainingRoutineLowerMuscleIndexKey, selectedLower)
                 .Apply();
@@ -716,6 +701,12 @@ namespace Gym_App.Data
             return (selectedUpper, selectedLower);
         }
 #endif
+
+        /// <summary>New random plan only when the local calendar day changes (not a 24h rolling window).</summary>
+        internal static bool ShouldSelectNewPlanForCalendarDay(string? lastSelectionDate, string today)
+        {
+            return !string.Equals(lastSelectionDate, today, StringComparison.Ordinal);
+        }
 
         /// <summary>Used by training-day display; separate from per-visit muscle plan randomization.</summary>
         internal static int AdvanceRotationOffset(int offset, DateTime lastTimestamp, DateTime now)
