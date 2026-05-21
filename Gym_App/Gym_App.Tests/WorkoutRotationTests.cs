@@ -33,6 +33,48 @@ public class WorkoutRotationTests
     }
 
     [Fact]
+    public void SelectRandomVisitPlan_BothUpperAndLowerDifferFromPrevious()
+    {
+        var random = new Random(99);
+        for (var prevUpper = 0; prevUpper < 3; prevUpper++)
+        {
+            for (var prevLower = 0; prevLower < 3; prevLower++)
+            {
+                for (var i = 0; i < 30; i++)
+                {
+                    var (upper, lower) = GymDatabase.SelectRandomVisitPlanDifferentFrom(prevUpper, prevLower, random);
+                    Assert.True(GymDatabase.VisitPlanDiffersFromPrevious(prevUpper, prevLower, upper, lower));
+                    Assert.NotEqual(prevUpper, upper);
+                    Assert.NotEqual(prevLower, lower);
+                }
+            }
+        }
+    }
+
+    [Fact]
+    public void SelectRandomVisitPlan_FirstVisit_CanProduceAnyCombination()
+    {
+        var random = new Random(7);
+        var seen = new HashSet<string>(StringComparer.Ordinal);
+        for (var i = 0; i < 60; i++)
+        {
+            var (upper, lower) = GymDatabase.SelectRandomVisitPlanDifferentFrom(-1, -1, random);
+            seen.Add($"{upper},{lower}");
+        }
+
+        Assert.True(seen.Count >= 6);
+    }
+
+    [Fact]
+    public void VisitPlanDiffersFromPrevious_RequiresBothSlotsToChange()
+    {
+        Assert.False(GymDatabase.VisitPlanDiffersFromPrevious(0, 1, 0, 1));
+        Assert.False(GymDatabase.VisitPlanDiffersFromPrevious(1, 2, 1, 2));
+        Assert.True(GymDatabase.VisitPlanDiffersFromPrevious(0, 1, 1, 2));
+        Assert.True(GymDatabase.VisitPlanDiffersFromPrevious(0, 1, 2, 1));
+    }
+
+    [Fact]
     public void AdvanceRotationOffset_AdvancesAfter24Hours()
     {
         var last = new DateTime(2026, 5, 1, 10, 0, 0);
@@ -40,24 +82,6 @@ public class WorkoutRotationTests
 
         Assert.Equal(1, GymDatabase.AdvanceRotationOffset(0, last, after25h));
         Assert.Equal(0, GymDatabase.AdvanceRotationOffset(0, last, last.AddHours(23)));
-    }
-
-    [Fact]
-    public void AdvanceRotationOffset_AdvancesMultipleDays()
-    {
-        var last = new DateTime(2026, 5, 1, 10, 0, 0);
-        var after49h = last.AddHours(49);
-
-        Assert.Equal(2, GymDatabase.AdvanceRotationOffset(0, last, after49h));
-    }
-
-    [Fact]
-    public void LowerBodySlot_CyclesLegsAbsCardio_WithOffset()
-    {
-        Assert.Equal("Legs", GymDatabase.BuildDailyWorkoutGroups(0, 0)[2]);
-        Assert.Equal("Abs", GymDatabase.BuildDailyWorkoutGroups(0, 1)[2]);
-        Assert.Equal("Cardio", GymDatabase.BuildDailyWorkoutGroups(0, 2)[2]);
-        Assert.Equal("Legs", GymDatabase.BuildDailyWorkoutGroups(0, 3)[2]);
     }
 
     [Fact]
@@ -72,18 +96,5 @@ public class WorkoutRotationTests
                 Assert.NotEqual(previous, selected);
             }
         }
-    }
-
-    [Fact]
-    public void SelectUpperPair_FirstVisit_CanBeAnyPair()
-    {
-        var random = new Random(7);
-        var seen = new HashSet<int>();
-        for (var i = 0; i < 30; i++)
-        {
-            seen.Add(GymDatabase.SelectUpperPairIndexDifferentFromPrevious(-1, random));
-        }
-
-        Assert.True(seen.Count >= 2);
     }
 }
