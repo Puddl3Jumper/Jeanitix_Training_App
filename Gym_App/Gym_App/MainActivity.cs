@@ -71,6 +71,7 @@ namespace Gym_App
         protected override void OnResume()
         {
             base.OnResume();
+            ApplyWelcomeWindowInsets();
             UpdateUI();
         }
 
@@ -80,13 +81,15 @@ namespace Gym_App
 
         private void ApplyWelcomeWindowInsets()
         {
-            // Let InsetsAwareWelcomeRoot receive status-bar and cutout insets (not consumed by the window).
+            // Edge-to-edge so InsetsAwareWelcomeRoot can pad for status bar + gesture navigation bar.
             if (OperatingSystem.IsAndroidVersionAtLeast(30))
             {
                 Window?.SetDecorFitsSystemWindows(false);
             }
 
             Window?.DecorView?.RequestApplyInsets();
+            var welcomeRoot = FindViewById<Gym_App.Views.InsetsAwareWelcomeRoot>(Resource.Id.welcomeRoot);
+            welcomeRoot?.RequestApplyInsets();
         }
 
         private void StartWorkoutButton_Click(object? sender, EventArgs e)

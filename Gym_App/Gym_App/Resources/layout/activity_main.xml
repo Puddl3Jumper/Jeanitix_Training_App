@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <Gym_App.Views.InsetsAwareWelcomeRoot xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/welcomeRoot"
     android:orientation="vertical"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
@@ -8,7 +9,7 @@
     android:paddingTop="0dp"
     android:paddingBottom="@dimen/welcome_screen_bottom_base"
     android:background="@drawable/bg_screen"
-    android:clipToPadding="false">
+    android:clipToPadding="true">
 
     <ImageView
         android:id="@+id/welcomeHeroImage"
@@ -111,6 +112,6 @@
         android:minHeight="@dimen/gym_primary_button_height"
         android:paddingStart="18dp"
         android:paddingEnd="18dp"
-        android:layout_marginBottom="0dp" />
+        android:layout_marginBottom="8dp" />
 
 </Gym_App.Views.InsetsAwareWelcomeRoot>

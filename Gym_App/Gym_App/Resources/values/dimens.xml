@@ -12,5 +12,7 @@
   <!-- Added below status bar + cutout on MainActivity (see InsetsAwareWelcomeRoot) -->
   <dimen name="welcome_screen_top_extra">96dp</dimen>
   <dimen name="welcome_screen_bottom_base">24dp</dimen>
-  <dimen name="welcome_screen_bottom_extra">16dp</dimen>
+  <dimen name="welcome_screen_bottom_extra">24dp</dimen>
+  <!-- Fallback when gesture-nav reports 0px system-bar inset (common with edge-to-edge). -->
+  <dimen name="welcome_screen_bottom_gesture_min">48dp</dimen>
 </resources>
