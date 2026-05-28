@@ -10,9 +10,9 @@
   <dimen name="gym_text_size_button">16sp</dimen>
   <dimen name="gym_text_size_dialog_title">20sp</dimen>
   <!-- Added below status bar + cutout on MainActivity (see InsetsAwareWelcomeRoot) -->
-  <dimen name="welcome_screen_top_extra">96dp</dimen>
+  <dimen name="welcome_screen_top_extra">48dp</dimen>
   <dimen name="welcome_screen_bottom_base">24dp</dimen>
   <dimen name="welcome_screen_bottom_extra">24dp</dimen>
   <!-- Fallback when gesture-nav reports 0px system-bar inset (common with edge-to-edge). -->
-  <dimen name="welcome_screen_bottom_gesture_min">48dp</dimen>
+  <dimen name="welcome_screen_bottom_gesture_min">56dp</dimen>
 </resources>

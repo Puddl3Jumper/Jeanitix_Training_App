@@ -8,17 +8,19 @@ using Android.Widget;
 namespace Gym_App.Views
 {
     /// <summary>
-    /// MainActivity root: system-bar insets plus extra spacing for welcome hero and bottom buttons.
+    /// MainActivity root: extra top spacing for hero; bottom safe area on the button bar.
     /// </summary>
     public class InsetsAwareWelcomeRoot : LinearLayout
     {
         private int _basePaddingLeft;
         private int _basePaddingTop;
         private int _basePaddingRight;
-        private int _basePaddingBottom;
+        private int _baseRootPaddingBottom;
+        private int _baseBottomBarPaddingBottom;
         private int _extraTopPadding;
         private int _extraBottomPadding;
         private int _minBottomGesturePadding;
+        private LinearLayout? _bottomBar;
 
         public InsetsAwareWelcomeRoot(Context context) : base(context)
         {
@@ -33,16 +35,27 @@ namespace Gym_App.Views
         {
         }
 
+        protected override void OnFinishInflate()
+        {
+            base.OnFinishInflate();
+            _bottomBar = FindViewById<LinearLayout>(Resource.Id.welcomeBottomBar);
+        }
+
         protected override void OnAttachedToWindow()
         {
             base.OnAttachedToWindow();
             _basePaddingLeft = PaddingLeft;
             _basePaddingTop = PaddingTop;
             _basePaddingRight = PaddingRight;
-            _basePaddingBottom = PaddingBottom;
+            _baseRootPaddingBottom = PaddingBottom;
             _extraTopPadding = (int)Resources.GetDimension(Resource.Dimension.welcome_screen_top_extra);
             _extraBottomPadding = (int)Resources.GetDimension(Resource.Dimension.welcome_screen_bottom_extra);
             _minBottomGesturePadding = (int)Resources.GetDimension(Resource.Dimension.welcome_screen_bottom_gesture_min);
+
+            if (_bottomBar != null)
+            {
+                _baseBottomBarPaddingBottom = _bottomBar.PaddingBottom;
+            }
 
             if (OperatingSystem.IsAndroidVersionAtLeast(30))
             {
@@ -72,14 +85,25 @@ namespace Gym_App.Views
             return ApplyInsetsAndConsume(insets);
         }
 
-        internal WindowInsets? ApplyInsetsAndConsume(WindowInsets insets)
+        internal WindowInsets ApplyInsetsAndConsume(WindowInsets insets)
         {
             var (topInset, bottomInset) = ResolveVerticalInsets(insets);
+
             SetPadding(
                 _basePaddingLeft,
                 _basePaddingTop + topInset + _extraTopPadding,
                 _basePaddingRight,
-                _basePaddingBottom + bottomInset + _extraBottomPadding);
+                _baseRootPaddingBottom);
+
+            if (_bottomBar != null)
+            {
+                var bottomBarPadding = _baseBottomBarPaddingBottom + ResolveBottomBarPadding(bottomInset);
+                _bottomBar.SetPadding(
+                    _bottomBar.PaddingLeft,
+                    _bottomBar.PaddingTop,
+                    _bottomBar.PaddingRight,
+                    bottomBarPadding);
+            }
 
             if (OperatingSystem.IsAndroidVersionAtLeast(30))
             {
@@ -88,6 +112,16 @@ namespace Gym_App.Views
             }
 
             return insets;
+        }
+
+        private int ResolveBottomBarPadding(int bottomInset)
+        {
+            if (bottomInset > 0)
+            {
+                return bottomInset + _extraBottomPadding;
+            }
+
+            return _minBottomGesturePadding + _extraBottomPadding;
         }
 
         private (int Top, int Bottom) ResolveVerticalInsets(WindowInsets insets)
@@ -104,13 +138,12 @@ namespace Gym_App.Views
                 var bottom = Math.Max(
                     Math.Max(systemBars.Bottom, navigationBars.Bottom),
                     Math.Max(gestures.Bottom, mandatoryGestures.Bottom));
-                bottom = Math.Max(bottom, _minBottomGesturePadding);
                 return (top, bottom);
             }
 
 #pragma warning disable CS0618
             var legacyTop = insets.SystemWindowInsetTop;
-            var legacyBottom = Math.Max(insets.SystemWindowInsetBottom, _minBottomGesturePadding);
+            var legacyBottom = insets.SystemWindowInsetBottom;
 #pragma warning restore CS0618
             return (legacyTop, legacyBottom);
         }
