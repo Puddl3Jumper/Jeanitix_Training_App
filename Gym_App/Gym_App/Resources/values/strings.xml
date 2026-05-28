@@ -15,7 +15,6 @@
     <string name="start_workout_before_finish">Start workout first to record duration</string>
     <string name="add_exercise_circuit">Add Exercise / Circuit</string>
     <string name="finish_workout">Finish Workout</string>
-    <string name="finished_workout">Finished Workout</string>
     <string name="finished_workout_logged">Today\'s workout saved to Log</string>
     <string name="history_title">Workout History</string>
     <string name="history_subtitle">Review completed sessions and progress</string>
