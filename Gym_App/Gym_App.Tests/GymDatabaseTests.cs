@@ -84,6 +84,22 @@ public class GymDatabaseTests
     }
 
     [Fact]
+    public void StartTimedWorkout_RecordsDurationWhenCompleted()
+    {
+        RunInIsolatedDataHome(database =>
+        {
+            var session = database.StartTimedWorkout("Chest/Back + Legs");
+            database.CompleteWorkout(session.Id);
+
+            var completed = database.GetWorkoutSession(session.Id)!;
+            Assert.True(completed.IsCompleted);
+            Assert.NotNull(completed.EndTime);
+            Assert.True(completed.EndTime >= completed.StartTime);
+            Assert.Equal(completed.EndTime!.Value - completed.StartTime, completed.Duration);
+        });
+    }
+
+    [Fact]
     public void CompleteTodayRoutine_PreservesExistingLoggedSets()
     {
         RunInIsolatedDataHome(database =>

@@ -319,6 +319,42 @@ namespace Gym_App.Data
             return session;
         }
 
+        /// <summary>
+        /// Starts or resumes a timed in-progress workout. When resetStartTime is true, the timer begins now.
+        /// </summary>
+        public WorkoutSession StartTimedWorkout(string name, int? workoutSessionId = null, bool resetStartTime = true)
+        {
+            WorkoutSession? session = null;
+
+            if (workoutSessionId is > 0)
+            {
+                session = GetWorkoutSession(workoutSessionId.Value);
+            }
+
+            session ??= GetCurrentWorkout();
+
+            if (session == null || session.IsCompleted)
+            {
+                return CreateWorkoutSession(name);
+            }
+
+            if (resetStartTime)
+            {
+                session.StartTime = DateTime.Now;
+            }
+
+            session.EndTime = null;
+            session.IsCompleted = false;
+
+            if (!string.IsNullOrWhiteSpace(name))
+            {
+                session.Name = name.Trim();
+            }
+
+            SaveData();
+            return session;
+        }
+
         public void AddExerciseToWorkout(int workoutSessionId, int exerciseId, string? circuitName = null)
         {
             var session = CurrentUserSessions().FirstOrDefault(s => s.Id == workoutSessionId);

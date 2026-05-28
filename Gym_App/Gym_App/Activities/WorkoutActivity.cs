@@ -1,5 +1,6 @@
 using Android.Content;
 using Android.Graphics;
+using Android.OS;
 using Android.Views;
 using Android.Widget;
 using Gym_App.Data;
@@ -10,8 +11,13 @@ namespace Gym_App.Activities
     [Activity(Label = "Training")]
     public class WorkoutActivity : Activity
     {
+        public const string ExtraStartWorkoutTimer = "startWorkoutTimer";
+        public const string ExtraWorkoutId = "workoutId";
+
         private GymDatabase? _database;
         private WorkoutSession? _currentWorkout;
+        private Chronometer? _workoutDurationChronometer;
+        private bool _isWorkoutTimerRunning;
 
         private TextView? _focusValueText;
         private ImageView? _upperBodyCardImage;
@@ -47,6 +53,22 @@ namespace Gym_App.Activities
 
         private string _selectedFocus = "Chest";
 
+        public static Intent CreateIntent(Context context, bool startWorkoutTimer = false, int workoutId = -1)
+        {
+            var intent = new Intent(context, typeof(WorkoutActivity));
+            if (startWorkoutTimer)
+            {
+                intent.PutExtra(ExtraStartWorkoutTimer, true);
+            }
+
+            if (workoutId > 0)
+            {
+                intent.PutExtra(ExtraWorkoutId, workoutId);
+            }
+
+            return intent;
+        }
+
         protected override void OnCreate(Bundle? savedInstanceState)
         {
             ThemeManager.ApplyTheme(this);
@@ -54,10 +76,7 @@ namespace Gym_App.Activities
             SetContentView(Resource.Layout.activity_workout);
 
             _database = new GymDatabase();
-            var workoutId = Intent?.GetIntExtra("workoutId", -1) ?? -1;
-            _currentWorkout = workoutId > 0
-                ? _database.GetWorkoutSession(workoutId) ?? _database.GetCurrentWorkout() ?? _database.CreateWorkoutSession("Training")
-                : _database.GetCurrentWorkout() ?? _database.CreateWorkoutSession("Training");
+            InitializeWorkoutSession();
 
             BindViews();
             BindTopActions();
@@ -66,10 +85,12 @@ namespace Gym_App.Activities
             LoadTodayMuscleTimes();
 
             RefreshScreen();
+            SyncWorkoutTimerUi();
         }
 
         protected override void OnDestroy()
         {
+            StopWorkoutTimerUi();
             SaveTodayMuscleTimes();
             base.OnDestroy();
         }
@@ -84,6 +105,39 @@ namespace Gym_App.Activities
             }
 
             RefreshScreen();
+            SyncWorkoutTimerUi();
+        }
+
+        protected override void OnPause()
+        {
+            StopWorkoutTimerUi();
+            base.OnPause();
+        }
+
+        private void InitializeWorkoutSession()
+        {
+            if (_database == null)
+                return;
+
+            var startTimer = Intent?.GetBooleanExtra(ExtraStartWorkoutTimer, false) ?? false;
+            var workoutId = Intent?.GetIntExtra(ExtraWorkoutId, -1) ?? -1;
+            var sessionName = GymDatabase.BuildRoutineSessionName(GetPlannedMuscleGroups());
+
+            if (startTimer)
+            {
+                _currentWorkout = _database.StartTimedWorkout(
+                    sessionName,
+                    workoutId > 0 ? workoutId : null,
+                    resetStartTime: true);
+                _isWorkoutTimerRunning = true;
+                return;
+            }
+
+            _currentWorkout = workoutId > 0
+                ? _database.GetWorkoutSession(workoutId)
+                : _database.GetCurrentWorkout();
+
+            _isWorkoutTimerRunning = _currentWorkout is { IsCompleted: false };
         }
 
         private void BindViews()
@@ -95,6 +149,7 @@ namespace Gym_App.Activities
 
             _lowerBodyCardImage = FindViewById<ImageView>(Resource.Id.lowerBodyCardImage);
             _lowerBodyWorkout1Text = FindViewById<TextView>(Resource.Id.lowerBodyWorkout1Text);
+            _workoutDurationChronometer = FindViewById<Chronometer>(Resource.Id.workoutDurationChronometer);
         }
 
         private void BindTopActions()
@@ -120,15 +175,44 @@ namespace Gym_App.Activities
             if (_database == null)
                 return;
 
+            if (_currentWorkout == null || !_isWorkoutTimerRunning)
+            {
+                Toast.MakeText(this, Resource.String.start_workout_before_finish, ToastLength.Short)?.Show();
+                return;
+            }
+
+            StopWorkoutTimerUi();
+
             var plannedGroups = GetPlannedMuscleGroups();
-            _database.CompleteTodayRoutine(plannedGroups, _currentWorkout?.Id);
+            _database.CompleteTodayRoutine(plannedGroups, _currentWorkout.Id);
             _currentWorkout = null;
+            _isWorkoutTimerRunning = false;
 
             Toast.MakeText(this, Resource.String.finished_workout_logged, ToastLength.Short)?.Show();
             StartActivity(new Intent(this, typeof(HistoryActivity)));
         }
 
+        private void SyncWorkoutTimerUi()
+        {
+            if (_workoutDurationChronometer == null)
+                return;
 
+            if (_currentWorkout == null || !_isWorkoutTimerRunning || _currentWorkout.IsCompleted)
+            {
+                StopWorkoutTimerUi();
+                _workoutDurationChronometer.Text = GetString(Resource.String.workout_timer_default);
+                return;
+            }
+
+            var elapsedMs = Math.Max(0, (long)(DateTime.Now - _currentWorkout.StartTime).TotalMilliseconds);
+            _workoutDurationChronometer.Base = SystemClock.ElapsedRealtime() - elapsedMs;
+            _workoutDurationChronometer.Start();
+        }
+
+        private void StopWorkoutTimerUi()
+        {
+            _workoutDurationChronometer?.Stop();
+        }
 
         private void RefreshScreen()
         {
@@ -221,8 +305,6 @@ namespace Gym_App.Activities
             return Resource.Drawable.ic_dumbbell;
         }
 
-
-
         private void LoadTodayMuscleTimes()
         {
             var prefs = GetSharedPreferences(MuscleTimePrefsName, FileCreationMode.Private);
@@ -266,10 +348,6 @@ namespace Gym_App.Activities
         {
             return _database?.GetDailyWorkoutGroups() ?? new[] { "Chest", "Back", "Legs" };
         }
-
-
-
-
 
         private void BindBottomNav()
         {

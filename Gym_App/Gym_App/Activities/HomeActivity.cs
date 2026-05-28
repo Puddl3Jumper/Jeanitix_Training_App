@@ -99,11 +99,10 @@ namespace Gym_App.Activities
                 startWorkoutButton.Click += (s, e) =>
                 {
                     var currentWorkout = _database?.GetCurrentWorkout();
-                    var intent = new Intent(this, typeof(WorkoutActivity));
-                    if (currentWorkout != null)
-                    {
-                        intent.PutExtra("workoutId", currentWorkout.Id);
-                    }
+                    var intent = WorkoutActivity.CreateIntent(
+                        this,
+                        startWorkoutTimer: true,
+                        workoutId: currentWorkout?.Id ?? -1);
                     StartActivity(intent);
                 };
             }
@@ -987,9 +986,7 @@ namespace Gym_App.Activities
             var session = currentWorkout ?? _database.CreateWorkoutSession("Quick Start Workout");
             _database.AddExerciseToWorkout(session.Id, exercise.Id);
 
-            var intent = new Intent(this, typeof(WorkoutActivity));
-            intent.PutExtra("workoutId", session.Id);
-            StartActivity(intent);
+            StartActivity(WorkoutActivity.CreateIntent(this, startWorkoutTimer: true, workoutId: session.Id));
         }
 
         private void ShowQuickAddDialog()

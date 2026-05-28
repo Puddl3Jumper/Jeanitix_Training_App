@@ -557,7 +557,7 @@ namespace Gym_App.Activities
             {
                 startWorkoutButton.Click += (s, e) =>
                 {
-                    StartActivity(new Intent(this, typeof(WorkoutActivity)));
+                    StartActivity(WorkoutActivity.CreateIntent(this, startWorkoutTimer: true));
                 };
             }
 
