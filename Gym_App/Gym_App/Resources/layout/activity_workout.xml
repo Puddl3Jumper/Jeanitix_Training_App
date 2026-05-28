@@ -198,16 +198,16 @@
         android:layout_marginEnd="20dp"
         android:layout_marginTop="8dp"
         android:layout_marginBottom="8dp"
+        android:minHeight="@dimen/gym_primary_button_height"
         android:text="@string/finished_workout"
         android:textAllCaps="false"
         android:textStyle="bold"
-        android:textSize="18sp"
+        android:textSize="16sp"
         android:textColor="@color/color_on_primary"
-        android:background="@drawable/bg_button_success"
+        android:background="@drawable/bg_button_primary"
         android:fontFamily="sans-serif-medium"
         android:stateListAnimator="@animator/edit_button_elevation"
-        android:elevation="4dp"
-        android:minHeight="@dimen/gym_primary_button_height" />
+        android:elevation="2dp" />
 
     <include layout="@layout/layout_bottom_bar" />
 
