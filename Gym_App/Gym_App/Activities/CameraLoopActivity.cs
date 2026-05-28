@@ -1,3 +1,5 @@
+#pragma warning disable CS0618 // Legacy Camera keeps loop detection dependency-free for this Android app.
+
 using Android.Content;
 using Android.Content.PM;
 using AndroidGraphicsFormat = Android.Graphics.Format;
@@ -236,20 +238,22 @@ namespace Gym_App.Activities
 
             try
             {
-                _camera = HardwareCamera.Open();
-                var parameters = _camera.GetParameters();
+                var camera = HardwareCamera.Open() ?? throw new InvalidOperationException("No camera is available.");
+                _camera = camera;
+
+                var parameters = camera.GetParameters();
                 var previewSize = ChoosePreviewSize(parameters?.SupportedPreviewSizes);
                 if (parameters != null && previewSize != null)
                 {
                     parameters.SetPreviewSize(previewSize.Width, previewSize.Height);
                     parameters.PreviewFormat = AndroidImageFormatType.Nv21;
-                    _camera.SetParameters(parameters);
+                    camera.SetParameters(parameters);
                 }
 
-                _camera.SetDisplayOrientation(90);
-                _camera.SetPreviewDisplay(_surfaceHolder);
-                _camera.SetPreviewCallback(this);
-                _camera.StartPreview();
+                camera.SetDisplayOrientation(90);
+                camera.SetPreviewDisplay(_surfaceHolder);
+                camera.SetPreviewCallback(this);
+                camera.StartPreview();
             }
             catch (Exception ex)
             {
