@@ -1,7 +1,8 @@
 using Android.Content;
 using Android.Content.PM;
-using Android.Graphics;
-using Android.Hardware;
+using AndroidGraphicsFormat = Android.Graphics.Format;
+using AndroidImageFormatType = Android.Graphics.ImageFormatType;
+using HardwareCamera = Android.Hardware.Camera;
 using Android.OS;
 using Android.Views;
 using Android.Widget;
@@ -12,7 +13,7 @@ using Gym_App.Services;
 namespace Gym_App.Activities
 {
     [Activity(Label = "Camera Loop Counter")]
-    public class CameraLoopActivity : Activity, ISurfaceHolderCallback, Camera.IPreviewCallback
+    public class CameraLoopActivity : Activity, ISurfaceHolderCallback, HardwareCamera.IPreviewCallback
     {
         public const string ExtraWorkoutId = "workoutId";
         public const string ExtraExerciseName = "exerciseName";
@@ -26,7 +27,7 @@ namespace Gym_App.Activities
         private GymDatabase? _database;
         private SurfaceView? _cameraPreview;
         private ISurfaceHolder? _surfaceHolder;
-        private Camera? _camera;
+        private HardwareCamera? _camera;
         private TextView? _loopCountText;
         private TextView? _motionStatusText;
         private TextView? _exerciseNameText;
@@ -93,7 +94,7 @@ namespace Gym_App.Activities
             }
         }
 
-        public void SurfaceChanged(ISurfaceHolder holder, Format format, int width, int height)
+        public void SurfaceChanged(ISurfaceHolder holder, AndroidGraphicsFormat format, int width, int height)
         {
             _surfaceHolder = holder;
             if (HasCameraPermission())
@@ -109,12 +110,12 @@ namespace Gym_App.Activities
             StopCameraPreview();
         }
 
-        public void OnPreviewFrame(byte[]? data, Camera? camera)
+        public void OnPreviewFrame(byte[]? data, HardwareCamera? camera)
         {
             if (!_isCounting || data == null || camera == null)
                 return;
 
-            Camera.Size? previewSize;
+            HardwareCamera.Size? previewSize;
             try
             {
                 previewSize = camera.GetParameters()?.PreviewSize;
@@ -235,13 +236,13 @@ namespace Gym_App.Activities
 
             try
             {
-                _camera = Camera.Open();
+                _camera = HardwareCamera.Open();
                 var parameters = _camera.GetParameters();
                 var previewSize = ChoosePreviewSize(parameters?.SupportedPreviewSizes);
                 if (parameters != null && previewSize != null)
                 {
                     parameters.SetPreviewSize(previewSize.Width, previewSize.Height);
-                    parameters.PreviewFormat = ImageFormatType.Nv21;
+                    parameters.PreviewFormat = AndroidImageFormatType.Nv21;
                     _camera.SetParameters(parameters);
                 }
 
@@ -257,7 +258,7 @@ namespace Gym_App.Activities
             }
         }
 
-        private static Camera.Size? ChoosePreviewSize(IList<Camera.Size>? supportedSizes)
+        private static HardwareCamera.Size? ChoosePreviewSize(IList<HardwareCamera.Size>? supportedSizes)
         {
             if (supportedSizes == null || supportedSizes.Count == 0)
                 return null;
