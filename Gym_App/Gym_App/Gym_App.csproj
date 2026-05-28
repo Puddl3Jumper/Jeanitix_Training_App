@@ -7,11 +7,18 @@
     <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationId>com.leiyu.GymJournal</ApplicationId>
     <ApplicationTitle>Jeanetix</ApplicationTitle>
-    <!-- Version format: major=year, minor=ISO week, patch=compile count (resets each week). -->
+    <!-- Version format: major=year, minor≈week (dayOfYear/7), patch=compile count (resets each week). -->
     <VersionStampFile>$(MSBuildProjectDirectory)/build.weekstamp</VersionStampFile>
     <VersionPatchFile>$(MSBuildProjectDirectory)/build.patch</VersionPatchFile>
-    <!-- Computed in Versioning.targets (_PrepareAndroidVersion) before PrepareForBuild. -->
-    <ApplicationDisplayVersion Condition="'$(ApplicationDisplayVersion)' == ''">0.0.0</ApplicationDisplayVersion>
+    <VersionMajor>$([System.DateTime]::UtcNow.Year)</VersionMajor>
+    <VersionMinor>$([MSBuild]::Divide($([System.DateTime]::UtcNow.DayOfYear), 7))</VersionMinor>
+    <_CurrentStamp>$(VersionMajor).$(VersionMinor)</_CurrentStamp>
+    <_StoredStamp Condition="Exists('$(VersionStampFile)')">$([System.String]::Copy($([System.IO.File]::ReadAllText('$(VersionStampFile)'))).Trim())</_StoredStamp>
+    <_StoredPatch Condition="Exists('$(VersionPatchFile)')">$([System.String]::Copy($([System.IO.File]::ReadAllText('$(VersionPatchFile)'))).Trim())</_StoredPatch>
+    <_StoredPatch Condition="!Exists('$(VersionPatchFile)')">0</_StoredPatch>
+    <VersionPatch Condition="'$(_StoredStamp)' == '$(_CurrentStamp)'">$([MSBuild]::Add($(_StoredPatch), 1))</VersionPatch>
+    <VersionPatch Condition="'$(_StoredStamp)' != '$(_CurrentStamp)'">1</VersionPatch>
+    <ApplicationDisplayVersion>$(VersionMajor).$(VersionMinor).$(VersionPatch)</ApplicationDisplayVersion>
   </PropertyGroup>
 
   <!-- Android versionCode must be a plain integer (no nested MSBuild::Add/Multiply — XA0003). -->

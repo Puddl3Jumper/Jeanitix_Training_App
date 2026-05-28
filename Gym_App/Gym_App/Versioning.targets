@@ -1,45 +1,5 @@
 <Project>
-  <UsingTask
-    TaskName="GetIsoWeekOfYear"
-    TaskFactory="RoslynCodeTaskFactory"
-    AssemblyFile="$(MSBuildToolsPath)/Microsoft.Build.Tasks.Core.dll">
-    <ParameterGroup>
-      <UtcNow ParameterType="System.DateTime" Required="true" />
-      <Week ParameterType="System.Int32" Output="true" />
-    </ParameterGroup>
-    <Task>
-      <Using Namespace="System" />
-      <Using Namespace="System.Globalization" />
-      <Code Type="Fragment" Language="cs"><![CDATA[
-Week = CultureInfo.InvariantCulture.Calendar.GetWeekOfYear(
-    UtcNow,
-    CalendarWeekRule.FirstFourDayWeek,
-    DayOfWeek.Monday);
-      ]]></Code>
-    </Task>
-  </UsingTask>
-
-  <!-- Compute year.ISO-week.patch once at build time; manifest and in-app UI share this value. -->
-  <Target
-    Name="_PrepareAndroidVersion"
-    BeforeTargets="PrepareForBuild"
-    Condition="'$(DesignTimeBuild)' != 'true'">
-    <GetIsoWeekOfYear UtcNow="$([System.DateTime]::UtcNow)">
-      <Output TaskParameter="Week" PropertyName="VersionMinor" />
-    </GetIsoWeekOfYear>
-
-    <PropertyGroup>
-      <VersionMajor>$([System.DateTime]::UtcNow.Year)</VersionMajor>
-      <_CurrentStamp>$(VersionMajor).$(VersionMinor)</_CurrentStamp>
-      <_StoredStamp Condition="Exists('$(VersionStampFile)')">$([System.String]::Copy($([System.IO.File]::ReadAllText('$(VersionStampFile)'))).Trim())</_StoredStamp>
-      <_StoredPatch Condition="Exists('$(VersionPatchFile)')">$([System.String]::Copy($([System.IO.File]::ReadAllText('$(VersionPatchFile)'))).Trim())</_StoredPatch>
-      <_StoredPatch Condition="!Exists('$(VersionPatchFile)')">0</_StoredPatch>
-      <VersionPatch Condition="'$(_StoredStamp)' == '$(_CurrentStamp)'">$([MSBuild]::Add($(_StoredPatch), 1))</VersionPatch>
-      <VersionPatch Condition="'$(_StoredStamp)' != '$(_CurrentStamp)'">1</VersionPatch>
-      <ApplicationDisplayVersion>$(VersionMajor).$(VersionMinor).$(VersionPatch)</ApplicationDisplayVersion>
-    </PropertyGroup>
-  </Target>
-
+  <!-- Persist compile patch counter after each successful build. -->
   <Target
     Name="_PersistAndroidVersion"
     AfterTargets="Build"
