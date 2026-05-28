@@ -80,6 +80,7 @@ namespace Gym_App.Activities
 
             BindViews();
             BindTopActions();
+            BindCameraLoopButton();
             BindFinishWorkoutButton();
             BindBottomNav();
             LoadTodayMuscleTimes();
@@ -159,6 +160,33 @@ namespace Gym_App.Activities
             {
                 historyButton.Click += (s, e) => StartActivity(new Intent(this, typeof(HistoryActivity)));
             }
+        }
+
+        private void BindCameraLoopButton()
+        {
+            var cameraLoopButton = FindViewById<Button>(Resource.Id.cameraLoopButton);
+            if (cameraLoopButton == null)
+                return;
+
+            cameraLoopButton.Click += (_, _) => StartCameraLoopCounter();
+        }
+
+        private void StartCameraLoopCounter()
+        {
+            if (_database == null)
+                return;
+
+            if (_currentWorkout == null || _currentWorkout.IsCompleted)
+            {
+                _currentWorkout = _database.StartTimedWorkout(
+                    GymDatabase.BuildRoutineSessionName(GetPlannedMuscleGroups()),
+                    resetStartTime: true);
+                _isWorkoutTimerRunning = true;
+                SyncWorkoutTimerUi();
+            }
+
+            var exerciseName = GetExerciseForMuscle(_selectedFocus);
+            StartActivity(CameraLoopActivity.CreateIntent(this, _currentWorkout.Id, exerciseName));
         }
 
         private void BindFinishWorkoutButton()

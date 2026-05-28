@@ -81,6 +81,20 @@
                         android:format="%s" />
                 </LinearLayout>
 
+                <Button
+                    android:id="@+id/cameraLoopButton"
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:minHeight="@dimen/gym_primary_button_height"
+                    android:text="@string/camera_loop_open"
+                    android:textAllCaps="false"
+                    android:textStyle="bold"
+                    android:textSize="16sp"
+                    android:textColor="@color/color_on_primary"
+                    android:background="@drawable/bg_button_train_action"
+                    android:fontFamily="sans-serif-medium"
+                    android:layout_marginBottom="12dp" />
+
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
