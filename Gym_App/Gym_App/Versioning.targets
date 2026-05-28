@@ -11,7 +11,10 @@
       <Using Namespace="System" />
       <Using Namespace="System.Globalization" />
       <Code Type="Fragment" Language="cs"><![CDATA[
-Week = ISOWeek.GetWeekOfYear(UtcNow);
+Week = CultureInfo.InvariantCulture.Calendar.GetWeekOfYear(
+    UtcNow,
+    CalendarWeekRule.FirstFourDayWeek,
+    DayOfWeek.Monday);
       ]]></Code>
     </Task>
   </UsingTask>
