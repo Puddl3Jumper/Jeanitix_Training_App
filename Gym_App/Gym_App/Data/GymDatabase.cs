@@ -619,6 +619,163 @@ namespace Gym_App.Data
             }
         }
 
+        /// <summary>
+        /// Records today's planned routine (upper/upper/lower muscles) as a completed workout in history.
+        /// </summary>
+        public WorkoutSession CompleteTodayRoutine(IReadOnlyList<string>? plannedGroups = null, int? workoutSessionId = null)
+        {
+            var groups = plannedGroups is { Count: > 0 }
+                ? plannedGroups.ToArray()
+                : GetDailyWorkoutGroups();
+
+            var sessionName = BuildRoutineSessionName(groups);
+            var session = ResolveRoutineWorkoutSession(workoutSessionId, sessionName);
+
+            foreach (var muscle in groups)
+            {
+                var exercise = ResolveExerciseForPlannedMuscle(muscle);
+                if (exercise == null)
+                    continue;
+
+                var alreadyLogged = session.Exercises.Any(e =>
+                    string.Equals(e.CircuitName, muscle, StringComparison.OrdinalIgnoreCase)
+                    || e.ExerciseId == exercise.Id);
+
+                if (!alreadyLogged)
+                {
+                    AddExerciseToWorkout(session.Id, exercise.Id, circuitName: muscle);
+                }
+            }
+
+            session = GetWorkoutSession(session.Id)!;
+
+            foreach (var workoutExercise in session.Exercises.Where(e => e.Sets.Count == 0))
+            {
+                AddSetToExercise(workoutExercise.Id, reps: 1, weight: 0, notes: "Routine completed");
+            }
+
+            if (!string.IsNullOrWhiteSpace(sessionName))
+            {
+                session.Name = sessionName;
+            }
+
+            CompleteWorkout(session.Id);
+            return GetWorkoutSession(session.Id)!;
+        }
+
+        internal static string BuildRoutineSessionName(IReadOnlyList<string> groups)
+        {
+            if (groups.Count >= 3)
+            {
+                return $"{groups[0]}/{groups[1]} + {groups[2]}";
+            }
+
+            if (groups.Count > 0)
+            {
+                return string.Join(" + ", groups);
+            }
+
+            return "Today's Workout";
+        }
+
+        internal static Exercise? ResolveExerciseForPlannedMuscle(string plannedMuscle, IReadOnlyList<Exercise> exercises)
+        {
+            if (string.IsNullOrWhiteSpace(plannedMuscle))
+                return null;
+
+            var preferredName = GetPreferredExerciseName(plannedMuscle);
+            if (!string.IsNullOrWhiteSpace(preferredName))
+            {
+                var preferred = exercises.FirstOrDefault(e =>
+                    string.Equals(e.Name, preferredName, StringComparison.OrdinalIgnoreCase));
+                if (preferred != null)
+                {
+                    return preferred;
+                }
+            }
+
+            var muscleGroup = MapPlannedMuscleToGroup(plannedMuscle);
+            return exercises.FirstOrDefault(e =>
+                string.Equals(e.MuscleGroup, muscleGroup, StringComparison.OrdinalIgnoreCase));
+        }
+
+        internal static string MapPlannedMuscleToGroup(string plannedMuscle)
+        {
+            if (string.Equals(plannedMuscle, "Cardio", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(plannedMuscle, "Abs", StringComparison.OrdinalIgnoreCase))
+            {
+                return "Core";
+            }
+
+            if (string.Equals(plannedMuscle, "Delts", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(plannedMuscle, "Shoulder", StringComparison.OrdinalIgnoreCase))
+            {
+                return "Shoulders";
+            }
+
+            if (string.Equals(plannedMuscle, "Biceps", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(plannedMuscle, "Triceps", StringComparison.OrdinalIgnoreCase))
+            {
+                return "Arms";
+            }
+
+            return plannedMuscle;
+        }
+
+        private static string? GetPreferredExerciseName(string plannedMuscle)
+        {
+            if (string.Equals(plannedMuscle, "Chest", StringComparison.OrdinalIgnoreCase))
+                return "Bench Press";
+            if (string.Equals(plannedMuscle, "Back", StringComparison.OrdinalIgnoreCase))
+                return "Deadlift";
+            if (string.Equals(plannedMuscle, "Legs", StringComparison.OrdinalIgnoreCase))
+                return "Squat";
+            if (string.Equals(plannedMuscle, "Biceps", StringComparison.OrdinalIgnoreCase))
+                return "Bicep Curls";
+            if (string.Equals(plannedMuscle, "Triceps", StringComparison.OrdinalIgnoreCase))
+                return "Triceps Dips";
+            if (string.Equals(plannedMuscle, "Delts", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(plannedMuscle, "Shoulder", StringComparison.OrdinalIgnoreCase))
+            {
+                return "Shoulder Press";
+            }
+            if (string.Equals(plannedMuscle, "Abs", StringComparison.OrdinalIgnoreCase)
+                || string.Equals(plannedMuscle, "Cardio", StringComparison.OrdinalIgnoreCase))
+            {
+                return "Plank";
+            }
+
+            return null;
+        }
+
+        private Exercise? ResolveExerciseForPlannedMuscle(string plannedMuscle) =>
+            ResolveExerciseForPlannedMuscle(plannedMuscle, _exercises);
+
+        private WorkoutSession ResolveRoutineWorkoutSession(int? workoutSessionId, string sessionName)
+        {
+            WorkoutSession? session = null;
+
+            if (workoutSessionId is > 0)
+            {
+                session = GetWorkoutSession(workoutSessionId.Value);
+            }
+
+            session ??= GetCurrentWorkout();
+
+            if (session == null || session.IsCompleted)
+            {
+                return CreateWorkoutSession(sessionName);
+            }
+
+            if (!string.IsNullOrWhiteSpace(sessionName))
+            {
+                session.Name = sessionName;
+                SaveData();
+            }
+
+            return session;
+        }
+
         public int GetNextTrainingDay()
         {
             var rotationIndex = GetTrainingRotationIndex();

@@ -12,6 +12,8 @@
     <string name="duration_default">Duration: 00:00:00</string>
     <string name="add_exercise_circuit">Add Exercise / Circuit</string>
     <string name="finish_workout">Finish Workout</string>
+    <string name="finished_workout">Finished Workout</string>
+    <string name="finished_workout_logged">Today\'s workout saved to Log</string>
     <string name="history_title">Workout History</string>
     <string name="history_subtitle">Review completed sessions and progress</string>
     <string name="history_quick_add">Quick add workout</string>

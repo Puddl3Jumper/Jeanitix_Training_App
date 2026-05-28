@@ -190,6 +190,25 @@
 
     </FrameLayout>
 
+    <Button
+        android:id="@+id/finishedWorkoutButton"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="20dp"
+        android:layout_marginEnd="20dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginBottom="8dp"
+        android:text="@string/finished_workout"
+        android:textAllCaps="false"
+        android:textStyle="bold"
+        android:textSize="18sp"
+        android:textColor="@color/color_on_primary"
+        android:background="@drawable/bg_button_success"
+        android:fontFamily="sans-serif-medium"
+        android:stateListAnimator="@animator/edit_button_elevation"
+        android:elevation="4dp"
+        android:minHeight="@dimen/gym_primary_button_height" />
+
     <include layout="@layout/layout_bottom_bar" />
 
 </LinearLayout>

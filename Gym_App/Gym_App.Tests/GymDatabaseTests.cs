@@ -64,6 +64,47 @@ public class GymDatabaseTests
     }
 
     [Fact]
+    public void CompleteTodayRoutine_LogsPlannedGroupsToHistory()
+    {
+        RunInIsolatedDataHome(database =>
+        {
+            var groups = new[] { "Chest", "Delts", "Legs" };
+            var completed = database.CompleteTodayRoutine(groups);
+
+            Assert.True(completed.IsCompleted);
+            Assert.Equal("Chest/Delts + Legs", completed.Name);
+            Assert.Equal(3, completed.Exercises.Count);
+            Assert.All(completed.Exercises, exercise => Assert.Single(exercise.Sets));
+
+            var history = database.GetWorkoutHistory();
+            var saved = Assert.Single(history);
+            Assert.Equal(completed.Id, saved.Id);
+            Assert.Null(database.GetCurrentWorkout());
+        });
+    }
+
+    [Fact]
+    public void CompleteTodayRoutine_PreservesExistingLoggedSets()
+    {
+        RunInIsolatedDataHome(database =>
+        {
+            var groups = new[] { "Chest", "Back", "Legs" };
+            var session = database.CreateWorkoutSession("Training");
+            var bench = database.GetAllExercises().First(e => e.Name == "Bench Press");
+            database.AddExerciseToWorkout(session.Id, bench.Id, "Chest");
+            var workoutExerciseId = database.GetWorkoutSession(session.Id)!.Exercises.Single().Id;
+            database.AddSetToExercise(workoutExerciseId, reps: 10, weight: 60);
+
+            var completed = database.CompleteTodayRoutine(groups, session.Id);
+
+            var chestExercise = completed.Exercises.Single(e => string.Equals(e.CircuitName, "Chest", StringComparison.OrdinalIgnoreCase));
+            Assert.Equal(10, chestExercise.Sets.Single().Reps);
+            Assert.Equal(60, chestExercise.Sets.Single().Weight);
+            Assert.Equal(3, completed.Exercises.Count);
+        });
+    }
+
+    [Fact]
     public void AddExerciseToWorkout_AssignsCircuitOrderForSameCircuitName()
     {
         RunInIsolatedDataHome(database =>

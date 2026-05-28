@@ -61,6 +61,7 @@ namespace Gym_App.Activities
 
             BindViews();
             BindTopActions();
+            BindFinishWorkoutButton();
             BindBottomNav();
             LoadTodayMuscleTimes();
 
@@ -103,6 +104,28 @@ namespace Gym_App.Activities
             {
                 historyButton.Click += (s, e) => StartActivity(new Intent(this, typeof(HistoryActivity)));
             }
+        }
+
+        private void BindFinishWorkoutButton()
+        {
+            var finishButton = FindViewById<Button>(Resource.Id.finishedWorkoutButton);
+            if (finishButton == null)
+                return;
+
+            finishButton.Click += (_, _) => OnFinishedWorkoutClicked();
+        }
+
+        private void OnFinishedWorkoutClicked()
+        {
+            if (_database == null)
+                return;
+
+            var plannedGroups = GetPlannedMuscleGroups();
+            _database.CompleteTodayRoutine(plannedGroups, _currentWorkout?.Id);
+            _currentWorkout = null;
+
+            Toast.MakeText(this, Resource.String.finished_workout_logged, ToastLength.Short)?.Show();
+            StartActivity(new Intent(this, typeof(HistoryActivity)));
         }
 
 
