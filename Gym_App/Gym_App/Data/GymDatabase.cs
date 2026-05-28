@@ -26,6 +26,7 @@ namespace Gym_App.Data
         private const string TrainingRoutineUpperPairIndexKey = "training_routine_upper_pair_index";
         private const string TrainingRoutineLowerMuscleIndexKey = "training_routine_lower_muscle_index";
         private const string TrainingRoutineLastSelectionDateKey = "training_routine_last_selection_date";
+        private const string TrainingRoutineLastSelectionTimestampKey = "training_routine_last_selection_timestamp";
 
         private static readonly string[] UpperBodyMuscles =
         {
@@ -696,6 +697,9 @@ namespace Gym_App.Data
             }
 
             CompleteWorkout(session.Id);
+#if ANDROID
+            AdvanceVisitPlanForNextSession();
+#endif
             return GetWorkoutSession(session.Id)!;
         }
 
@@ -859,7 +863,7 @@ namespace Gym_App.Data
         {
 #if ANDROID
             var prefs = Android.App.Application.Context.GetSharedPreferences(TrainingRoutinePrefsName, FileCreationMode.Private);
-            var (upperIndex, lowerIndex) = ResolveVisitPlanIndices(prefs, DateTime.Now, Random.Shared);
+            var (upperIndex, lowerIndex) = ResolveVisitPlanIndices(prefs, DateTime.UtcNow, Random.Shared);
             return BuildDailyWorkoutGroups(upperIndex, lowerIndex);
 #else
             return BuildDailyWorkoutGroups(0, 0);
@@ -867,17 +871,82 @@ namespace Gym_App.Data
         }
 
 #if ANDROID
+        /// <summary>
+        /// After Finish Workout: pick the next random plan (upper and lower both change).
+        /// </summary>
+        public void AdvanceVisitPlanForNextSession()
+        {
+            var prefs = Android.App.Application.Context.GetSharedPreferences(TrainingRoutinePrefsName, FileCreationMode.Private);
+            var previousUpper = prefs.GetInt(TrainingRoutineUpperPairIndexKey, -1);
+            var previousLower = prefs.GetInt(TrainingRoutineLowerMuscleIndexKey, -1);
+            var (selectedUpper, selectedLower) = SelectRandomVisitPlanDifferentFrom(
+                previousUpper,
+                previousLower,
+                Random.Shared);
+            PersistVisitPlanSelection(prefs, selectedUpper, selectedLower, DateTime.UtcNow);
+        }
+
+        private static void PersistVisitPlanSelection(
+            Android.Content.ISharedPreferences prefs,
+            int upperIndex,
+            int lowerIndex,
+            DateTime selectionUtc)
+        {
+            var localNow = selectionUtc.ToLocalTime();
+            prefs.Edit()
+                .PutString(TrainingRoutineLastSelectionDateKey, localNow.ToString("yyyyMMdd"))
+                .PutString(TrainingRoutineLastSelectionTimestampKey, selectionUtc.ToString("o"))
+                .PutInt(TrainingRoutineUpperPairIndexKey, upperIndex)
+                .PutInt(TrainingRoutineLowerMuscleIndexKey, lowerIndex)
+                .Apply();
+        }
+
+        private static DateTime? ReadVisitPlanSelectionTimestamp(
+            Android.Content.ISharedPreferences prefs,
+            string? lastSelectionDate)
+        {
+            var timestampString = prefs.GetString(TrainingRoutineLastSelectionTimestampKey, null);
+            if (!string.IsNullOrWhiteSpace(timestampString)
+                && DateTime.TryParse(
+                    timestampString,
+                    null,
+                    System.Globalization.DateTimeStyles.RoundtripKind,
+                    out var parsedTimestamp))
+            {
+                return parsedTimestamp.ToUniversalTime();
+            }
+
+            if (string.IsNullOrWhiteSpace(lastSelectionDate))
+            {
+                return null;
+            }
+
+            if (DateTime.TryParseExact(
+                    lastSelectionDate,
+                    "yyyyMMdd",
+                    System.Globalization.CultureInfo.InvariantCulture,
+                    System.Globalization.DateTimeStyles.None,
+                    out var legacyDate))
+            {
+                return legacyDate.ToUniversalTime();
+            }
+
+            return null;
+        }
+#endif
+
+#if ANDROID
         private static (int UpperIndex, int LowerIndex) ResolveVisitPlanIndices(
             Android.Content.ISharedPreferences prefs,
-            DateTime now,
+            DateTime nowUtc,
             Random random)
         {
-            var today = now.ToString("yyyyMMdd");
             var lastSelectionDate = prefs.GetString(TrainingRoutineLastSelectionDateKey, null);
             var previousUpper = prefs.GetInt(TrainingRoutineUpperPairIndexKey, -1);
             var previousLower = prefs.GetInt(TrainingRoutineLowerMuscleIndexKey, -1);
+            var lastSelectionUtc = ReadVisitPlanSelectionTimestamp(prefs, lastSelectionDate);
 
-            if (!ShouldSelectNewPlanForCalendarDay(lastSelectionDate, today))
+            if (!ShouldSelectNewPlanAfter24Hours(lastSelectionUtc, nowUtc))
             {
                 var upper = previousUpper >= 0 && previousUpper < UpperBodyPairs.Length ? previousUpper : 0;
                 var lower = previousLower >= 0 && previousLower < LowerBodyMuscles.Length ? previousLower : 0;
@@ -885,17 +954,24 @@ namespace Gym_App.Data
             }
 
             var (selectedUpper, selectedLower) = SelectRandomVisitPlanDifferentFrom(previousUpper, previousLower, random);
-            prefs.Edit()
-                .PutString(TrainingRoutineLastSelectionDateKey, today)
-                .PutInt(TrainingRoutineUpperPairIndexKey, selectedUpper)
-                .PutInt(TrainingRoutineLowerMuscleIndexKey, selectedLower)
-                .Apply();
+            PersistVisitPlanSelection(prefs, selectedUpper, selectedLower, nowUtc);
 
             return (selectedUpper, selectedLower);
         }
 #endif
 
-        /// <summary>New random plan only when the local calendar day changes (not a 24h rolling window).</summary>
+        /// <summary>New random plan when 24+ hours have passed since the last plan was assigned.</summary>
+        internal static bool ShouldSelectNewPlanAfter24Hours(DateTime? lastSelectionUtc, DateTime nowUtc)
+        {
+            if (!lastSelectionUtc.HasValue)
+            {
+                return true;
+            }
+
+            return (nowUtc - lastSelectionUtc.Value).TotalHours >= 24;
+        }
+
+        /// <summary>Legacy calendar-day helper; rotation now uses <see cref="ShouldSelectNewPlanAfter24Hours"/>.</summary>
         internal static bool ShouldSelectNewPlanForCalendarDay(string? lastSelectionDate, string today)
         {
             return !string.Equals(lastSelectionDate, today, StringComparison.Ordinal);

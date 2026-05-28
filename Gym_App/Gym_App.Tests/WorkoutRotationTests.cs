@@ -76,6 +76,17 @@ public class WorkoutRotationTests
     }
 
     [Fact]
+    public void ShouldSelectNewPlanAfter24Hours_WhenNeverSetOrElapsed()
+    {
+        var now = new DateTime(2026, 5, 28, 12, 0, 0, DateTimeKind.Utc);
+
+        Assert.True(GymDatabase.ShouldSelectNewPlanAfter24Hours(null, now));
+        Assert.True(GymDatabase.ShouldSelectNewPlanAfter24Hours(now.AddHours(-25), now));
+        Assert.False(GymDatabase.ShouldSelectNewPlanAfter24Hours(now.AddHours(-23), now));
+        Assert.True(GymDatabase.ShouldSelectNewPlanAfter24Hours(now.AddHours(-24), now));
+    }
+
+    [Fact]
     public void ShouldSelectNewPlanForCalendarDay_OnlyWhenDateChanges()
     {
         Assert.True(GymDatabase.ShouldSelectNewPlanForCalendarDay(null, "20260520"));
