@@ -87,7 +87,7 @@
                     android:layout_height="wrap_content"
                     android:orientation="vertical"
                     android:background="@drawable/bg_card_today_outer"
-                    android:padding="16dp"
+                    android:padding="12dp"
                     android:layout_marginBottom="12dp">
 
                     <LinearLayout
@@ -95,7 +95,7 @@
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:layout_marginBottom="12dp">
+                        android:layout_marginBottom="8dp">
 
                         <View
                             android:layout_width="4dp"
@@ -114,7 +114,7 @@
                                 android:layout_height="wrap_content"
                                 android:text="@string/camera_loop_title"
                                 android:textColor="@color/color_text_primary"
-                                android:textSize="22sp"
+                                android:textSize="18sp"
                                 android:textStyle="bold" />
 
                             <TextView
@@ -129,7 +129,7 @@
 
                     <FrameLayout
                         android:layout_width="match_parent"
-                        android:layout_height="220dp"
+                        android:layout_height="180dp"
                         android:background="@drawable/bg_card_m3_elevated"
                         android:layout_marginBottom="12dp"
                         android:padding="2dp">
@@ -145,41 +145,36 @@
                         android:layout_height="wrap_content"
                         android:orientation="horizontal"
                         android:gravity="center_vertical"
-                        android:layout_marginBottom="12dp">
-
-                        <LinearLayout
-                            android:layout_width="0dp"
-                            android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:orientation="vertical">
-
-                            <TextView
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="@string/camera_loop_count_label"
-                                android:textColor="@color/color_text_secondary"
-                                android:textSize="14sp" />
-
-                            <TextView
-                                android:id="@+id/trainingCameraLoopCountText"
-                                android:layout_width="wrap_content"
-                                android:layout_height="wrap_content"
-                                android:text="0"
-                                android:textColor="@color/color_primary"
-                                android:textSize="42sp"
-                                android:textStyle="bold" />
-                        </LinearLayout>
+                        android:layout_marginBottom="4dp">
 
                         <TextView
-                            android:id="@+id/trainingCameraLoopStatusText"
-                            android:layout_width="0dp"
+                            android:id="@+id/trainingCameraLoopCountText"
+                            android:layout_width="wrap_content"
                             android:layout_height="wrap_content"
-                            android:layout_weight="1"
-                            android:text="@string/camera_loop_status_ready"
-                            android:textAlignment="viewEnd"
+                            android:text="0"
+                            android:textColor="@color/color_primary"
+                            android:textSize="44sp"
+                            android:textStyle="bold" />
+
+                        <TextView
+                            android:layout_width="wrap_content"
+                            android:layout_height="wrap_content"
+                            android:text="@string/camera_loop_count_label"
+                            android:layout_marginStart="4dp"
                             android:textColor="@color/color_text_secondary"
                             android:textSize="14sp" />
                     </LinearLayout>
+
+                    <TextView
+                        android:id="@+id/trainingCameraLoopStatusText"
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="@string/camera_loop_status_ready"
+                        android:textColor="@color/color_text_secondary"
+                        android:textSize="14sp"
+                        android:maxLines="1"
+                        android:ellipsize="end"
+                        android:layout_marginBottom="12dp" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -191,11 +186,11 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:minHeight="@dimen/gym_primary_button_height"
+                            android:minHeight="48dp"
                             android:text="@string/camera_loop_start"
                             android:textAllCaps="false"
                             android:textStyle="bold"
-                            android:textSize="16sp"
+                            android:textSize="15sp"
                             android:textColor="@color/color_on_primary"
                             android:background="@drawable/bg_button_train_action"
                             android:fontFamily="sans-serif-medium"
@@ -206,11 +201,11 @@
                             android:layout_width="0dp"
                             android:layout_height="wrap_content"
                             android:layout_weight="1"
-                            android:minHeight="@dimen/gym_primary_button_height"
+                            android:minHeight="48dp"
                             android:text="@string/camera_loop_save"
                             android:textAllCaps="false"
                             android:textStyle="bold"
-                            android:textSize="16sp"
+                            android:textSize="15sp"
                             android:textColor="@color/color_on_primary"
                             android:background="@drawable/bg_button_success"
                             android:fontFamily="sans-serif-medium" />
