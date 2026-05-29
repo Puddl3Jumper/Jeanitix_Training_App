@@ -2,6 +2,7 @@
 
 using Android.Content;
 using Android.Content.PM;
+using Android.Graphics;
 using AndroidGraphicsFormat = Android.Graphics.Format;
 using AndroidImageFormatType = Android.Graphics.ImageFormatType;
 using HardwareCamera = Android.Hardware.Camera;
@@ -26,6 +27,8 @@ namespace Gym_App.Activities
         private readonly CameraFrameMotionAnalyzer _motionAnalyzer = new();
         private readonly object _frameLock = new();
 
+        private MediaPipePoseMotionAnalyzer? _poseMotionAnalyzer;
+
         private GymDatabase? _database;
         private SurfaceView? _cameraPreview;
         private ISurfaceHolder? _surfaceHolder;
@@ -40,7 +43,9 @@ namespace Gym_App.Activities
         private bool _isCounting;
         private int _workoutId;
         private string _exerciseName = "Camera-detected exercise";
+        private string _motionSourceText = "camera frame";
         private DateTimeOffset _lastUiUpdate = DateTimeOffset.MinValue;
+        private long _lastMediaPipeFrameMs;
 
         public static Intent CreateIntent(Context context, int workoutId, string exerciseName)
         {
@@ -59,6 +64,8 @@ namespace Gym_App.Activities
             _database = new GymDatabase();
             _workoutId = Intent?.GetIntExtra(ExtraWorkoutId, -1) ?? -1;
             _exerciseName = Intent?.GetStringExtra(ExtraExerciseName) ?? _exerciseName;
+            _poseMotionAnalyzer = MediaPipePoseMotionAnalyzer.TryCreate(this);
+            _motionSourceText = _poseMotionAnalyzer == null ? "camera frame" : "MediaPipe pose";
 
             BindViews();
             EnsureCameraPermission();
@@ -83,6 +90,8 @@ namespace Gym_App.Activities
         protected override void OnDestroy()
         {
             StopCameraPreview();
+            _poseMotionAnalyzer?.Dispose();
+            _poseMotionAnalyzer = null;
             base.OnDestroy();
         }
 
@@ -130,17 +139,65 @@ namespace Gym_App.Activities
             if (previewSize == null)
                 return;
 
-            CameraLoopDetectionResult result;
+            var capturedAt = DateTimeOffset.UtcNow;
+            CameraLoopDetectionResult? result;
             lock (_frameLock)
             {
-                var motionScore = _motionAnalyzer.AnalyzeNv21Frame(data, previewSize.Width, previewSize.Height);
-                result = _loopDetector.AddSample(motionScore, DateTimeOffset.UtcNow);
+                var motionScore = TryAnalyzeMotionScore(data, previewSize.Width, previewSize.Height);
+                result = motionScore.HasValue
+                    ? _loopDetector.AddSample(motionScore.Value, capturedAt)
+                    : null;
             }
+
+            if (result == null)
+                return;
 
             if (result.LoopCompleted || DateTimeOffset.UtcNow - _lastUiUpdate > TimeSpan.FromMilliseconds(250))
             {
                 _lastUiUpdate = DateTimeOffset.UtcNow;
                 RunOnUiThread(() => UpdateCounterViews(result));
+            }
+        }
+
+        private double? TryAnalyzeMotionScore(byte[] data, int width, int height)
+        {
+            if (_poseMotionAnalyzer != null)
+            {
+                var timestampMs = SystemClock.ElapsedRealtime();
+                if (timestampMs - _lastMediaPipeFrameMs < 150)
+                    return null;
+
+                _lastMediaPipeFrameMs = timestampMs;
+                using var bitmap = DecodeNv21Frame(data, width, height);
+                if (bitmap == null)
+                    return 0d;
+
+                var sample = _poseMotionAnalyzer.Analyze(bitmap, timestampMs);
+                _motionSourceText = sample.HasPose
+                    ? $"MediaPipe pose ({sample.LandmarkCount} points)"
+                    : "MediaPipe pose (no body)";
+                return sample.HasPose ? sample.MotionScore : 0d;
+            }
+
+            _motionSourceText = "camera frame";
+            return _motionAnalyzer.AnalyzeNv21Frame(data, width, height);
+        }
+
+        private static Bitmap? DecodeNv21Frame(byte[] data, int width, int height)
+        {
+            try
+            {
+                using var yuvImage = new YuvImage(data, AndroidImageFormatType.Nv21, width, height, null);
+                using var stream = new MemoryStream();
+                if (!yuvImage.CompressToJpeg(new Rect(0, 0, width, height), 60, stream))
+                    return null;
+
+                var jpeg = stream.ToArray();
+                return BitmapFactory.DecodeByteArray(jpeg, 0, jpeg.Length);
+            }
+            catch
+            {
+                return null;
             }
         }
 
@@ -152,7 +209,7 @@ namespace Gym_App.Activities
 
             if (HasCameraPermission())
             {
-                UpdateStatus("Camera ready. Tap Start to count loops.");
+                UpdateStatus(BuildReadyStatus());
                 if (_surfaceReady)
                 {
                     StartCameraPreview();
@@ -224,7 +281,7 @@ namespace Gym_App.Activities
         {
             if (HasCameraPermission())
             {
-                UpdateStatus("Camera ready. Tap Start to count loops.");
+                UpdateStatus(BuildReadyStatus());
                 return;
             }
 
@@ -306,14 +363,16 @@ namespace Gym_App.Activities
             lock (_frameLock)
             {
                 _motionAnalyzer.Reset();
+                _poseMotionAnalyzer?.Reset();
                 _loopDetector.Reset();
+                _lastMediaPipeFrameMs = 0;
             }
 
             _isCounting = true;
             if (_startStopButton != null)
                 _startStopButton.Text = "Stop detection";
 
-            UpdateStatus("Counting loops. Keep your full movement in frame.");
+            UpdateStatus($"Counting loops with {_motionSourceText}. Keep your full movement in frame.");
         }
 
         private void StopCounting()
@@ -341,9 +400,16 @@ namespace Gym_App.Activities
                 {
                     CameraLoopPhase.MotionActive => "Motion detected",
                     CameraLoopPhase.Cooldown => "Loop counted",
-                    _ => $"Ready - motion {result.SmoothedMotion:P0}"
+                    _ => $"Ready - {_motionSourceText} motion {result.SmoothedMotion:P0}"
                 };
             }
+        }
+
+        private string BuildReadyStatus()
+        {
+            return _poseMotionAnalyzer == null
+                ? "Camera ready. Tap Start to count loops."
+                : "MediaPipe Pose ready. Tap Start to count loops.";
         }
 
         private void UpdateStatus(string message)
