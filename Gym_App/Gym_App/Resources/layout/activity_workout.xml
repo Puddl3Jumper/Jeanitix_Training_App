@@ -81,19 +81,141 @@
                         android:format="%s" />
                 </LinearLayout>
 
-                <Button
-                    android:id="@+id/cameraLoopButton"
+                <LinearLayout
+                    android:id="@+id/trainingCameraLoopCard"
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
-                    android:minHeight="@dimen/gym_primary_button_height"
-                    android:text="@string/camera_loop_open"
-                    android:textAllCaps="false"
-                    android:textStyle="bold"
-                    android:textSize="16sp"
-                    android:textColor="@color/color_on_primary"
-                    android:background="@drawable/bg_button_train_action"
-                    android:fontFamily="sans-serif-medium"
-                    android:layout_marginBottom="12dp" />
+                    android:orientation="vertical"
+                    android:background="@drawable/bg_card_today_outer"
+                    android:padding="16dp"
+                    android:layout_marginBottom="12dp">
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
+
+                        <View
+                            android:layout_width="4dp"
+                            android:layout_height="match_parent"
+                            android:background="@color/home_cta_orange"
+                            android:layout_marginEnd="8dp" />
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/camera_loop_title"
+                                android:textColor="@color/color_text_primary"
+                                android:textSize="22sp"
+                                android:textStyle="bold" />
+
+                            <TextView
+                                android:id="@+id/trainingCameraLoopExerciseText"
+                                android:layout_width="match_parent"
+                                android:layout_height="wrap_content"
+                                android:text="@string/camera_loop_exercise_default"
+                                android:textColor="@color/color_text_secondary"
+                                android:textSize="14sp" />
+                        </LinearLayout>
+                    </LinearLayout>
+
+                    <FrameLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="220dp"
+                        android:background="@drawable/bg_card_m3_elevated"
+                        android:layout_marginBottom="12dp"
+                        android:padding="2dp">
+
+                        <SurfaceView
+                            android:id="@+id/trainingCameraLoopPreview"
+                            android:layout_width="match_parent"
+                            android:layout_height="match_parent" />
+                    </FrameLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal"
+                        android:gravity="center_vertical"
+                        android:layout_marginBottom="12dp">
+
+                        <LinearLayout
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:orientation="vertical">
+
+                            <TextView
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="@string/camera_loop_count_label"
+                                android:textColor="@color/color_text_secondary"
+                                android:textSize="14sp" />
+
+                            <TextView
+                                android:id="@+id/trainingCameraLoopCountText"
+                                android:layout_width="wrap_content"
+                                android:layout_height="wrap_content"
+                                android:text="0"
+                                android:textColor="@color/color_primary"
+                                android:textSize="42sp"
+                                android:textStyle="bold" />
+                        </LinearLayout>
+
+                        <TextView
+                            android:id="@+id/trainingCameraLoopStatusText"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:text="@string/camera_loop_status_ready"
+                            android:textAlignment="viewEnd"
+                            android:textColor="@color/color_text_secondary"
+                            android:textSize="14sp" />
+                    </LinearLayout>
+
+                    <LinearLayout
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:orientation="horizontal">
+
+                        <Button
+                            android:id="@+id/trainingCameraLoopStartStopButton"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:minHeight="@dimen/gym_primary_button_height"
+                            android:text="@string/camera_loop_start"
+                            android:textAllCaps="false"
+                            android:textStyle="bold"
+                            android:textSize="16sp"
+                            android:textColor="@color/color_on_primary"
+                            android:background="@drawable/bg_button_train_action"
+                            android:fontFamily="sans-serif-medium"
+                            android:layout_marginEnd="8dp" />
+
+                        <Button
+                            android:id="@+id/trainingCameraLoopSaveButton"
+                            android:layout_width="0dp"
+                            android:layout_height="wrap_content"
+                            android:layout_weight="1"
+                            android:minHeight="@dimen/gym_primary_button_height"
+                            android:text="@string/camera_loop_save"
+                            android:textAllCaps="false"
+                            android:textStyle="bold"
+                            android:textSize="16sp"
+                            android:textColor="@color/color_on_primary"
+                            android:background="@drawable/bg_button_success"
+                            android:fontFamily="sans-serif-medium" />
+                    </LinearLayout>
+                </LinearLayout>
 
                 <LinearLayout
                     android:layout_width="match_parent"
