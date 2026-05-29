@@ -66,7 +66,7 @@ namespace Gym_App.Services
             }
         }
 
-        public MediaPipePoseMotionSample Analyze(Bitmap bitmap, long timestampMs)
+        public MediaPipePoseMotionSample Analyze(Bitmap bitmap, long timestampMs, string? targetExercise = null, string? targetMuscle = null)
         {
             ThrowIfDisposed();
 
@@ -79,7 +79,7 @@ namespace Gym_App.Services
                 return new MediaPipePoseMotionSample();
             }
 
-            var currentVector = BuildPoseVector(pose);
+            var currentVector = BuildPoseVector(pose, targetExercise, targetMuscle);
             if (_previousPoseVector == null || _previousPoseVector.Length != currentVector.Length)
             {
                 _previousPoseVector = currentVector;
@@ -124,17 +124,48 @@ namespace Gym_App.Services
             _disposed = true;
         }
 
-        private static float[] BuildPoseVector(IList<NormalizedLandmark> pose)
+        private static float[] BuildPoseVector(IList<NormalizedLandmark> pose, string? targetExercise, string? targetMuscle)
         {
-            var vector = new float[pose.Count * 2];
-            var index = 0;
-            foreach (var landmark in pose)
+            var landmarkIndexes = ResolveTrackedLandmarks(targetExercise, targetMuscle)
+                .Where(index => index >= 0 && index < pose.Count)
+                .ToArray();
+            if (landmarkIndexes.Length == 0)
             {
-                vector[index++] = landmark.X();
-                vector[index++] = landmark.Y();
+                landmarkIndexes = Enumerable.Range(0, pose.Count).ToArray();
+            }
+
+            var vector = new float[landmarkIndexes.Length * 2];
+            var vectorIndex = 0;
+            foreach (var landmarkIndex in landmarkIndexes)
+            {
+                var landmark = pose[landmarkIndex];
+                vector[vectorIndex++] = landmark.X();
+                vector[vectorIndex++] = landmark.Y();
             }
 
             return vector;
+        }
+
+        private static int[] ResolveTrackedLandmarks(string? targetExercise, string? targetMuscle)
+        {
+            var key = $"{targetExercise} {targetMuscle}".ToLowerInvariant();
+
+            if (key.Contains("squat") || key.Contains("leg") || key.Contains("lunge"))
+                return new[] { 23, 24, 25, 26, 27, 28 };
+
+            if (key.Contains("pulldown") || key.Contains("pull") || key.Contains("row") || key.Contains("back"))
+                return new[] { 11, 12, 13, 14, 15, 16 };
+
+            if (key.Contains("curl") || key.Contains("bicep") || key.Contains("tricep") || key.Contains("pushdown"))
+                return new[] { 13, 14, 15, 16 };
+
+            if (key.Contains("press") || key.Contains("chest") || key.Contains("shoulder") || key.Contains("delt"))
+                return new[] { 11, 12, 13, 14, 15, 16 };
+
+            if (key.Contains("plank") || key.Contains("core") || key.Contains("abs"))
+                return new[] { 11, 12, 23, 24 };
+
+            return Array.Empty<int>();
         }
 
         private void ThrowIfDisposed()

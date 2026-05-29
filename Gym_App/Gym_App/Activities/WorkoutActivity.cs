@@ -111,6 +111,7 @@ namespace Gym_App.Activities
             BindViews();
             BindTopActions();
             BindEmbeddedCameraControls();
+            BindWorkoutTargetSelection();
             BindFinishWorkoutButton();
             BindBottomNav();
             LoadTodayMuscleTimes();
@@ -251,6 +252,43 @@ namespace Gym_App.Activities
             {
                 _saveDetectedLoopsButton.Click += (_, _) => SaveDetectedCameraLoops();
             }
+        }
+
+        private void BindWorkoutTargetSelection()
+        {
+            if (_upperBodyWorkout1Text != null)
+                _upperBodyWorkout1Text.Click += (_, _) => SelectWorkoutTargetByIndex(0);
+
+            if (_upperBodyWorkout2Text != null)
+                _upperBodyWorkout2Text.Click += (_, _) => SelectWorkoutTargetByIndex(1);
+
+            if (_lowerBodyWorkout1Text != null)
+                _lowerBodyWorkout1Text.Click += (_, _) => SelectWorkoutTargetByIndex(2);
+        }
+
+        private void SelectWorkoutTargetByIndex(int index)
+        {
+            var plannedGroups = GetPlannedMuscleGroups();
+            if (index < 0 || index >= plannedGroups.Length)
+                return;
+
+            SelectCameraTarget(plannedGroups[index]);
+        }
+
+        private void SelectCameraTarget(string plannedMuscle)
+        {
+            if (string.IsNullOrWhiteSpace(plannedMuscle)
+                || string.Equals(_selectedFocus, plannedMuscle, StringComparison.OrdinalIgnoreCase))
+            {
+                return;
+            }
+
+            _selectedFocus = plannedMuscle;
+            ResetCameraCounter();
+            UpdateMuscleTimeViews();
+            UpdateLowerBodyViews();
+            UpdateEmbeddedCameraExerciseText();
+            UpdateCameraStatus($"Target: {GetExerciseForMuscle(_selectedFocus)}");
         }
 
         public void SurfaceCreated(ISurfaceHolder holder)
@@ -505,7 +543,7 @@ namespace Gym_App.Activities
                 if (bitmap == null)
                     return 0d;
 
-                var sample = _poseMotionAnalyzer.Analyze(bitmap, timestampMs);
+                var sample = _poseMotionAnalyzer.Analyze(bitmap, timestampMs, GetExerciseForMuscle(_selectedFocus), _selectedFocus);
                 _motionSourceText = sample.HasPose
                     ? "MediaPipe"
                     : "No body";
@@ -572,7 +610,7 @@ namespace Gym_App.Activities
         {
             if (_cameraExerciseNameText != null)
             {
-                _cameraExerciseNameText.Text = GetExerciseForMuscle(_selectedFocus);
+                _cameraExerciseNameText.Text = $"Target: {GetExerciseForMuscle(_selectedFocus)}";
             }
         }
 
@@ -605,18 +643,7 @@ namespace Gym_App.Activities
 
             Toast.MakeText(this, $"Saved {loops} camera-detected loops", ToastLength.Short)?.Show();
             StopEmbeddedCameraCounting();
-            lock (_frameLock)
-            {
-                _loopDetector.Reset();
-                _motionAnalyzer.Reset();
-                _poseMotionAnalyzer?.Reset();
-            }
-            UpdateCameraCounterViews(new CameraLoopDetectionResult
-            {
-                TotalLoops = 0,
-                SmoothedMotion = 0,
-                Phase = CameraLoopPhase.WaitingForMotion
-            });
+            ResetCameraCounter();
         }
 
         private WorkoutSession EnsureWorkoutForCameraCounting()
@@ -724,7 +751,7 @@ namespace Gym_App.Activities
         private void RefreshScreen()
         {
             var plannedGroups = GetPlannedMuscleGroups();
-            if (plannedGroups.Length > 0)
+            if (plannedGroups.Length > 0 && !plannedGroups.Any(group => string.Equals(group, _selectedFocus, StringComparison.OrdinalIgnoreCase)))
             {
                 _selectedFocus = plannedGroups[0];
             }
@@ -748,8 +775,8 @@ namespace Gym_App.Activities
 
             if (plannedGroups.Length >= 2)
             {
-                _upperBodyWorkout1Text?.SetText(plannedGroups[0], TextView.BufferType.Normal);
-                _upperBodyWorkout2Text?.SetText(plannedGroups[1], TextView.BufferType.Normal);
+                _upperBodyWorkout1Text?.SetText(BuildWorkoutTargetLabel(plannedGroups[0]), TextView.BufferType.Normal);
+                _upperBodyWorkout2Text?.SetText(BuildWorkoutTargetLabel(plannedGroups[1]), TextView.BufferType.Normal);
             }
         }
 
@@ -759,8 +786,35 @@ namespace Gym_App.Activities
 
             if (plannedGroups.Length >= 3)
             {
-                _lowerBodyWorkout1Text?.SetText(plannedGroups[2], TextView.BufferType.Normal);
+                _lowerBodyWorkout1Text?.SetText(BuildWorkoutTargetLabel(plannedGroups[2]), TextView.BufferType.Normal);
             }
+        }
+
+        private string BuildWorkoutTargetLabel(string plannedMuscle)
+        {
+            var selectedPrefix = string.Equals(plannedMuscle, _selectedFocus, StringComparison.OrdinalIgnoreCase)
+                ? "● "
+                : string.Empty;
+            return selectedPrefix + GetExerciseForMuscle(plannedMuscle);
+        }
+
+        private void ResetCameraCounter()
+        {
+            StopEmbeddedCameraCounting();
+            lock (_frameLock)
+            {
+                _loopDetector.Reset();
+                _motionAnalyzer.Reset();
+                _poseMotionAnalyzer?.Reset();
+                _lastMediaPipeFrameMs = 0;
+            }
+
+            UpdateCameraCounterViews(new CameraLoopDetectionResult
+            {
+                TotalLoops = 0,
+                SmoothedMotion = 0,
+                Phase = CameraLoopPhase.WaitingForMotion
+            });
         }
 
         private int GetMuscleSeconds(string muscle)
