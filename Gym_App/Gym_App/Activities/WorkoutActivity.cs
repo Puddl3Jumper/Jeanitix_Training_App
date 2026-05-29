@@ -361,7 +361,7 @@ namespace Gym_App.Activities
 
             try
             {
-                var camera = HardwareCamera.Open() ?? throw new InvalidOperationException("No camera is available.");
+                var (camera, cameraInfo) = OpenPreferredCamera();
                 _camera = camera;
 
                 var parameters = camera.GetParameters();
@@ -373,7 +373,7 @@ namespace Gym_App.Activities
                     camera.SetParameters(parameters);
                 }
 
-                camera.SetDisplayOrientation(90);
+                camera.SetDisplayOrientation(CalculateDisplayOrientation(cameraInfo));
                 camera.SetPreviewDisplay(_surfaceHolder);
                 camera.SetPreviewCallback(this);
                 camera.StartPreview();
@@ -383,6 +383,42 @@ namespace Gym_App.Activities
                 UpdateCameraStatus("Unable to start camera: " + ex.Message);
                 StopCameraPreview();
             }
+        }
+
+        private static (HardwareCamera Camera, HardwareCamera.CameraInfo CameraInfo) OpenPreferredCamera()
+        {
+            var cameraInfo = new HardwareCamera.CameraInfo();
+            var cameraId = FindCameraId(Android.Hardware.CameraFacing.Front, cameraInfo)
+                ?? FindCameraId(Android.Hardware.CameraFacing.Back, cameraInfo);
+
+            if (!cameraId.HasValue)
+                throw new InvalidOperationException("No camera is available.");
+
+            return (HardwareCamera.Open(cameraId.Value), cameraInfo);
+        }
+
+        private static int? FindCameraId(Android.Hardware.CameraFacing facing, HardwareCamera.CameraInfo cameraInfo)
+        {
+            for (var cameraId = 0; cameraId < HardwareCamera.NumberOfCameras; cameraId++)
+            {
+                HardwareCamera.GetCameraInfo(cameraId, cameraInfo);
+                if (cameraInfo.Facing == facing)
+                    return cameraId;
+            }
+
+            return null;
+        }
+
+        private static int CalculateDisplayOrientation(HardwareCamera.CameraInfo cameraInfo)
+        {
+            const int displayRotationDegrees = 0;
+            if (cameraInfo.Facing == Android.Hardware.CameraFacing.Front)
+            {
+                var result = (cameraInfo.Orientation + displayRotationDegrees) % 360;
+                return (360 - result) % 360;
+            }
+
+            return (cameraInfo.Orientation - displayRotationDegrees + 360) % 360;
         }
 
         private static HardwareCamera.Size? ChoosePreviewSize(IList<HardwareCamera.Size>? supportedSizes)
