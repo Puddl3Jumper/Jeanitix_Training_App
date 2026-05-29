@@ -825,35 +825,11 @@ namespace Gym_App.Data
         public int GetTrainingRotationIndex()
         {
 #if ANDROID
+            // Behavior-driven: the day counter only moves when the user finishes a workout
+            // (see AdvanceVisitPlanForNextSession). It never auto-advances on a wall clock,
+            // so skipping a day leaves the plan exactly where the user left off.
             var prefs = Android.App.Application.Context.GetSharedPreferences(TrainingRoutinePrefsName, FileCreationMode.Private);
-            var offset = prefs.GetInt(TrainingRoutineOffsetKey, 0);
-            var timestampString = prefs.GetString(TrainingRoutineTimestampKey, null);
-            var lastTimestamp = DateTime.MinValue;
-
-            if (!string.IsNullOrWhiteSpace(timestampString) && DateTime.TryParse(timestampString, out var parsedTimestamp))
-            {
-                lastTimestamp = parsedTimestamp;
-            }
-            else
-            {
-                lastTimestamp = DateTime.Now;
-                prefs.Edit()
-                    .PutString(TrainingRoutineTimestampKey, lastTimestamp.ToString("o"))
-                    .PutInt(TrainingRoutineOffsetKey, offset)
-                    .Apply();
-            }
-
-            var newOffset = AdvanceRotationOffset(offset, lastTimestamp, DateTime.Now);
-            if (newOffset != offset)
-            {
-                offset = newOffset;
-                prefs.Edit()
-                    .PutInt(TrainingRoutineOffsetKey, offset)
-                    .PutString(TrainingRoutineTimestampKey, DateTime.Now.ToString("o"))
-                    .Apply();
-            }
-
-            return offset;
+            return prefs.GetInt(TrainingRoutineOffsetKey, 0);
 #else
             return 0;
 #endif
@@ -872,7 +848,10 @@ namespace Gym_App.Data
 
 #if ANDROID
         /// <summary>
-        /// After Finish Workout: pick the next random plan (upper and lower both change).
+        /// After Finish Workout: pick the next random plan (upper and lower both change) and
+        /// advance the training-day counter. This is the single, behavior-driven trigger for
+        /// moving the rotation forward — completing Day 1 moves the user to Day 2, etc.,
+        /// regardless of how many calendar days passed in between.
         /// </summary>
         public void AdvanceVisitPlanForNextSession()
         {
@@ -884,6 +863,12 @@ namespace Gym_App.Data
                 previousLower,
                 Random.Shared);
             PersistVisitPlanSelection(prefs, selectedUpper, selectedLower, DateTime.UtcNow);
+
+            var offset = prefs.GetInt(TrainingRoutineOffsetKey, 0);
+            prefs.Edit()
+                .PutInt(TrainingRoutineOffsetKey, offset + 1)
+                .PutString(TrainingRoutineTimestampKey, DateTime.Now.ToString("o"))
+                .Apply();
         }
 
         private static void PersistVisitPlanSelection(
@@ -901,38 +886,6 @@ namespace Gym_App.Data
                 .Apply();
         }
 
-        private static DateTime? ReadVisitPlanSelectionTimestamp(
-            Android.Content.ISharedPreferences prefs,
-            string? lastSelectionDate)
-        {
-            var timestampString = prefs.GetString(TrainingRoutineLastSelectionTimestampKey, null);
-            if (!string.IsNullOrWhiteSpace(timestampString)
-                && DateTime.TryParse(
-                    timestampString,
-                    null,
-                    System.Globalization.DateTimeStyles.RoundtripKind,
-                    out var parsedTimestamp))
-            {
-                return parsedTimestamp.ToUniversalTime();
-            }
-
-            if (string.IsNullOrWhiteSpace(lastSelectionDate))
-            {
-                return null;
-            }
-
-            if (DateTime.TryParseExact(
-                    lastSelectionDate,
-                    "yyyyMMdd",
-                    System.Globalization.CultureInfo.InvariantCulture,
-                    System.Globalization.DateTimeStyles.None,
-                    out var legacyDate))
-            {
-                return legacyDate.ToUniversalTime();
-            }
-
-            return null;
-        }
 #endif
 
 #if ANDROID
@@ -941,18 +894,17 @@ namespace Gym_App.Data
             DateTime nowUtc,
             Random random)
         {
-            var lastSelectionDate = prefs.GetString(TrainingRoutineLastSelectionDateKey, null);
             var previousUpper = prefs.GetInt(TrainingRoutineUpperPairIndexKey, -1);
             var previousLower = prefs.GetInt(TrainingRoutineLowerMuscleIndexKey, -1);
-            var lastSelectionUtc = ReadVisitPlanSelectionTimestamp(prefs, lastSelectionDate);
 
-            if (!ShouldSelectNewPlanAfter24Hours(lastSelectionUtc, nowUtc))
+            if (HasStoredVisitPlan(previousUpper, previousLower))
             {
-                var upper = previousUpper >= 0 && previousUpper < UpperBodyPairs.Length ? previousUpper : 0;
-                var lower = previousLower >= 0 && previousLower < LowerBodyMuscles.Length ? previousLower : 0;
-                return (upper, lower);
+                // Behavior-driven rotation: keep the current plan locked until the user taps
+                // Finish Workout. Coming back a day (or several days) later must not reshuffle it.
+                return (previousUpper, previousLower);
             }
 
+            // No plan has ever been assigned for this user: pick one and lock it in.
             var (selectedUpper, selectedLower) = SelectRandomVisitPlanDifferentFrom(previousUpper, previousLower, random);
             PersistVisitPlanSelection(prefs, selectedUpper, selectedLower, nowUtc);
 
@@ -960,7 +912,22 @@ namespace Gym_App.Data
         }
 #endif
 
-        /// <summary>New random plan when 24+ hours have passed since the last plan was assigned.</summary>
+        /// <summary>
+        /// True when a visit plan has already been assigned and stored for the user.
+        /// While a plan is stored it stays locked and only changes on Finish Workout.
+        /// </summary>
+        internal static bool HasStoredVisitPlan(int upperIndex, int lowerIndex)
+        {
+            return upperIndex >= 0
+                && lowerIndex >= 0
+                && upperIndex < UpperBodyPairs.Length
+                && lowerIndex < LowerBodyMuscles.Length;
+        }
+
+        /// <summary>
+        /// Legacy time-based trigger. No longer wired into the live rotation, which is now
+        /// behavior-driven (advances on Finish Workout). Retained for reference/tests.
+        /// </summary>
         internal static bool ShouldSelectNewPlanAfter24Hours(DateTime? lastSelectionUtc, DateTime nowUtc)
         {
             if (!lastSelectionUtc.HasValue)
@@ -971,13 +938,16 @@ namespace Gym_App.Data
             return (nowUtc - lastSelectionUtc.Value).TotalHours >= 24;
         }
 
-        /// <summary>Legacy calendar-day helper; rotation now uses <see cref="ShouldSelectNewPlanAfter24Hours"/>.</summary>
+        /// <summary>Legacy calendar-day helper; superseded by behavior-driven advancement.</summary>
         internal static bool ShouldSelectNewPlanForCalendarDay(string? lastSelectionDate, string today)
         {
             return !string.Equals(lastSelectionDate, today, StringComparison.Ordinal);
         }
 
-        /// <summary>Used by training-day display; separate from per-visit muscle plan randomization.</summary>
+        /// <summary>
+        /// Legacy time-based day-offset advance. No longer wired into the live rotation,
+        /// which now advances the day counter on Finish Workout. Retained for reference/tests.
+        /// </summary>
         internal static int AdvanceRotationOffset(int offset, DateTime lastTimestamp, DateTime now)
         {
             var advanceDays = (int)((now - lastTimestamp).TotalHours / 24);

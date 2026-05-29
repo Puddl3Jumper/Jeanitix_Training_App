@@ -965,7 +965,7 @@ namespace Gym_App.Activities
 
             var dialog = new MaterialAlertDialogBuilder(this)
                 .SetTitle("What's New")
-                .SetMessage("Workout plan rotates after you tap Finish Workout, or automatically after 24 hours.")
+                .SetMessage("Your workout plan now stays put until you tap Finish Workout. Miss a day? No problem — your plan waits for you and only moves forward once you finish a session.")
                 .SetPositiveButton("Got it", (s, e) =>
                 {
                     versionPrefs.Edit()?.PutLong("last_seen_version_code", versionCode)?.Apply();

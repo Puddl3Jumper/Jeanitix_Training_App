@@ -105,6 +105,37 @@ public class WorkoutRotationTests
     }
 
     [Fact]
+    public void HasStoredVisitPlan_FalseWhenNoPlanAssignedYet()
+    {
+        // -1/-1 is the "never selected" sentinel: the very first visit should pick a plan.
+        Assert.False(GymDatabase.HasStoredVisitPlan(-1, -1));
+        Assert.False(GymDatabase.HasStoredVisitPlan(0, -1));
+        Assert.False(GymDatabase.HasStoredVisitPlan(-1, 0));
+    }
+
+    [Fact]
+    public void HasStoredVisitPlan_TrueForEveryValidStoredCombination()
+    {
+        // Once a plan is stored it must be treated as locked (kept until Finish Workout),
+        // never reshuffled by the passage of time.
+        for (var upper = 0; upper < 3; upper++)
+        {
+            for (var lower = 0; lower < 3; lower++)
+            {
+                Assert.True(GymDatabase.HasStoredVisitPlan(upper, lower));
+            }
+        }
+    }
+
+    [Fact]
+    public void HasStoredVisitPlan_FalseForOutOfRangeIndices()
+    {
+        Assert.False(GymDatabase.HasStoredVisitPlan(3, 0));
+        Assert.False(GymDatabase.HasStoredVisitPlan(0, 3));
+        Assert.False(GymDatabase.HasStoredVisitPlan(99, 99));
+    }
+
+    [Fact]
     public void SelectUpperPair_AvoidsYesterdayWhenPossible()
     {
         var random = new Random(42);
