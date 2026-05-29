@@ -23,7 +23,8 @@
 
   <!-- Android versionCode must be a plain integer (no nested MSBuild::Add/Multiply — XA0003). -->
   <PropertyGroup>
-    <ApplicationVersion>$([System.DateTimeOffset]::UtcNow.ToUnixTimeSeconds())</ApplicationVersion>
+    <ApplicationVersion Condition="'$(Configuration)' == 'Debug'">1</ApplicationVersion>
+    <ApplicationVersion Condition="'$(Configuration)' != 'Debug'">$([System.DateTimeOffset]::UtcNow.ToUnixTimeSeconds())</ApplicationVersion>
     <AndroidManifest>AndroidManifest.xml</AndroidManifest>
     <AndroidEnableMultiDex>true</AndroidEnableMultiDex>
     <AndroidUseAapt2Daemon>false</AndroidUseAapt2Daemon>
