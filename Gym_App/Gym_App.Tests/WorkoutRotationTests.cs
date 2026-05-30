@@ -90,4 +90,24 @@ public class WorkoutRotationTests
 
         Assert.Equal(3, seen.Count);
     }
+
+    [Fact]
+    public void ShouldResetRotationForInactivity_TrueOnlyAfterMoreThanThreeDays()
+    {
+        var now = new DateTime(2026, 5, 30, 12, 0, 0, DateTimeKind.Local);
+
+        Assert.False(GymDatabase.ShouldResetRotationForInactivity(now.AddDays(-2), now));
+        // Exactly 3 days is not "more than 3 days".
+        Assert.False(GymDatabase.ShouldResetRotationForInactivity(now.AddDays(-3), now));
+        Assert.True(GymDatabase.ShouldResetRotationForInactivity(now.AddDays(-3).AddHours(-1), now));
+        Assert.True(GymDatabase.ShouldResetRotationForInactivity(now.AddDays(-4), now));
+        Assert.True(GymDatabase.ShouldResetRotationForInactivity(now.AddDays(-10), now));
+    }
+
+    [Fact]
+    public void ShouldResetRotationForInactivity_FalseWhenNeverTrained()
+    {
+        var now = new DateTime(2026, 5, 30, 12, 0, 0, DateTimeKind.Local);
+        Assert.False(GymDatabase.ShouldResetRotationForInactivity(null, now));
+    }
 }

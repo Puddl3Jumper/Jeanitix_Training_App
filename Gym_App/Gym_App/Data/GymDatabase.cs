@@ -837,6 +837,18 @@ namespace Gym_App.Data
 #if ANDROID
             var prefs = Android.App.Application.Context.GetSharedPreferences(TrainingRoutinePrefsName, FileCreationMode.Private);
             var dayIndex = prefs.GetInt(TrainingRoutineOffsetKey, 0);
+
+            // After a long break (no completed workout for more than 3 days) restart the
+            // weekly schedule from Day 1 (Biceps/Triceps) instead of resuming mid-cycle.
+            if (GetUpperPairIndexForDay(dayIndex) != 0
+                && ShouldResetRotationForInactivity(GetLastCompletedWorkoutTimestamp(), DateTime.Now))
+            {
+                dayIndex = 0;
+                prefs.Edit()
+                    .PutInt(TrainingRoutineOffsetKey, dayIndex)
+                    .Apply();
+            }
+
             var upperIndex = GetUpperPairIndexForDay(dayIndex);
             var lowerIndex = ResolveLockedLowerIndex(prefs, Random.Shared);
             return BuildDailyWorkoutGroups(upperIndex, lowerIndex);
@@ -844,6 +856,24 @@ namespace Gym_App.Data
             return BuildDailyWorkoutGroups(0, 0);
 #endif
         }
+
+#if ANDROID
+        /// <summary>Most recent completed workout time for the current user, if any.</summary>
+        private DateTime? GetLastCompletedWorkoutTimestamp()
+        {
+            DateTime? latest = null;
+            foreach (var session in CurrentUserSessions().Where(s => s.IsCompleted))
+            {
+                var timestamp = session.EndTime ?? session.StartTime;
+                if (latest == null || timestamp > latest)
+                {
+                    latest = timestamp;
+                }
+            }
+
+            return latest;
+        }
+#endif
 
 #if ANDROID
         /// <summary>
@@ -894,6 +924,24 @@ namespace Gym_App.Data
         internal static int GetUpperPairIndexForDay(int dayIndex)
         {
             return NormalizeIndex(dayIndex, UpperBodyPairs.Length);
+        }
+
+        /// <summary>
+        /// True when the rotation should restart from Day 1 because the user has not completed
+        /// a workout for more than <paramref name="maxIdleDays"/> days. A user who never trained
+        /// (no timestamp) is left untouched — they already start on Day 1.
+        /// </summary>
+        internal static bool ShouldResetRotationForInactivity(
+            DateTime? lastCompletedWorkoutAt,
+            DateTime now,
+            int maxIdleDays = 3)
+        {
+            if (!lastCompletedWorkoutAt.HasValue)
+            {
+                return false;
+            }
+
+            return (now - lastCompletedWorkoutAt.Value).TotalDays > maxIdleDays;
         }
 
         /// <summary>
