@@ -23,10 +23,7 @@ namespace Gym_App.Data
         private const string TrainingRoutinePrefsName = "training_routine_prefs";
         private const string TrainingRoutineOffsetKey = "training_routine_offset";
         private const string TrainingRoutineTimestampKey = "training_routine_timestamp";
-        private const string TrainingRoutineUpperPairIndexKey = "training_routine_upper_pair_index";
         private const string TrainingRoutineLowerMuscleIndexKey = "training_routine_lower_muscle_index";
-        private const string TrainingRoutineLastSelectionDateKey = "training_routine_last_selection_date";
-        private const string TrainingRoutineLastSelectionTimestampKey = "training_routine_last_selection_timestamp";
 
         private static readonly string[] UpperBodyMuscles =
         {
@@ -839,7 +836,9 @@ namespace Gym_App.Data
         {
 #if ANDROID
             var prefs = Android.App.Application.Context.GetSharedPreferences(TrainingRoutinePrefsName, FileCreationMode.Private);
-            var (upperIndex, lowerIndex) = ResolveVisitPlanIndices(prefs, DateTime.UtcNow, Random.Shared);
+            var dayIndex = prefs.GetInt(TrainingRoutineOffsetKey, 0);
+            var upperIndex = GetUpperPairIndexForDay(dayIndex);
+            var lowerIndex = ResolveLockedLowerIndex(prefs, Random.Shared);
             return BuildDailyWorkoutGroups(upperIndex, lowerIndex);
 #else
             return BuildDailyWorkoutGroups(0, 0);
@@ -848,166 +847,73 @@ namespace Gym_App.Data
 
 #if ANDROID
         /// <summary>
-        /// After Finish Workout: pick the next random plan (upper and lower both change) and
-        /// advance the training-day counter. This is the single, behavior-driven trigger for
-        /// moving the rotation forward — completing Day 1 moves the user to Day 2, etc.,
-        /// regardless of how many calendar days passed in between.
+        /// After Finish Workout: advance the training-day counter (which rotates the fixed
+        /// upper-body schedule Day 1 → Day 2 → Day 3) and pick a new lower-body movement that
+        /// differs from the previous one. This is the single, behavior-driven trigger for
+        /// moving the rotation forward, regardless of how many calendar days passed.
         /// </summary>
         public void AdvanceVisitPlanForNextSession()
         {
             var prefs = Android.App.Application.Context.GetSharedPreferences(TrainingRoutinePrefsName, FileCreationMode.Private);
-            var previousUpper = prefs.GetInt(TrainingRoutineUpperPairIndexKey, -1);
             var previousLower = prefs.GetInt(TrainingRoutineLowerMuscleIndexKey, -1);
-            var (selectedUpper, selectedLower) = SelectRandomVisitPlanDifferentFrom(
-                previousUpper,
-                previousLower,
-                Random.Shared);
-            PersistVisitPlanSelection(prefs, selectedUpper, selectedLower, DateTime.UtcNow);
-
+            var selectedLower = SelectLowerIndexDifferentFromPrevious(previousLower, Random.Shared);
             var offset = prefs.GetInt(TrainingRoutineOffsetKey, 0);
+
             prefs.Edit()
+                .PutInt(TrainingRoutineLowerMuscleIndexKey, selectedLower)
                 .PutInt(TrainingRoutineOffsetKey, offset + 1)
                 .PutString(TrainingRoutineTimestampKey, DateTime.Now.ToString("o"))
                 .Apply();
         }
 
-        private static void PersistVisitPlanSelection(
-            Android.Content.ISharedPreferences prefs,
-            int upperIndex,
-            int lowerIndex,
-            DateTime selectionUtc)
+        /// <summary>
+        /// Returns the locked lower-body movement for the current day. The lower body only
+        /// changes on Finish Workout, so returning a day (or several days) later keeps the
+        /// same movement. The very first session picks one at random and locks it in.
+        /// </summary>
+        private static int ResolveLockedLowerIndex(Android.Content.ISharedPreferences prefs, Random random)
         {
-            var localNow = selectionUtc.ToLocalTime();
+            var storedLower = prefs.GetInt(TrainingRoutineLowerMuscleIndexKey, -1);
+            if (storedLower >= 0 && storedLower < LowerBodyMuscles.Length)
+            {
+                return storedLower;
+            }
+
+            var selected = LowerBodyMuscles.Length <= 0 ? 0 : random.Next(LowerBodyMuscles.Length);
             prefs.Edit()
-                .PutString(TrainingRoutineLastSelectionDateKey, localNow.ToString("yyyyMMdd"))
-                .PutString(TrainingRoutineLastSelectionTimestampKey, selectionUtc.ToString("o"))
-                .PutInt(TrainingRoutineUpperPairIndexKey, upperIndex)
-                .PutInt(TrainingRoutineLowerMuscleIndexKey, lowerIndex)
+                .PutInt(TrainingRoutineLowerMuscleIndexKey, selected)
                 .Apply();
-        }
-
-#endif
-
-#if ANDROID
-        private static (int UpperIndex, int LowerIndex) ResolveVisitPlanIndices(
-            Android.Content.ISharedPreferences prefs,
-            DateTime nowUtc,
-            Random random)
-        {
-            var previousUpper = prefs.GetInt(TrainingRoutineUpperPairIndexKey, -1);
-            var previousLower = prefs.GetInt(TrainingRoutineLowerMuscleIndexKey, -1);
-
-            if (HasStoredVisitPlan(previousUpper, previousLower))
-            {
-                // Behavior-driven rotation: keep the current plan locked until the user taps
-                // Finish Workout. Coming back a day (or several days) later must not reshuffle it.
-                return (previousUpper, previousLower);
-            }
-
-            // No plan has ever been assigned for this user: pick one and lock it in.
-            var (selectedUpper, selectedLower) = SelectRandomVisitPlanDifferentFrom(previousUpper, previousLower, random);
-            PersistVisitPlanSelection(prefs, selectedUpper, selectedLower, nowUtc);
-
-            return (selectedUpper, selectedLower);
+            return selected;
         }
 #endif
 
         /// <summary>
-        /// True when a visit plan has already been assigned and stored for the user.
-        /// While a plan is stored it stays locked and only changes on Finish Workout.
+        /// Upper body follows a fixed weekly schedule keyed by the training-day index:
+        /// Day 1 → Biceps/Triceps, Day 2 → Chest/Delts, Day 3 → Back/Shoulder, then repeat.
         /// </summary>
-        internal static bool HasStoredVisitPlan(int upperIndex, int lowerIndex)
+        internal static int GetUpperPairIndexForDay(int dayIndex)
         {
-            return upperIndex >= 0
-                && lowerIndex >= 0
-                && upperIndex < UpperBodyPairs.Length
-                && lowerIndex < LowerBodyMuscles.Length;
+            return NormalizeIndex(dayIndex, UpperBodyPairs.Length);
         }
 
         /// <summary>
-        /// Legacy time-based trigger. No longer wired into the live rotation, which is now
-        /// behavior-driven (advances on Finish Workout). Retained for reference/tests.
+        /// Picks a lower-body movement at random while avoiding the immediately previous one,
+        /// so two consecutive days never share the same lower-body movement.
         /// </summary>
-        internal static bool ShouldSelectNewPlanAfter24Hours(DateTime? lastSelectionUtc, DateTime nowUtc)
+        internal static int SelectLowerIndexDifferentFromPrevious(int previousLowerIndex, Random random)
         {
-            if (!lastSelectionUtc.HasValue)
-            {
-                return true;
-            }
-
-            return (nowUtc - lastSelectionUtc.Value).TotalHours >= 24;
-        }
-
-        /// <summary>Legacy calendar-day helper; superseded by behavior-driven advancement.</summary>
-        internal static bool ShouldSelectNewPlanForCalendarDay(string? lastSelectionDate, string today)
-        {
-            return !string.Equals(lastSelectionDate, today, StringComparison.Ordinal);
-        }
-
-        /// <summary>
-        /// Legacy time-based day-offset advance. No longer wired into the live rotation,
-        /// which now advances the day counter on Finish Workout. Retained for reference/tests.
-        /// </summary>
-        internal static int AdvanceRotationOffset(int offset, DateTime lastTimestamp, DateTime now)
-        {
-            var advanceDays = (int)((now - lastTimestamp).TotalHours / 24);
-            return advanceDays > 0 ? offset + advanceDays : offset;
-        }
-
-        /// <summary>Random upper + lower for a new visit; both must differ from the previous visit when possible.</summary>
-        internal static (int UpperIndex, int LowerIndex) SelectRandomVisitPlanDifferentFrom(
-            int previousUpperIndex,
-            int previousLowerIndex,
-            Random random)
-        {
-            if (UpperBodyPairs.Length == 0 || LowerBodyMuscles.Length == 0)
-                return (0, 0);
-
-            if (previousUpperIndex < 0
-                || previousLowerIndex < 0
-                || previousUpperIndex >= UpperBodyPairs.Length
-                || previousLowerIndex >= LowerBodyMuscles.Length)
-            {
-                return (random.Next(UpperBodyPairs.Length), random.Next(LowerBodyMuscles.Length));
-            }
-
-            int upper;
-            int lower;
-            do
-            {
-                upper = random.Next(UpperBodyPairs.Length);
-                lower = random.Next(LowerBodyMuscles.Length);
-            }
-            while (!VisitPlanDiffersFromPrevious(previousUpperIndex, previousLowerIndex, upper, lower));
-
-            return (upper, lower);
-        }
-
-        internal static bool VisitPlanDiffersFromPrevious(
-            int previousUpperIndex,
-            int previousLowerIndex,
-            int upperIndex,
-            int lowerIndex)
-        {
-            var upperChanged = UpperBodyPairs.Length <= 1 || upperIndex != previousUpperIndex;
-            var lowerChanged = LowerBodyMuscles.Length <= 1 || lowerIndex != previousLowerIndex;
-            return upperChanged && lowerChanged;
-        }
-
-        internal static int SelectUpperPairIndexDifferentFromPrevious(int previousUpperPairIndex, Random random)
-        {
-            if (UpperBodyPairs.Length <= 1)
+            if (LowerBodyMuscles.Length <= 1)
                 return 0;
 
-            if (previousUpperPairIndex < 0 || previousUpperPairIndex >= UpperBodyPairs.Length)
-                return random.Next(UpperBodyPairs.Length);
+            if (previousLowerIndex < 0 || previousLowerIndex >= LowerBodyMuscles.Length)
+                return random.Next(LowerBodyMuscles.Length);
 
             int selected;
             do
             {
-                selected = random.Next(UpperBodyPairs.Length);
+                selected = random.Next(LowerBodyMuscles.Length);
             }
-            while (selected == previousUpperPairIndex);
+            while (selected == previousLowerIndex);
 
             return selected;
         }

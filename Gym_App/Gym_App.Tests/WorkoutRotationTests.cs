@@ -32,120 +32,62 @@ public class WorkoutRotationTests
         Assert.Equal(expected, GymDatabase.BuildDailyWorkoutGroups(upper, lower));
     }
 
-    [Fact]
-    public void SelectRandomVisitPlan_BothUpperAndLowerDifferFromPrevious()
+    [Theory]
+    [InlineData(0, 0)]
+    [InlineData(1, 1)]
+    [InlineData(2, 2)]
+    [InlineData(3, 0)]
+    [InlineData(4, 1)]
+    [InlineData(5, 2)]
+    [InlineData(-1, 2)]
+    public void GetUpperPairIndexForDay_CyclesThroughFixedUpperSchedule(int dayIndex, int expectedUpperIndex)
     {
-        var random = new Random(99);
-        for (var prevUpper = 0; prevUpper < 3; prevUpper++)
-        {
-            for (var prevLower = 0; prevLower < 3; prevLower++)
-            {
-                for (var i = 0; i < 30; i++)
-                {
-                    var (upper, lower) = GymDatabase.SelectRandomVisitPlanDifferentFrom(prevUpper, prevLower, random);
-                    Assert.True(GymDatabase.VisitPlanDiffersFromPrevious(prevUpper, prevLower, upper, lower));
-                    Assert.NotEqual(prevUpper, upper);
-                    Assert.NotEqual(prevLower, lower);
-                }
-            }
-        }
+        Assert.Equal(expectedUpperIndex, GymDatabase.GetUpperPairIndexForDay(dayIndex));
     }
 
     [Fact]
-    public void SelectRandomVisitPlan_FirstVisit_CanProduceAnyCombination()
+    public void UpperBodySchedule_IsFixed_Day1Biceps_Day2Chest_Day3Back()
     {
-        var random = new Random(7);
-        var seen = new HashSet<string>(StringComparer.Ordinal);
-        for (var i = 0; i < 60; i++)
-        {
-            var (upper, lower) = GymDatabase.SelectRandomVisitPlanDifferentFrom(-1, -1, random);
-            seen.Add($"{upper},{lower}");
-        }
+        // The upper body is a fixed weekly schedule keyed by the training-day index.
+        // Lower body (3rd element) is randomized separately, so only the upper pair matters here.
+        var day1 = GymDatabase.BuildDailyWorkoutGroups(GymDatabase.GetUpperPairIndexForDay(0), 0);
+        var day2 = GymDatabase.BuildDailyWorkoutGroups(GymDatabase.GetUpperPairIndexForDay(1), 0);
+        var day3 = GymDatabase.BuildDailyWorkoutGroups(GymDatabase.GetUpperPairIndexForDay(2), 0);
 
-        Assert.True(seen.Count >= 6);
+        Assert.Equal(new[] { "Biceps", "Triceps" }, new[] { day1[0], day1[1] });
+        Assert.Equal(new[] { "Chest", "Delts" }, new[] { day2[0], day2[1] });
+        Assert.Equal(new[] { "Back", "Shoulder" }, new[] { day3[0], day3[1] });
+
+        // Day 4 wraps back to the Day 1 upper pair.
+        var day4 = GymDatabase.BuildDailyWorkoutGroups(GymDatabase.GetUpperPairIndexForDay(3), 0);
+        Assert.Equal(new[] { "Biceps", "Triceps" }, new[] { day4[0], day4[1] });
     }
 
     [Fact]
-    public void VisitPlanDiffersFromPrevious_RequiresBothSlotsToChange()
+    public void SelectLowerIndex_NeverRepeatsThePreviousDay()
     {
-        Assert.False(GymDatabase.VisitPlanDiffersFromPrevious(0, 1, 0, 1));
-        Assert.False(GymDatabase.VisitPlanDiffersFromPrevious(1, 2, 1, 2));
-        Assert.False(GymDatabase.VisitPlanDiffersFromPrevious(0, 1, 2, 1));
-        Assert.True(GymDatabase.VisitPlanDiffersFromPrevious(0, 1, 1, 2));
-        Assert.True(GymDatabase.VisitPlanDiffersFromPrevious(0, 1, 2, 0));
-    }
-
-    [Fact]
-    public void ShouldSelectNewPlanAfter24Hours_WhenNeverSetOrElapsed()
-    {
-        var now = new DateTime(2026, 5, 28, 12, 0, 0, DateTimeKind.Utc);
-
-        Assert.True(GymDatabase.ShouldSelectNewPlanAfter24Hours(null, now));
-        Assert.True(GymDatabase.ShouldSelectNewPlanAfter24Hours(now.AddHours(-25), now));
-        Assert.False(GymDatabase.ShouldSelectNewPlanAfter24Hours(now.AddHours(-23), now));
-        Assert.True(GymDatabase.ShouldSelectNewPlanAfter24Hours(now.AddHours(-24), now));
-    }
-
-    [Fact]
-    public void ShouldSelectNewPlanForCalendarDay_OnlyWhenDateChanges()
-    {
-        Assert.True(GymDatabase.ShouldSelectNewPlanForCalendarDay(null, "20260520"));
-        Assert.True(GymDatabase.ShouldSelectNewPlanForCalendarDay("20260519", "20260520"));
-        Assert.False(GymDatabase.ShouldSelectNewPlanForCalendarDay("20260520", "20260520"));
-    }
-
-    [Fact]
-    public void AdvanceRotationOffset_AdvancesAfter24Hours()
-    {
-        var last = new DateTime(2026, 5, 1, 10, 0, 0);
-        var after25h = last.AddHours(25);
-
-        Assert.Equal(1, GymDatabase.AdvanceRotationOffset(0, last, after25h));
-        Assert.Equal(0, GymDatabase.AdvanceRotationOffset(0, last, last.AddHours(23)));
-    }
-
-    [Fact]
-    public void HasStoredVisitPlan_FalseWhenNoPlanAssignedYet()
-    {
-        // -1/-1 is the "never selected" sentinel: the very first visit should pick a plan.
-        Assert.False(GymDatabase.HasStoredVisitPlan(-1, -1));
-        Assert.False(GymDatabase.HasStoredVisitPlan(0, -1));
-        Assert.False(GymDatabase.HasStoredVisitPlan(-1, 0));
-    }
-
-    [Fact]
-    public void HasStoredVisitPlan_TrueForEveryValidStoredCombination()
-    {
-        // Once a plan is stored it must be treated as locked (kept until Finish Workout),
-        // never reshuffled by the passage of time.
-        for (var upper = 0; upper < 3; upper++)
-        {
-            for (var lower = 0; lower < 3; lower++)
-            {
-                Assert.True(GymDatabase.HasStoredVisitPlan(upper, lower));
-            }
-        }
-    }
-
-    [Fact]
-    public void HasStoredVisitPlan_FalseForOutOfRangeIndices()
-    {
-        Assert.False(GymDatabase.HasStoredVisitPlan(3, 0));
-        Assert.False(GymDatabase.HasStoredVisitPlan(0, 3));
-        Assert.False(GymDatabase.HasStoredVisitPlan(99, 99));
-    }
-
-    [Fact]
-    public void SelectUpperPair_AvoidsYesterdayWhenPossible()
-    {
-        var random = new Random(42);
+        var random = new Random(123);
         for (var previous = 0; previous < 3; previous++)
         {
-            for (var i = 0; i < 20; i++)
+            for (var i = 0; i < 50; i++)
             {
-                var selected = GymDatabase.SelectUpperPairIndexDifferentFromPrevious(previous, random);
+                var selected = GymDatabase.SelectLowerIndexDifferentFromPrevious(previous, random);
+                Assert.InRange(selected, 0, 2);
                 Assert.NotEqual(previous, selected);
             }
         }
+    }
+
+    [Fact]
+    public void SelectLowerIndex_FirstTime_CanProduceAnyMovement()
+    {
+        var random = new Random(7);
+        var seen = new HashSet<int>();
+        for (var i = 0; i < 60; i++)
+        {
+            seen.Add(GymDatabase.SelectLowerIndexDifferentFromPrevious(-1, random));
+        }
+
+        Assert.Equal(3, seen.Count);
     }
 }
