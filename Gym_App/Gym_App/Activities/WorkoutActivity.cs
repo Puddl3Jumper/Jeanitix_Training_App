@@ -119,10 +119,6 @@ namespace Gym_App.Activities
             RefreshScreen();
             SyncWorkoutTimerUi();
 
-            if (_cameraSurfaceReady && HasCameraPermission())
-            {
-                StartCameraPreview();
-            }
         }
 
         protected override void OnDestroy()
@@ -148,10 +144,6 @@ namespace Gym_App.Activities
             RefreshScreen();
             SyncWorkoutTimerUi();
 
-            if (_cameraSurfaceReady && HasCameraPermission())
-            {
-                StartCameraPreview();
-            }
         }
 
         protected override void OnPause()
@@ -295,7 +287,7 @@ namespace Gym_App.Activities
         {
             _cameraSurfaceReady = true;
             _surfaceHolder = holder;
-            if (HasCameraPermission())
+            if (_isCameraCounting && HasCameraPermission())
             {
                 StartCameraPreview();
             }
@@ -304,7 +296,7 @@ namespace Gym_App.Activities
         public void SurfaceChanged(ISurfaceHolder holder, AndroidGraphicsFormat format, int width, int height)
         {
             _surfaceHolder = holder;
-            if (HasCameraPermission())
+            if (_isCameraCounting && HasCameraPermission())
             {
                 StartCameraPreview();
             }
@@ -364,10 +356,6 @@ namespace Gym_App.Activities
             if (HasCameraPermission())
             {
                 UpdateCameraStatus(BuildCameraReadyStatus());
-                if (_cameraSurfaceReady)
-                {
-                    StartCameraPreview();
-                }
                 StartEmbeddedCameraCounting();
             }
             else
@@ -487,6 +475,14 @@ namespace Gym_App.Activities
             }
         }
 
+        private void SetLoopDetectionKeepScreenOn(bool keepScreenOn)
+        {
+            if (keepScreenOn)
+                Window?.AddFlags(WindowManagerFlags.KeepScreenOn);
+            else
+                Window?.ClearFlags(WindowManagerFlags.KeepScreenOn);
+        }
+
         private void StartEmbeddedCameraCounting()
         {
             if (!HasCameraPermission())
@@ -500,6 +496,9 @@ namespace Gym_App.Activities
                 StartCameraPreview();
             }
 
+            if (_camera == null)
+                return;
+
             EnsureWorkoutForCameraCounting();
 
             lock (_frameLock)
@@ -511,6 +510,7 @@ namespace Gym_App.Activities
             }
 
             _isCameraCounting = true;
+            SetLoopDetectionKeepScreenOn(true);
             if (_startStopButton != null)
                 _startStopButton.Text = "Stop";
 
@@ -524,6 +524,8 @@ namespace Gym_App.Activities
                 return;
 
             _isCameraCounting = false;
+            SetLoopDetectionKeepScreenOn(false);
+            StopCameraPreview();
             if (_startStopButton != null)
                 _startStopButton.Text = "Start";
 
