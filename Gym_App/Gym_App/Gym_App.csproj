@@ -23,7 +23,8 @@
 
   <!-- Android versionCode must be a plain integer (no nested MSBuild::Add/Multiply — XA0003). -->
   <PropertyGroup>
-    <ApplicationVersion>$([System.DateTimeOffset]::UtcNow.ToUnixTimeSeconds())</ApplicationVersion>
+    <ApplicationVersion Condition="'$(Configuration)' == 'Debug'">1</ApplicationVersion>
+    <ApplicationVersion Condition="'$(Configuration)' != 'Debug'">$([System.DateTimeOffset]::UtcNow.ToUnixTimeSeconds())</ApplicationVersion>
     <AndroidManifest>AndroidManifest.xml</AndroidManifest>
     <AndroidEnableMultiDex>true</AndroidEnableMultiDex>
     <AndroidUseAapt2Daemon>false</AndroidUseAapt2Daemon>
@@ -54,6 +55,7 @@
 
   <ItemGroup>
     <!-- Align with transitive Lifecycle.Runtime 2.10.x (avoids NU1608 from Process 2.8.7.2). -->
+    <PackageReference Include="MediaPipeTasksVision.Android" Version="0.10.33" />
     <PackageReference Include="Xamarin.AndroidX.Lifecycle.Process" Version="2.10.0.2" />
     <PackageReference Include="Xamarin.Google.Android.Material" Version="1.12.0.2" />
     <!-- Keep Play Services packages on the same Base (118.10.x) to avoid APT missing googleg_* drawables. -->

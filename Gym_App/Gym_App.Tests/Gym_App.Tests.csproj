@@ -19,6 +19,7 @@
     <Compile Include="..\Gym_App\Models\WorkoutExercise.cs" Link="Models\WorkoutExercise.cs" />
     <Compile Include="..\Gym_App\Models\WorkoutSession.cs" Link="Models\WorkoutSession.cs" />
     <Compile Include="..\Gym_App\Models\WorkoutSet.cs" Link="Models\WorkoutSet.cs" />
+    <Compile Include="..\Gym_App\Services\CameraLoopDetection.cs" Link="Services\CameraLoopDetection.cs" />
     <Compile Include="..\Gym_App\Services\GymProximityMath.cs" Link="Services\GymProximityMath.cs" />
   </ItemGroup>
 </Project>
