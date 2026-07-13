@@ -4,6 +4,7 @@
 
 [![Platform](https://img.shields.io/badge/Platform-Android%207.0%2B-brightgreen)](https://www.android.com/)
 [![Framework](https://img.shields.io/badge/.NET-10.0--android-blue)](https://dotnet.microsoft.com/)
+[![Latest Release](https://img.shields.io/github/v/release/Puddl3Jumper/GYM_Log_App?label=Release&color=gold)](https://github.com/Puddl3Jumper/GYM_Log_App/releases/latest)
 [![License](https://img.shields.io/badge/License-MIT-yellow)](LICENSE)
 
 ---
