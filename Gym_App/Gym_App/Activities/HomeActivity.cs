@@ -82,7 +82,7 @@ namespace Gym_App.Activities
             _weeklyAvgValueText = FindViewById<TextView>(Resource.Id.weeklyAvgValueText);
             _weeklyAvgLabelText = FindViewById<TextView>(Resource.Id.weeklyAvgLabelText);
             _weeklyGoalSummaryText = FindViewById<TextView>(Resource.Id.weeklyGoalSummaryText);
-            _insightText = FindViewById<TextView>(Resource.Id.insightText);
+            _insightText = null;
             _homeWelcomeText = FindViewById<TextView>(Resource.Id.homeWelcomeText);
             _todayExercisesContainer = FindViewById<LinearLayout>(Resource.Id.todayExercisesContainer);
             _noRecordsIcon = FindViewById<ImageView>(Resource.Id.noRecordsIcon);
