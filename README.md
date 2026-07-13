@@ -98,11 +98,9 @@ all wrapped in a clean Material Design 3 interface.
 
 ## Screenshots
 
-> _Coming soon — replace placeholders with actual device screenshots._
-
-| Home | Workout | History | Progress |
-|---|---|---|---|
-| _(placeholder)_ | _(placeholder)_ | _(placeholder)_ | _(placeholder)_ |
+| Home | Log | Train | Profile |
+|:---:|:---:|:---:|:---:|
+| <img src="docs/screenshots/home.png" width="180"/> | <img src="docs/screenshots/log.png" width="180"/> | <img src="docs/screenshots/train.png" width="180"/> | <img src="docs/screenshots/profile.png" width="180"/> |
 
 ---
 
