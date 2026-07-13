@@ -210,7 +210,7 @@ namespace Gym_App.Activities
                 return;
             }
 
-            _homeWelcomeText.Text = $"Welcome, {name}!";
+            _homeWelcomeText.Text = $"Welcome, {GetDisplayFirstName(name)}!";
         }
 
         private static string GetLowercaseFirstName(string name)

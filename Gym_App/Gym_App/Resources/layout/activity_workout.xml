@@ -38,8 +38,8 @@
                         android:layout_height="wrap_content"
                         android:layout_weight="1"
                         android:text="Workout Duration"
-                        android:textColor="@color/home_cta_orange"
-                        android:textSize="28sp"
+                        android:textColor="@color/color_primary"
+                        android:textSize="16sp"
                         android:textStyle="bold" />
 
                     <ImageButton
@@ -61,14 +61,6 @@
                     android:padding="16dp"
                     android:layout_marginBottom="12dp"
                     android:gravity="center_horizontal">
-
-                    <TextView
-                        android:layout_width="wrap_content"
-                        android:layout_height="wrap_content"
-                        android:text="@string/workout_duration_label"
-                        android:textColor="@color/color_text_secondary"
-                        android:textSize="14sp"
-                        android:layout_marginBottom="6dp" />
 
                     <Chronometer
                         android:id="@+id/workoutDurationChronometer"
