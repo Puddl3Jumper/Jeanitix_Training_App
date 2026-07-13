@@ -110,7 +110,6 @@ namespace Gym_App.Activities
 
             BindViews();
             BindTopActions();
-            BindEmbeddedCameraControls();
             BindWorkoutTargetSelection();
             BindFinishWorkoutButton();
             BindBottomNav();
@@ -184,25 +183,19 @@ namespace Gym_App.Activities
         {
             _focusValueText = FindViewById<TextView>(Resource.Id.focusValueText);
             _upperBodyCardImage = FindViewById<ImageView>(Resource.Id.upperBodyCardImage);
-            _upperBodyWorkout1Text = FindViewById<TextView>(Resource.Id.upperBodyWorkout1Text);
-            _upperBodyWorkout2Text = FindViewById<TextView>(Resource.Id.upperBodyWorkout2Text);
+            _upperBodyWorkout1Text = null;
+            _upperBodyWorkout2Text = null;
 
             _lowerBodyCardImage = FindViewById<ImageView>(Resource.Id.lowerBodyCardImage);
-            _lowerBodyWorkout1Text = FindViewById<TextView>(Resource.Id.lowerBodyWorkout1Text);
+            _lowerBodyWorkout1Text = null;
             _workoutDurationChronometer = FindViewById<Chronometer>(Resource.Id.workoutDurationChronometer);
 
-            _cameraPreview = FindViewById<SurfaceView>(Resource.Id.trainingCameraLoopPreview);
-            _loopCountText = FindViewById<TextView>(Resource.Id.trainingCameraLoopCountText);
-            _motionStatusText = FindViewById<TextView>(Resource.Id.trainingCameraLoopStatusText);
-            _cameraExerciseNameText = FindViewById<TextView>(Resource.Id.trainingCameraLoopExerciseText);
-            _startStopButton = FindViewById<Button>(Resource.Id.trainingCameraLoopStartStopButton);
-            _saveDetectedLoopsButton = FindViewById<Button>(Resource.Id.trainingCameraLoopSaveButton);
-
-            if (_cameraPreview?.Holder != null)
-            {
-                _surfaceHolder = _cameraPreview.Holder;
-                _surfaceHolder.AddCallback(this);
-            }
+            _cameraPreview = null;
+            _loopCountText = null;
+            _motionStatusText = null;
+            _cameraExerciseNameText = null;
+            _startStopButton = null;
+            _saveDetectedLoopsButton = null;
         }
 
         private void BindTopActions()

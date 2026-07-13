@@ -93,7 +93,7 @@
                             <LinearLayout
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
-                                android:layout_weight="1"
+                                android:layout_weight="2"
                                 android:orientation="vertical"
                                 android:layout_marginStart="8dp">
 
@@ -118,6 +118,21 @@
                                     android:textFontWeight="400"
                                     android:text="Biceps/Triceps" />
                             </LinearLayout>
+
+                            <Button
+                                android:id="@+id/skipUpperBodyButton"
+                                android:layout_width="0dp"
+                                android:layout_weight="1"
+                                android:layout_height="40dp"
+                                android:minHeight="0dp"
+                                android:minWidth="0dp"
+                                android:text="Skip"
+                                android:textSize="14sp"
+                                android:textAllCaps="false"
+                                android:textColor="@color/home_cta_orange"
+                                android:background="@drawable/bg_button_skip"
+                                android:layout_gravity="center_vertical"
+                                android:layout_marginStart="12dp" />
                         </LinearLayout>
                     </LinearLayout>
 
@@ -145,7 +160,7 @@
                             <LinearLayout
                                 android:layout_width="0dp"
                                 android:layout_height="wrap_content"
-                                android:layout_weight="1"
+                                android:layout_weight="2"
                                 android:orientation="vertical"
                                 android:layout_marginStart="8dp">
 
@@ -170,6 +185,21 @@
                                     android:textFontWeight="400"
                                     android:text="Abs" />
                             </LinearLayout>
+
+                            <Button
+                                android:id="@+id/skipLowerBodyButton"
+                                android:layout_width="0dp"
+                                android:layout_weight="1"
+                                android:layout_height="40dp"
+                                android:minHeight="0dp"
+                                android:minWidth="0dp"
+                                android:text="Skip"
+                                android:textSize="14sp"
+                                android:textAllCaps="false"
+                                android:textColor="@color/home_cta_orange"
+                                android:background="@drawable/bg_button_skip"
+                                android:layout_gravity="center_vertical"
+                                android:layout_marginStart="12dp" />
                         </LinearLayout>
                     </LinearLayout>
                 </LinearLayout>

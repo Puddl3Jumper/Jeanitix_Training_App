@@ -27,6 +27,8 @@ namespace Gym_App.Activities
         private TextView? _upperBodyPlanText;
         private TextView? _lowerBodyLabelText;
         private TextView? _lowerBodyPlanText;
+        private Button? _skipUpperBodyButton;
+        private Button? _skipLowerBodyButton;
         private LinearLayout? _weeklyProgressChart;
 
         private TextView? _weeklyAvgValueText;
@@ -53,6 +55,29 @@ namespace Gym_App.Activities
             _upperBodyPlanText = FindViewById<TextView>(Resource.Id.upperBodyPlanText);
             _lowerBodyLabelText = FindViewById<TextView>(Resource.Id.lowerBodyLabelText);
             _lowerBodyPlanText = FindViewById<TextView>(Resource.Id.lowerBodyPlanText);
+            _skipUpperBodyButton = FindViewById<Button>(Resource.Id.skipUpperBodyButton);
+            _skipLowerBodyButton = FindViewById<Button>(Resource.Id.skipLowerBodyButton);
+
+            if (_skipUpperBodyButton != null)
+            {
+                _skipUpperBodyButton.Click += (s, e) =>
+                {
+                    _database?.SkipUpperBodyRotation();
+                    RenderTodayTrainingPlan();
+                    Toast.MakeText(this, "Upper body rotation skipped", ToastLength.Short)?.Show();
+                };
+            }
+
+            if (_skipLowerBodyButton != null)
+            {
+                _skipLowerBodyButton.Click += (s, e) =>
+                {
+                    _database?.SkipLowerBodyRotation();
+                    RenderTodayTrainingPlan();
+                    Toast.MakeText(this, "Lower body rotation skipped", ToastLength.Short)?.Show();
+                };
+            }
+
             _weeklyProgressChart = FindViewById<LinearLayout>(Resource.Id.weeklyProgressChart);
             _weeklyAvgValueText = FindViewById<TextView>(Resource.Id.weeklyAvgValueText);
             _weeklyAvgLabelText = FindViewById<TextView>(Resource.Id.weeklyAvgLabelText);

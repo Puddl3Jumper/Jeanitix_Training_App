@@ -3,7 +3,7 @@
   <Target
     Name="_PersistAndroidVersion"
     AfterTargets="Build"
-    Condition="'$(DesignTimeBuild)' != 'true' and '$(Configuration)' != 'Debug'">
+    Condition="'$(DesignTimeBuild)' != 'true'">
     <WriteLinesToFile File="$(VersionStampFile)" Lines="$(_CurrentStamp)" Overwrite="true" />
     <WriteLinesToFile File="$(VersionPatchFile)" Lines="$(VersionPatch)" Overwrite="true" />
   </Target>

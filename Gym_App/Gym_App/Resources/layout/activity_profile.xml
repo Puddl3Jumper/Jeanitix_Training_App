@@ -242,6 +242,15 @@
                         android:progressDrawable="@drawable/bg_weekly_progress" />
                 </LinearLayout>
 
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Key Metrics"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/color_primary"
+                    android:layout_marginBottom="8dp" />
+
                 <LinearLayout
                     android:id="@+id/keyMetricsCard"
                     android:layout_width="match_parent"
@@ -250,15 +259,6 @@
                     android:background="@drawable/bg_card_today_outer"
                     android:padding="16dp"
                     android:layout_marginBottom="12dp">
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Key Metrics"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/color_primary"
-                        android:layout_marginBottom="8dp" />
 
                     <LinearLayout
                         android:layout_width="match_parent"
@@ -484,6 +484,15 @@
                     </LinearLayout>
                 </LinearLayout>
 
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Training Summary"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/color_primary"
+                    android:layout_marginBottom="8dp" />
+
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -491,15 +500,6 @@
                     android:background="@drawable/bg_card_today_outer"
                     android:padding="16dp"
                     android:layout_marginBottom="12dp">
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Training Summary"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/color_primary"
-                        android:layout_marginBottom="8dp" />
 
                     <TextView
                         android:id="@+id/summaryWeekValue"
@@ -537,6 +537,15 @@
                         android:textColor="@android:color/white" />
                 </LinearLayout>
 
+                <TextView
+                    android:layout_width="match_parent"
+                    android:layout_height="wrap_content"
+                    android:text="Quick Actions"
+                    android:textSize="16sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/color_primary"
+                    android:layout_marginBottom="8dp" />
+
                 <LinearLayout
                     android:layout_width="match_parent"
                     android:layout_height="wrap_content"
@@ -544,15 +553,6 @@
                     android:background="@drawable/bg_card_today_outer"
                     android:padding="16dp"
                     android:layout_marginBottom="12dp">
-
-                    <TextView
-                        android:layout_width="match_parent"
-                        android:layout_height="wrap_content"
-                        android:text="Quick Actions"
-                        android:textSize="16sp"
-                        android:textStyle="bold"
-                        android:textColor="@color/color_primary"
-                        android:layout_marginBottom="8dp" />
 
                     <Button
                         android:id="@+id/quickStartWorkoutButton"

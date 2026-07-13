@@ -33,9 +33,7 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:orientation="vertical"
-            android:background="@drawable/bg_card_today_outer"
-            android:padding="16dp"
-            android:layout_marginBottom="12dp">
+            android:layout_marginBottom="8dp">
 
             <TextView
                 android:layout_width="match_parent"
@@ -44,6 +42,16 @@
                 android:textStyle="bold"
                 android:textSize="16sp"
                 android:textColor="@color/color_primary" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/bg_card_today_outer"
+            android:padding="16dp"
+            android:layout_marginBottom="12dp">
 
             <LinearLayout
                 android:layout_width="match_parent"
@@ -293,6 +301,197 @@
                 android:stateListAnimator="@animator/edit_button_elevation"
                 android:elevation="2dp"
                 android:layout_marginTop="10dp" />
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:layout_marginBottom="8dp">
+
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Reminder"
+                android:textStyle="bold"
+                android:textSize="16sp"
+                android:textColor="@color/color_primary" />
+
+        </LinearLayout>
+
+        <LinearLayout
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:orientation="vertical"
+            android:background="@drawable/bg_card_today_outer"
+            android:padding="16dp"
+            android:layout_marginBottom="12dp">
+
+            <!-- Daily Reminder title + switch -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Daily Reminder"
+                        android:textSize="16sp"
+                        android:textStyle="bold"
+                        android:textColor="@android:color/white" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="Plays a voice reminder with today's workout rotation"
+                        android:textSize="13sp"
+                        android:textColor="@color/color_text_secondary" />
+
+                </LinearLayout>
+
+                <Switch
+                    android:id="@+id/reminderEnabledSwitch"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:layout_marginStart="12dp" />
+
+            </LinearLayout>
+
+            <!-- Preview button -->
+            <Button
+                android:id="@+id/reminderPreviewButton"
+                android:layout_width="wrap_content"
+                android:layout_height="40dp"
+                android:minHeight="0dp"
+                android:minWidth="0dp"
+                android:text="Preview"
+                android:textSize="14sp"
+                android:textAllCaps="false"
+                android:textStyle="bold"
+                android:textColor="@color/color_primary"
+                android:background="@drawable/bg_button_skip"
+                android:paddingStart="24dp"
+                android:paddingEnd="24dp"
+                android:layout_marginTop="14dp" />
+
+            <!-- Divider -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/color_text_secondary"
+                android:alpha="0.2"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="16dp" />
+
+            <!-- Reminder Time row -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical">
+
+                <LinearLayout
+                    android:layout_width="0dp"
+                    android:layout_height="wrap_content"
+                    android:layout_weight="1"
+                    android:orientation="vertical">
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:text="Reminder Time"
+                        android:textSize="14sp"
+                        android:textStyle="bold"
+                        android:textColor="@android:color/white" />
+
+                    <TextView
+                        android:layout_width="match_parent"
+                        android:layout_height="wrap_content"
+                        android:layout_marginTop="4dp"
+                        android:text="Tap to change the daily alarm time"
+                        android:textSize="12sp"
+                        android:textColor="@color/color_text_secondary" />
+
+                </LinearLayout>
+
+                <TextView
+                    android:id="@+id/reminderTimeText"
+                    android:layout_width="wrap_content"
+                    android:layout_height="wrap_content"
+                    android:text="07:00"
+                    android:textSize="22sp"
+                    android:textStyle="bold"
+                    android:textColor="@color/color_primary"
+                    android:clickable="true"
+                    android:focusable="true"
+                    android:layout_marginStart="12dp" />
+
+            </LinearLayout>
+
+            <!-- Divider -->
+            <View
+                android:layout_width="match_parent"
+                android:layout_height="1dp"
+                android:background="@color/color_text_secondary"
+                android:alpha="0.2"
+                android:layout_marginTop="16dp"
+                android:layout_marginBottom="16dp" />
+
+            <!-- Reminder Days label -->
+            <TextView
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:text="Reminder Days"
+                android:textSize="14sp"
+                android:textStyle="bold"
+                android:textColor="@android:color/white"
+                android:layout_marginBottom="12dp" />
+
+            <!-- Day circle buttons -->
+            <LinearLayout
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal">
+
+                <FrameLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center">
+                    <TextView android:id="@+id/reminderDayMon" android:layout_width="40dp" android:layout_height="40dp" android:layout_gravity="center" android:gravity="center" android:clickable="true" android:focusable="true" android:text="M" android:textStyle="bold" android:textSize="13sp" android:textColor="@android:color/white" android:background="@drawable/bg_day_circle_inactive" />
+                </FrameLayout>
+
+                <FrameLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center">
+                    <TextView android:id="@+id/reminderDayTue" android:layout_width="40dp" android:layout_height="40dp" android:layout_gravity="center" android:gravity="center" android:clickable="true" android:focusable="true" android:text="T" android:textStyle="bold" android:textSize="13sp" android:textColor="@android:color/white" android:background="@drawable/bg_day_circle_inactive" />
+                </FrameLayout>
+
+                <FrameLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center">
+                    <TextView android:id="@+id/reminderDayWed" android:layout_width="40dp" android:layout_height="40dp" android:layout_gravity="center" android:gravity="center" android:clickable="true" android:focusable="true" android:text="W" android:textStyle="bold" android:textSize="13sp" android:textColor="@android:color/white" android:background="@drawable/bg_day_circle_inactive" />
+                </FrameLayout>
+
+                <FrameLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center">
+                    <TextView android:id="@+id/reminderDayThu" android:layout_width="40dp" android:layout_height="40dp" android:layout_gravity="center" android:gravity="center" android:clickable="true" android:focusable="true" android:text="T" android:textStyle="bold" android:textSize="13sp" android:textColor="@android:color/white" android:background="@drawable/bg_day_circle_inactive" />
+                </FrameLayout>
+
+                <FrameLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center">
+                    <TextView android:id="@+id/reminderDayFri" android:layout_width="40dp" android:layout_height="40dp" android:layout_gravity="center" android:gravity="center" android:clickable="true" android:focusable="true" android:text="F" android:textStyle="bold" android:textSize="13sp" android:textColor="@android:color/white" android:background="@drawable/bg_day_circle_inactive" />
+                </FrameLayout>
+
+                <FrameLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center">
+                    <TextView android:id="@+id/reminderDaySat" android:layout_width="40dp" android:layout_height="40dp" android:layout_gravity="center" android:gravity="center" android:clickable="true" android:focusable="true" android:text="S" android:textStyle="bold" android:textSize="13sp" android:textColor="@android:color/white" android:background="@drawable/bg_day_circle_inactive" />
+                </FrameLayout>
+
+                <FrameLayout android:layout_width="0dp" android:layout_height="wrap_content" android:layout_weight="1" android:gravity="center">
+                    <TextView android:id="@+id/reminderDaySun" android:layout_width="40dp" android:layout_height="40dp" android:layout_gravity="center" android:gravity="center" android:clickable="true" android:focusable="true" android:text="S" android:textStyle="bold" android:textSize="13sp" android:textColor="@android:color/white" android:background="@drawable/bg_day_circle_inactive" />
+                </FrameLayout>
+
+            </LinearLayout>
+
         </LinearLayout>
 
         <LinearLayout

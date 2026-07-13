@@ -897,6 +897,33 @@ namespace Gym_App.Data
         }
 
         /// <summary>
+        /// Skips the current upper-body rotation, advancing to the next day's upper-body
+        /// pair without recording a completed workout.
+        /// </summary>
+        public void SkipUpperBodyRotation()
+        {
+            var prefs = Android.App.Application.Context.GetSharedPreferences(TrainingRoutinePrefsName, FileCreationMode.Private);
+            var offset = prefs.GetInt(TrainingRoutineOffsetKey, 0);
+            prefs.Edit()
+                .PutInt(TrainingRoutineOffsetKey, offset + 1)
+                .Apply();
+        }
+
+        /// <summary>
+        /// Skips the current lower-body rotation, picking a new lower-body movement
+        /// different from the current one without recording a completed workout.
+        /// </summary>
+        public void SkipLowerBodyRotation()
+        {
+            var prefs = Android.App.Application.Context.GetSharedPreferences(TrainingRoutinePrefsName, FileCreationMode.Private);
+            var previousLower = prefs.GetInt(TrainingRoutineLowerMuscleIndexKey, -1);
+            var selectedLower = SelectLowerIndexDifferentFromPrevious(previousLower, Random.Shared);
+            prefs.Edit()
+                .PutInt(TrainingRoutineLowerMuscleIndexKey, selectedLower)
+                .Apply();
+        }
+
+        /// <summary>
         /// Returns the locked lower-body movement for the current day. The lower body only
         /// changes on Finish Workout, so returning a day (or several days) later keeps the
         /// same movement. The very first session picks one at random and locks it in.

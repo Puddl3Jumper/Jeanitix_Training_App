@@ -1,9 +1,12 @@
+using Android.App;
 using Android.Content;
 using Android.Text;
 using Android.Text.Style;
 using Android.Widget;
 using Android.Graphics;
 using Gym_App.Data;
+using Gym_App.Receivers;
+using Gym_App.Services;
 using Java.Lang;
 
 namespace Gym_App.Activities
@@ -273,6 +276,155 @@ namespace Gym_App.Activities
                     Finish();
                 };
             }
+
+            // ── Daily Reminder ────────────────────────────────────────────────
+            var reminderPrefs = GetSharedPreferences("reminder_prefs", FileCreationMode.Private);
+            var reminderSwitch   = FindViewById<Switch>(Resource.Id.reminderEnabledSwitch);
+            var reminderPreviewButton = FindViewById<Button>(Resource.Id.reminderPreviewButton);
+            var reminderTimeText = FindViewById<TextView>(Resource.Id.reminderTimeText);
+            var rdMon = FindViewById<TextView>(Resource.Id.reminderDayMon);
+            var rdTue = FindViewById<TextView>(Resource.Id.reminderDayTue);
+            var rdWed = FindViewById<TextView>(Resource.Id.reminderDayWed);
+            var rdThu = FindViewById<TextView>(Resource.Id.reminderDayThu);
+            var rdFri = FindViewById<TextView>(Resource.Id.reminderDayFri);
+            var rdSat = FindViewById<TextView>(Resource.Id.reminderDaySat);
+            var rdSun = FindViewById<TextView>(Resource.Id.reminderDaySun);
+
+            var reminderEnabled  = reminderPrefs?.GetBoolean("enabled", false) ?? false;
+            var reminderDaysMask = reminderPrefs?.GetInt("days_mask", ReminderScheduler.DefaultDaysMask) ?? ReminderScheduler.DefaultDaysMask;
+            var reminderHour     = reminderPrefs?.GetInt("hour", 7) ?? 7;
+            var reminderMinute   = reminderPrefs?.GetInt("minute", 0) ?? 0;
+
+            if (reminderSwitch != null)
+                reminderSwitch.Checked = reminderEnabled;
+
+            if (reminderTimeText != null)
+                reminderTimeText.Text = $"{reminderHour:D2}:{reminderMinute:D2}";
+
+            if (reminderPreviewButton != null)
+            {
+                reminderPreviewButton.Click += (s, e) =>
+                {
+                    var svcIntent = new Intent(this, typeof(ReminderService));
+                    StartForegroundService(svcIntent);
+                    Toast.MakeText(this, "Playing preview…", ToastLength.Short)?.Show();
+                };
+            }
+
+            void ApplyDayStyle(TextView? btn, bool selected)
+            {
+                if (btn == null) return;
+                btn.SetBackgroundResource(selected ? Resource.Drawable.bg_day_circle_active : Resource.Drawable.bg_day_circle_inactive);
+                btn.SetTextColor(new Color(GetColor(selected ? Resource.Color.color_on_primary : Resource.Color.color_text_secondary)));
+            }
+
+            void RefreshDayButtons()
+            {
+                ApplyDayStyle(rdMon, ReminderScheduler.IsDaySelected(reminderDaysMask, DayOfWeek.Monday));
+                ApplyDayStyle(rdTue, ReminderScheduler.IsDaySelected(reminderDaysMask, DayOfWeek.Tuesday));
+                ApplyDayStyle(rdWed, ReminderScheduler.IsDaySelected(reminderDaysMask, DayOfWeek.Wednesday));
+                ApplyDayStyle(rdThu, ReminderScheduler.IsDaySelected(reminderDaysMask, DayOfWeek.Thursday));
+                ApplyDayStyle(rdFri, ReminderScheduler.IsDaySelected(reminderDaysMask, DayOfWeek.Friday));
+                ApplyDayStyle(rdSat, ReminderScheduler.IsDaySelected(reminderDaysMask, DayOfWeek.Saturday));
+                ApplyDayStyle(rdSun, ReminderScheduler.IsDaySelected(reminderDaysMask, DayOfWeek.Sunday));
+            }
+
+            RefreshDayButtons();
+
+            void SaveAndReschedule()
+            {
+                reminderPrefs?.Edit()
+                    ?.PutBoolean("enabled", reminderEnabled)
+                    ?.PutInt("days_mask", reminderDaysMask)
+                    ?.PutInt("hour", reminderHour)
+                    ?.PutInt("minute", reminderMinute)
+                    ?.Apply();
+
+                ScheduleOrCancelReminders(reminderEnabled, reminderDaysMask, reminderHour, reminderMinute);
+            }
+
+            if (reminderSwitch != null)
+            {
+                reminderSwitch.CheckedChange += (s, e) =>
+                {
+                    reminderEnabled = e.IsChecked;
+                    SaveAndReschedule();
+                    Toast.MakeText(this, reminderEnabled ? "Reminder enabled" : "Reminder disabled", ToastLength.Short)?.Show();
+                };
+            }
+
+            void ToggleDay(DayOfWeek day, int bit)
+            {
+                if ((reminderDaysMask & bit) != 0)
+                    reminderDaysMask &= ~bit;
+                else
+                    reminderDaysMask |= bit;
+                RefreshDayButtons();
+                SaveAndReschedule();
+            }
+
+            if (rdMon != null) rdMon.Click += (s, e) => ToggleDay(DayOfWeek.Monday,    ReminderScheduler.MondayBit);
+            if (rdTue != null) rdTue.Click += (s, e) => ToggleDay(DayOfWeek.Tuesday,   ReminderScheduler.TuesdayBit);
+            if (rdWed != null) rdWed.Click += (s, e) => ToggleDay(DayOfWeek.Wednesday, ReminderScheduler.WednesdayBit);
+            if (rdThu != null) rdThu.Click += (s, e) => ToggleDay(DayOfWeek.Thursday,  ReminderScheduler.ThursdayBit);
+            if (rdFri != null) rdFri.Click += (s, e) => ToggleDay(DayOfWeek.Friday,    ReminderScheduler.FridayBit);
+            if (rdSat != null) rdSat.Click += (s, e) => ToggleDay(DayOfWeek.Saturday,  ReminderScheduler.SaturdayBit);
+            if (rdSun != null) rdSun.Click += (s, e) => ToggleDay(DayOfWeek.Sunday,    ReminderScheduler.SundayBit);
+
+            if (reminderTimeText != null)
+            {
+                reminderTimeText.Click += (s, e) =>
+                {
+                    var dlg = new Android.App.TimePickerDialog(
+                        this,
+                        (_, args) =>
+                        {
+                            reminderHour   = args.HourOfDay;
+                            reminderMinute = args.Minute;
+                            reminderTimeText.Text = $"{reminderHour:D2}:{reminderMinute:D2}";
+                            SaveAndReschedule();
+                        },
+                        reminderHour, reminderMinute, true);
+                    dlg.Show();
+                };
+            }
+        }
+
+        private void ScheduleOrCancelReminders(bool enabled, int daysMask, int hour, int minute)
+        {
+            var alarmManager = (AlarmManager?)GetSystemService(AlarmService);
+            if (alarmManager == null) return;
+
+            // Cancel all existing per-day alarms first
+            foreach (DayOfWeek day in System.Enum.GetValues<DayOfWeek>())
+            {
+                var cancelIntent = BuildReminderIntent((int)day);
+                var cancelPi = PendingIntent.GetBroadcast(this, (int)day, cancelIntent,
+                    PendingIntentFlags.NoCreate | PendingIntentFlags.Immutable);
+                if (cancelPi != null)
+                    alarmManager.Cancel(cancelPi);
+            }
+
+            if (!enabled || daysMask == 0) return;
+
+            var triggers = ReminderScheduler.GetScheduledTriggers(daysMask, hour, minute, DateTime.Now);
+            long weekMs = 7L * 24 * 60 * 60 * 1000;
+            foreach (var (day, triggerUtc) in triggers)
+            {
+                var pi = PendingIntent.GetBroadcast(this, (int)day, BuildReminderIntent((int)day),
+                    PendingIntentFlags.UpdateCurrent | PendingIntentFlags.Immutable);
+                if (pi == null) continue;
+                var triggerMs = new DateTimeOffset(triggerUtc).ToUnixTimeMilliseconds();
+                alarmManager.SetRepeating(AlarmType.RtcWakeup, triggerMs, weekMs, pi);
+            }
+        }
+
+        private Intent BuildReminderIntent(int dayCode)
+        {
+            var intent = new Intent("com.leiyu.GymJournal.ACTION_DAILY_REMINDER");
+            intent.SetClass(this, typeof(ReminderReceiver));
+            intent.PutExtra("day_code", dayCode);
+            return intent;
         }
 
         private void UpdateBottomNavLabelStyles()
