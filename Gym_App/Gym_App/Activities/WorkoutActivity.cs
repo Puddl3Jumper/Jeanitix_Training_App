@@ -31,7 +31,6 @@ namespace Gym_App.Activities
         private readonly CameraFrameMotionAnalyzer _motionAnalyzer = new();
         private readonly object _frameLock = new();
 
-        private MediaPipePoseMotionAnalyzer? _poseMotionAnalyzer;
         private SurfaceView? _cameraPreview;
         private ISurfaceHolder? _surfaceHolder;
         private HardwareCamera? _camera;
@@ -104,8 +103,7 @@ namespace Gym_App.Activities
             SetContentView(Resource.Layout.activity_workout);
 
             _database = new GymDatabase();
-            _poseMotionAnalyzer = MediaPipePoseMotionAnalyzer.TryCreate(this);
-            _motionSourceText = _poseMotionAnalyzer == null ? "Camera" : "MediaPipe";
+            _motionSourceText = "Camera";
             InitializeWorkoutSession();
 
             BindViews();
@@ -125,8 +123,6 @@ namespace Gym_App.Activities
             StopWorkoutTimerUi();
             StopEmbeddedCameraCounting();
             StopCameraPreview();
-            _poseMotionAnalyzer?.Dispose();
-            _poseMotionAnalyzer = null;
             SaveTodayMuscleTimes();
             base.OnDestroy();
         }
@@ -497,7 +493,6 @@ namespace Gym_App.Activities
             lock (_frameLock)
             {
                 _motionAnalyzer.Reset();
-                _poseMotionAnalyzer?.Reset();
                 _loopDetector.Reset();
                 _lastMediaPipeFrameMs = 0;
             }
@@ -527,24 +522,6 @@ namespace Gym_App.Activities
 
         private double? TryAnalyzeCameraMotionScore(byte[] data, int width, int height)
         {
-            if (_poseMotionAnalyzer != null)
-            {
-                var timestampMs = SystemClock.ElapsedRealtime();
-                if (timestampMs - _lastMediaPipeFrameMs < 150)
-                    return null;
-
-                _lastMediaPipeFrameMs = timestampMs;
-                using var bitmap = DecodeNv21Frame(data, width, height);
-                if (bitmap == null)
-                    return 0d;
-
-                var sample = _poseMotionAnalyzer.Analyze(bitmap, timestampMs, GetExerciseForMuscle(_selectedFocus), _selectedFocus);
-                _motionSourceText = sample.HasPose
-                    ? "MediaPipe"
-                    : "No body";
-                return sample.HasPose ? sample.MotionScore : 0d;
-            }
-
             _motionSourceText = "Camera";
             return _motionAnalyzer.AnalyzeNv21Frame(data, width, height);
         }
@@ -586,12 +563,7 @@ namespace Gym_App.Activities
             }
         }
 
-        private string BuildCameraReadyStatus()
-        {
-            return _poseMotionAnalyzer == null
-                ? "Ready"
-                : "MediaPipe ready";
-        }
+        private string BuildCameraReadyStatus() => "Ready";
 
         private void UpdateCameraStatus(string message)
         {
@@ -800,7 +772,6 @@ namespace Gym_App.Activities
             {
                 _loopDetector.Reset();
                 _motionAnalyzer.Reset();
-                _poseMotionAnalyzer?.Reset();
                 _lastMediaPipeFrameMs = 0;
             }
 
