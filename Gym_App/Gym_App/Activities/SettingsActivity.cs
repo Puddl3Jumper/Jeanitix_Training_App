@@ -296,7 +296,21 @@ namespace Gym_App.Activities
             var reminderMinute   = reminderPrefs?.GetInt("minute", 0) ?? 0;
 
             if (reminderSwitch != null)
+            {
                 reminderSwitch.Checked = reminderEnabled;
+
+                // Gold track when on, dim when off; white thumb always
+                var gold = new Color(GetColor(Resource.Color.color_primary));
+                var dimTrack = new Color(0x44, 0x44, 0x55, 0xFF);
+                var trackStates = new Android.Content.Res.ColorStateList(
+                    new[] { new[] { Android.Resource.Attribute.StateChecked }, Array.Empty<int>() },
+                    new[] { (int)gold, (int)dimTrack });
+                var thumbStates = new Android.Content.Res.ColorStateList(
+                    new[] { new[] { Android.Resource.Attribute.StateChecked }, Array.Empty<int>() },
+                    new[] { (int)Color.White, (int)Color.White });
+                reminderSwitch.TrackTintList = trackStates;
+                reminderSwitch.ThumbTintList = thumbStates;
+            }
 
             if (reminderTimeText != null)
                 reminderTimeText.Text = $"{reminderHour:D2}:{reminderMinute:D2}";
@@ -305,8 +319,11 @@ namespace Gym_App.Activities
             {
                 reminderPreviewButton.Click += (s, e) =>
                 {
+                    // Use StartService (not StartForegroundService) for preview
+                    // because the app is already in the foreground.
                     var svcIntent = new Intent(this, typeof(ReminderService));
-                    StartForegroundService(svcIntent);
+                    svcIntent.PutExtra("preview", true);
+                    StartService(svcIntent);
                     Toast.MakeText(this, "Playing preview…", ToastLength.Short)?.Show();
                 };
             }
