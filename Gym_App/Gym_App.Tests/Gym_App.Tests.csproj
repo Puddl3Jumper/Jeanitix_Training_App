@@ -21,5 +21,6 @@
     <Compile Include="..\Gym_App\Models\WorkoutSet.cs" Link="Models\WorkoutSet.cs" />
     <Compile Include="..\Gym_App\Services\CameraLoopDetection.cs" Link="Services\CameraLoopDetection.cs" />
     <Compile Include="..\Gym_App\Services\GymProximityMath.cs" Link="Services\GymProximityMath.cs" />
+    <Compile Include="..\Gym_App\Services\ReminderScheduler.cs" Link="Services\ReminderScheduler.cs" />
   </ItemGroup>
 </Project>

@@ -1,10 +1,14 @@
-<Project Sdk="Microsoft.NET.Sdk.Maui">
+<!--
+  NOTE: This project is being migrated to .NET MAUI for cross-platform (Android + iOS) support.
+  When the maui-core workload is available in your build environment, change the Sdk to
+  "Microsoft.NET.Sdk.Maui", restore the TargetFrameworks to "net10.0-android;net10.0-ios",
+  remove the Compile Exclude items at the bottom, and remove UseMaui/SingleProject conditionals.
+-->
+<Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
-    <TargetFrameworks>net10.0-android;net10.0-ios</TargetFrameworks>
+    <TargetFramework>net10.0-android</TargetFramework>
     <OutputType>Exe</OutputType>
     <RootNamespace>Gym_App</RootNamespace>
-    <UseMaui>true</UseMaui>
-    <SingleProject>true</SingleProject>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationId>com.leiyu.GymJournal</ApplicationId>
@@ -25,7 +29,7 @@
   </PropertyGroup>
 
   <!-- Android-specific properties -->
-  <PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
+  <PropertyGroup>
     <SupportedOSPlatformVersion>24</SupportedOSPlatformVersion>
     <!-- Android versionCode must be a plain integer (no nested MSBuild::Add/Multiply — XA0003). -->
     <ApplicationVersion Condition="'$(Configuration)' == 'Debug'">1</ApplicationVersion>
@@ -80,5 +84,27 @@
     <PackageReference Include="Xamarin.GooglePlayServices.Location" Version="121.3.0.9" />
     <GoogleServicesJson Include="google-services.json" />
     <AndroidAsset Include="google-services.json" />
+  </ItemGroup>
+
+  <!--
+    Exclude iOS platform files and MAUI bootstrap from this Android-only build.
+    These are compiled when the project SDK is upgraded to Microsoft.NET.Sdk.Maui
+    with TargetFrameworks set to "net10.0-android;net10.0-ios".
+  -->
+  <ItemGroup>
+    <Compile Remove="Platforms\iOS\**\*.cs" />
+    <Compile Remove="Platforms\Android\MainActivity.cs" />
+    <Compile Remove="Platforms\Android\MainApplication.cs" />
+    <Compile Remove="MauiProgram.cs" />
+    <Compile Remove="App.xaml.cs" />
+    <Compile Remove="AppShell.xaml.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Platforms\iOS\**\*.cs" />
+    <None Include="Platforms\Android\MainActivity.cs" />
+    <None Include="Platforms\Android\MainApplication.cs" />
+    <None Include="MauiProgram.cs" />
+    <None Include="App.xaml.cs" />
+    <None Include="AppShell.xaml.cs" />
   </ItemGroup>
 </Project>
