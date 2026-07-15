@@ -7,8 +7,8 @@ using Gym_App.Activities;
 
 namespace Gym_App
 {
-    [Activity(Label = "@string/app_name", MainLauncher = true)]
-    public class MainActivity : Activity
+    [Activity(Label = "@string/app_name")]
+    public class WelcomeActivity : Activity
     {
         private View? _startWorkoutButton;
         private View? _continueWorkoutButton;
