@@ -72,7 +72,7 @@ namespace Gym_App.Data
             MigrateLegacySessionsToCurrentUser();
             InitializeDefaultExercises();
 
-#if ANDROID
+#if ANDROID || IOS
             WorkoutCloudSyncService.TryScheduleInitialPull(this);
 #endif
         }
@@ -187,6 +187,16 @@ namespace Gym_App.Data
             {
                 var context = Application.Context;
                 var email = context == null ? null : AuthSessionStore.ReadEmail(context);
+                return NormalizeUserKey(email);
+            }
+            catch
+            {
+                return GuestUserKey;
+            }
+#elif IOS
+            try
+            {
+                var email = AuthSessionStore.ReadEmail();
                 return NormalizeUserKey(email);
             }
             catch
@@ -629,6 +639,28 @@ namespace Gym_App.Data
             {
                 return false;
             }
+#elif IOS
+            try
+            {
+                // On iOS, write the CSV to the app's Documents directory, which is accessible
+                // via the Files app when the app declares UIFileSharingEnabled in Info.plist.
+                var docsDir = Foundation.NSFileManager.DefaultManager.GetUrls(
+                    Foundation.NSSearchPathDirectory.DocumentDirectory,
+                    Foundation.NSSearchPathDomain.UserDomain).FirstOrDefault()?.Path;
+
+                if (string.IsNullOrWhiteSpace(docsDir))
+                    return false;
+
+                Directory.CreateDirectory(docsDir);
+                var filePath = Path.Combine(docsDir, fileName);
+                File.WriteAllText(filePath, csvContent);
+                exportedPath = filePath;
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
 #else
             return false;
 #endif
@@ -694,7 +726,7 @@ namespace Gym_App.Data
             }
 
             CompleteWorkout(session.Id);
-#if ANDROID
+#if ANDROID || IOS
             AdvanceVisitPlanForNextSession();
 #endif
             return GetWorkoutSession(session.Id)!;
@@ -827,6 +859,9 @@ namespace Gym_App.Data
             // so skipping a day leaves the plan exactly where the user left off.
             var prefs = Android.App.Application.Context.GetSharedPreferences(TrainingRoutinePrefsName, FileCreationMode.Private);
             return prefs.GetInt(TrainingRoutineOffsetKey, 0);
+#elif IOS
+            return (int)Foundation.NSUserDefaults.StandardUserDefaults
+                .IntForKey(TrainingRoutinePrefsName + "." + TrainingRoutineOffsetKey);
 #else
             return 0;
 #endif
@@ -852,12 +887,28 @@ namespace Gym_App.Data
             var upperIndex = GetUpperPairIndexForDay(dayIndex);
             var lowerIndex = ResolveLockedLowerIndex(prefs, Random.Shared);
             return BuildDailyWorkoutGroups(upperIndex, lowerIndex);
+#elif IOS
+            var defaults = Foundation.NSUserDefaults.StandardUserDefaults;
+            var iosOffsetKey = TrainingRoutinePrefsName + "." + TrainingRoutineOffsetKey;
+            var dayIndex = (int)defaults.IntForKey(iosOffsetKey);
+
+            // After a long break (no completed workout for more than 3 days) restart the
+            // weekly schedule from Day 1 (Biceps/Triceps) instead of resuming mid-cycle.
+            if (GetUpperPairIndexForDay(dayIndex) != 0
+                && ShouldResetRotationForInactivity(GetLastCompletedWorkoutTimestamp(), DateTime.Now))
+            {
+                dayIndex = 0;
+                defaults.SetInt(0, iosOffsetKey);
+            }
+
+            var upperIndex = GetUpperPairIndexForDay(dayIndex);
+            var lowerIndex = ResolveLockedLowerIndexIOS(defaults, Random.Shared);
+            return BuildDailyWorkoutGroups(upperIndex, lowerIndex);
 #else
             return BuildDailyWorkoutGroups(0, 0);
 #endif
         }
 
-#if ANDROID
         /// <summary>Most recent completed workout time for the current user, if any.</summary>
         private DateTime? GetLastCompletedWorkoutTimestamp()
         {
@@ -873,7 +924,6 @@ namespace Gym_App.Data
 
             return latest;
         }
-#endif
 
 #if ANDROID
         /// <summary>
@@ -940,6 +990,77 @@ namespace Gym_App.Data
             prefs.Edit()
                 .PutInt(TrainingRoutineLowerMuscleIndexKey, selected)
                 .Apply();
+            return selected;
+        }
+#elif IOS
+        /// <summary>
+        /// After Finish Workout: advance the training-day counter and pick a new lower-body
+        /// movement that differs from the previous one. iOS version uses NSUserDefaults.
+        /// </summary>
+        public void AdvanceVisitPlanForNextSession()
+        {
+            var defaults = Foundation.NSUserDefaults.StandardUserDefaults;
+            var lowerKey  = TrainingRoutinePrefsName + "." + TrainingRoutineLowerMuscleIndexKey;
+            var offsetKey = TrainingRoutinePrefsName + "." + TrainingRoutineOffsetKey;
+            var tsKey     = TrainingRoutinePrefsName + "." + TrainingRoutineTimestampKey;
+
+            var previousLower = defaults.ValueForKey(new Foundation.NSString(lowerKey)) != null
+                ? (int)defaults.IntForKey(lowerKey)
+                : -1;
+            var selectedLower = SelectLowerIndexDifferentFromPrevious(previousLower, Random.Shared);
+            var offset = (int)defaults.IntForKey(offsetKey);
+
+            defaults.SetInt(selectedLower, lowerKey);
+            defaults.SetInt(offset + 1, offsetKey);
+            defaults.SetString(DateTime.Now.ToString("o"), tsKey);
+        }
+
+        /// <summary>
+        /// Skips the current upper-body rotation, advancing to the next day's upper-body
+        /// pair without recording a completed workout. iOS version uses NSUserDefaults.
+        /// </summary>
+        public void SkipUpperBodyRotation()
+        {
+            var defaults  = Foundation.NSUserDefaults.StandardUserDefaults;
+            var offsetKey = TrainingRoutinePrefsName + "." + TrainingRoutineOffsetKey;
+            var offset    = (int)defaults.IntForKey(offsetKey);
+            defaults.SetInt(offset + 1, offsetKey);
+        }
+
+        /// <summary>
+        /// Skips the current lower-body rotation, picking a new lower-body movement
+        /// different from the current one without recording a completed workout. iOS version.
+        /// </summary>
+        public void SkipLowerBodyRotation()
+        {
+            var defaults  = Foundation.NSUserDefaults.StandardUserDefaults;
+            var lowerKey  = TrainingRoutinePrefsName + "." + TrainingRoutineLowerMuscleIndexKey;
+
+            var previousLower = defaults.ValueForKey(new Foundation.NSString(lowerKey)) != null
+                ? (int)defaults.IntForKey(lowerKey)
+                : -1;
+            var selectedLower = SelectLowerIndexDifferentFromPrevious(previousLower, Random.Shared);
+            defaults.SetInt(selectedLower, lowerKey);
+        }
+
+        /// <summary>
+        /// Returns the locked lower-body movement for the current day using NSUserDefaults.
+        /// The very first session picks one at random and locks it in.
+        /// </summary>
+        private static int ResolveLockedLowerIndexIOS(Foundation.NSUserDefaults defaults, Random random)
+        {
+            var lowerKey = TrainingRoutinePrefsName + "." + TrainingRoutineLowerMuscleIndexKey;
+
+            // ValueForKey returns null when the key has never been set (distinguishes from stored 0).
+            if (defaults.ValueForKey(new Foundation.NSString(lowerKey)) != null)
+            {
+                var storedLower = (int)defaults.IntForKey(lowerKey);
+                if (storedLower >= 0 && storedLower < LowerBodyMuscles.Length)
+                    return storedLower;
+            }
+
+            var selected = LowerBodyMuscles.Length <= 0 ? 0 : random.Next(LowerBodyMuscles.Length);
+            defaults.SetInt(selected, lowerKey);
             return selected;
         }
 #endif
@@ -1049,7 +1170,7 @@ namespace Gym_App.Data
                 var json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
                 File.WriteAllText(Path.Combine(_dataPath, "gym_data.json"), json);
 
-#if ANDROID
+#if ANDROID || IOS
                 if (triggerCloudSync && !IsGuestUser)
                 {
                     WorkoutCloudSyncService.NotifyLocalWorkoutsChanged(this);

@@ -1,8 +1,14 @@
+<!--
+  NOTE: This project is being migrated to .NET MAUI for cross-platform (Android + iOS) support.
+  When the maui-core workload is available in your build environment, change the Sdk to
+  "Microsoft.NET.Sdk.Maui", restore the TargetFrameworks to "net10.0-android;net10.0-ios",
+  remove the Compile Exclude items at the bottom, and remove UseMaui/SingleProject conditionals.
+-->
 <Project Sdk="Microsoft.NET.Sdk">
   <PropertyGroup>
     <TargetFramework>net10.0-android</TargetFramework>
-    <SupportedOSPlatformVersion>24</SupportedOSPlatformVersion>
     <OutputType>Exe</OutputType>
+    <RootNamespace>Gym_App</RootNamespace>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
     <ApplicationId>com.leiyu.GymJournal</ApplicationId>
@@ -19,19 +25,27 @@
     <VersionPatch Condition="'$(_StoredStamp)' == '$(_CurrentStamp)'">$([MSBuild]::Add($(_StoredPatch), 1))</VersionPatch>
     <VersionPatch Condition="'$(_StoredStamp)' != '$(_CurrentStamp)'">1</VersionPatch>
     <ApplicationDisplayVersion>$(VersionMajor).$(VersionMinor).$(VersionPatch)</ApplicationDisplayVersion>
+    <Platforms>AnyCPU;ARM64</Platforms>
   </PropertyGroup>
 
-  <!-- Android versionCode must be a plain integer (no nested MSBuild::Add/Multiply — XA0003). -->
+  <!-- Android-specific properties -->
   <PropertyGroup>
+    <SupportedOSPlatformVersion>24</SupportedOSPlatformVersion>
+    <!-- Android versionCode must be a plain integer (no nested MSBuild::Add/Multiply — XA0003). -->
     <ApplicationVersion Condition="'$(Configuration)' == 'Debug'">1</ApplicationVersion>
     <ApplicationVersion Condition="'$(Configuration)' != 'Debug'">$([System.DateTimeOffset]::UtcNow.ToUnixTimeSeconds())</ApplicationVersion>
-    <AndroidManifest>AndroidManifest.xml</AndroidManifest>
+    <AndroidManifest>Platforms\Android\AndroidManifest.xml</AndroidManifest>
     <AndroidEnableMultiDex>true</AndroidEnableMultiDex>
     <AndroidUseAapt2Daemon>false</AndroidUseAapt2Daemon>
     <AndroidAapt2CompileExtraArgs>--no-crunch</AndroidAapt2CompileExtraArgs>
     <AndroidUseIntermediateDesignerFile>true</AndroidUseIntermediateDesignerFile>
     <TrimMode>copy</TrimMode>
-    <Platforms>AnyCPU;ARM64</Platforms>
+  </PropertyGroup>
+
+  <!-- iOS-specific properties -->
+  <PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
+    <SupportedOSPlatformVersion>15.0</SupportedOSPlatformVersion>
+    <RuntimeIdentifier Condition="'$(Configuration)' == 'Release'">ios-arm64</RuntimeIdentifier>
   </PropertyGroup>
 
   <Import Project="Versioning.targets" />
@@ -40,7 +54,8 @@
     <ApplicationVersion>$(GITHUB_RUN_NUMBER)</ApplicationVersion>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)' == 'Release'">
+  <!-- Android Release build optimisations -->
+  <PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android' And '$(Configuration)' == 'Release'">
     <PublishTrimmed>true</PublishTrimmed>
     <TrimMode>partial</TrimMode>
     <AndroidLinkMode>SdkOnly</AndroidLinkMode>
@@ -51,13 +66,15 @@
     <RuntimeIdentifiers>android-arm64</RuntimeIdentifiers>
   </PropertyGroup>
 
-  <PropertyGroup Condition="'$(Configuration)' == 'Debug'">
+  <!-- Android Debug build settings -->
+  <PropertyGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android' And '$(Configuration)' == 'Debug'">
     <EmbedAssembliesIntoApk>true</EmbedAssembliesIntoApk>
     <!-- arm64 only — matches Apple Silicon emulator and drops x86_64 libs (~40 MB) -->
     <RuntimeIdentifiers>android-arm64</RuntimeIdentifiers>
   </PropertyGroup>
 
-  <ItemGroup>
+  <!-- Android-only NuGet packages -->
+  <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'android'">
     <!-- Align with transitive Lifecycle.Runtime 2.10.x (avoids NU1608 from Process 2.8.7.2). -->
     <PackageReference Include="Xamarin.AndroidX.Lifecycle.Process" Version="2.10.0.2" />
     <PackageReference Include="Xamarin.Google.Android.Material" Version="1.12.0.2" />
@@ -65,13 +82,42 @@
     <PackageReference Include="Xamarin.GooglePlayServices.Base" Version="118.10.0.1" />
     <PackageReference Include="Xamarin.GooglePlayServices.Auth" Version="121.5.1.1" />
     <PackageReference Include="Xamarin.GooglePlayServices.Location" Version="121.3.0.9" />
-  </ItemGroup>
-
-  <ItemGroup>
     <GoogleServicesJson Include="google-services.json" />
+    <AndroidAsset Include="google-services.json" />
   </ItemGroup>
 
+  <!--
+    Exclude iOS platform files and MAUI bootstrap from this Android-only build.
+    These are compiled when the project SDK is upgraded to Microsoft.NET.Sdk.Maui
+    with TargetFrameworks set to "net10.0-android;net10.0-ios".
+  -->
   <ItemGroup>
-    <AndroidAsset Include="google-services.json" />
+    <Compile Remove="Platforms\iOS\**\*.cs" />
+    <Compile Remove="Platforms\Android\MainActivity.cs" />
+    <Compile Remove="Platforms\Android\MainApplication.cs" />
+    <Compile Remove="MauiProgram.cs" />
+    <Compile Remove="App.xaml.cs" />
+    <Compile Remove="AppShell.xaml.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="Platforms\iOS\**\*.cs" />
+    <None Include="Platforms\iOS\GoogleService-Info.plist" />
+    <None Include="Platforms\Android\MainActivity.cs" />
+    <None Include="Platforms\Android\MainApplication.cs" />
+    <None Include="MauiProgram.cs" />
+    <None Include="App.xaml.cs" />
+    <None Include="AppShell.xaml.cs" />
+  </ItemGroup>
+
+  <!-- iOS-specific NuGet packages and bundle resources — active when TargetFramework is net10.0-ios -->
+  <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
+    <!--
+      GoogleService-Info.plist must be included as a BundleResource so it is embedded in the
+      .app bundle and can be read at runtime via NSBundle.MainBundle.PathForResource.
+      Replace the placeholder file with the real one downloaded from Firebase Console.
+    -->
+    <BundleResource Include="Platforms\iOS\GoogleService-Info.plist">
+      <LogicalName>GoogleService-Info.plist</LogicalName>
+    </BundleResource>
   </ItemGroup>
 </Project>

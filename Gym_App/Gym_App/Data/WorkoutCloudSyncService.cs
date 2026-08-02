@@ -4,6 +4,8 @@ using System.Text.Json;
 #if ANDROID
 using Android.App;
 using Android.Content;
+#elif IOS
+using Foundation;
 #endif
 using Gym_App.Models;
 
@@ -272,6 +274,261 @@ internal static class WorkoutCloudSyncService
             return;
 
         var idToken = await GetValidIdTokenAsync(context, cancellationToken).ConfigureAwait(false);
+        if (string.IsNullOrWhiteSpace(idToken))
+            return;
+
+        await PushLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            var payload = database.ExportWorkoutSyncPayload();
+            var json = JsonSerializer.Serialize(payload, JsonOptions);
+
+            var baseUrl = BuildDatabaseBaseUrl(projectId);
+            var url = $"{baseUrl}/users/{Uri.EscapeDataString(localId)}/workouts.json?auth={Uri.EscapeDataString(idToken)}";
+
+            using var content = new StringContent(json, Encoding.UTF8, "application/json");
+            using var response = await Http.PutAsync(url, content, cancellationToken).ConfigureAwait(false);
+            // Best effort: ignore errors.
+        }
+        finally
+        {
+            PushLock.Release();
+        }
+    }
+
+#elif IOS
+    // Key used in NSUserDefaults to track the last successfully applied cloud payload timestamp.
+    private const string KeyLastAppliedUpdatedAt = "workout_cloud_sync.last_applied_updated_at";
+
+    private static readonly HttpClient Http = new();
+    private static readonly JsonSerializerOptions JsonOptions = new()
+    {
+        PropertyNamingPolicy = JsonNamingPolicy.CamelCase,
+        PropertyNameCaseInsensitive = true,
+        WriteIndented = false
+    };
+
+    private static readonly SemaphoreSlim PullLock = new(1, 1);
+    private static readonly SemaphoreSlim PushLock = new(1, 1);
+
+    private static readonly object InitialPullGate = new();
+    private static string? _initialPullLocalId;
+    private static CancellationTokenSource? _pushDebounceCts;
+
+    internal static void TryScheduleInitialPull(GymDatabase database)
+    {
+        if (database == null)
+            return;
+
+        if (database.IsGuestUser)
+            return;
+
+        if (!TryGetSyncIdentifiers(out var localId, out _))
+            return;
+
+        lock (InitialPullGate)
+        {
+            if (string.Equals(_initialPullLocalId, localId, StringComparison.Ordinal))
+                return;
+
+            _initialPullLocalId = localId;
+        }
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await TryPullAndApplyAsync(database, CancellationToken.None).ConfigureAwait(false);
+            }
+            catch
+            {
+                // Best-effort only.
+            }
+        });
+    }
+
+    internal static void NotifyLocalWorkoutsChanged(GymDatabase database)
+    {
+        if (database == null)
+            return;
+
+        if (!TryGetSyncIdentifiers(out _, out _))
+            return;
+
+        _pushDebounceCts?.Cancel();
+        _pushDebounceCts = new CancellationTokenSource();
+        var token = _pushDebounceCts.Token;
+
+        _ = Task.Run(async () =>
+        {
+            try
+            {
+                await Task.Delay(TimeSpan.FromSeconds(1), token).ConfigureAwait(false);
+                await TryPushAsync(database, token).ConfigureAwait(false);
+            }
+            catch
+            {
+                // Best-effort only.
+            }
+        }, token);
+    }
+
+    private static bool TryGetSyncIdentifiers(out string localId, out string projectId)
+    {
+        localId = string.Empty;
+        projectId = string.Empty;
+
+        localId = AuthSessionStore.ReadLocalId() ?? string.Empty;
+        if (string.IsNullOrWhiteSpace(localId))
+            return false;
+
+        try
+        {
+            var config = FirebaseProjectConfig.LoadFromGoogleServiceInfoPlist();
+            projectId = config.ProjectId;
+            return !string.IsNullOrWhiteSpace(projectId);
+        }
+        catch
+        {
+            return false;
+        }
+    }
+
+    private static string BuildDatabaseBaseUrl(string projectId)
+    {
+        // Default RTDB instance host for new Firebase projects.
+        return $"https://{projectId}-default-rtdb.firebaseio.com";
+    }
+
+    private static async Task<string?> GetValidIdTokenAsync(CancellationToken cancellationToken)
+    {
+        var (refreshToken, idToken, expiresAtUtc) = AuthSessionStore.ReadSessionTokens();
+        if (!string.IsNullOrWhiteSpace(idToken) && expiresAtUtc.HasValue)
+        {
+            if (expiresAtUtc.Value > DateTimeOffset.UtcNow.AddMinutes(1))
+                return idToken;
+        }
+
+        if (string.IsNullOrWhiteSpace(refreshToken))
+            return null;
+
+        var config = FirebaseProjectConfig.LoadFromGoogleServiceInfoPlist();
+        var auth = new FirebaseAuthService(config);
+        var refreshed = await auth.RefreshIdTokenAsync(refreshToken, cancellationToken).ConfigureAwait(false);
+
+        var email = AuthSessionStore.ReadEmail() ?? string.Empty;
+        var stitched = refreshed with { Email = email };
+        AuthSessionStore.Save(stitched);
+        return stitched.IdToken;
+    }
+
+    internal static async Task TryPullAndApplyAsync(GymDatabase database, CancellationToken cancellationToken)
+    {
+        if (database == null)
+            return;
+
+        if (database.IsGuestUser)
+            return;
+
+        if (!TryGetSyncIdentifiers(out var localId, out var projectId))
+            return;
+
+        var idToken = await GetValidIdTokenAsync(cancellationToken).ConfigureAwait(false);
+        if (string.IsNullOrWhiteSpace(idToken))
+            return;
+
+        await PullLock.WaitAsync(cancellationToken).ConfigureAwait(false);
+        try
+        {
+            var defaults = NSUserDefaults.StandardUserDefaults;
+            var lastAppliedText = defaults.StringForKey(KeyLastAppliedUpdatedAt);
+            _ = long.TryParse(lastAppliedText, out var lastApplied);
+
+            var baseUrl = BuildDatabaseBaseUrl(projectId);
+            var url = $"{baseUrl}/users/{Uri.EscapeDataString(localId)}/workouts.json?auth={Uri.EscapeDataString(idToken)}";
+
+            using var response = await Http.GetAsync(url, cancellationToken).ConfigureAwait(false);
+            if (response.StatusCode == HttpStatusCode.NotFound)
+                return;
+
+            var body = await response.Content.ReadAsStringAsync(cancellationToken).ConfigureAwait(false);
+            if (!response.IsSuccessStatusCode)
+                return;
+
+            if (string.IsNullOrWhiteSpace(body) || body.Trim() == "null")
+                return;
+
+            WorkoutSyncPayload? payload;
+            try
+            {
+                payload = JsonSerializer.Deserialize<WorkoutSyncPayload>(body, JsonOptions);
+            }
+            catch
+            {
+                payload = null;
+            }
+
+            // Backward compatibility: older cloud data may be a raw array of sessions.
+            if (payload == null)
+            {
+                try
+                {
+                    var legacySessions = JsonSerializer.Deserialize<List<WorkoutSession>>(body, JsonOptions) ?? new List<WorkoutSession>();
+                    payload = new WorkoutSyncPayload
+                    {
+                        UpdatedAtUnixSeconds = 0,
+                        WorkoutSessions = legacySessions,
+                        NextWorkoutSessionId = 1,
+                        NextWorkoutExerciseId = 1,
+                        NextWorkoutSetId = 1
+                    };
+                }
+                catch
+                {
+                    return;
+                }
+            }
+
+            if (payload == null)
+                return;
+
+            // Some older payloads do not carry UpdatedAtUnixSeconds. In that case,
+            // apply once and stamp current time to avoid skipping valid remote logs.
+            var hasUpdatedAt = payload.UpdatedAtUnixSeconds > 0;
+            if (hasUpdatedAt && payload.UpdatedAtUnixSeconds <= lastApplied)
+                return;
+
+            if (!hasUpdatedAt && (payload.WorkoutSessions?.Count ?? 0) == 0)
+                return;
+
+            var applied = database.TryApplyRemoteWorkoutSync(payload);
+            if (!applied)
+                return;
+
+            var appliedUpdatedAt = hasUpdatedAt
+                ? payload.UpdatedAtUnixSeconds
+                : DateTimeOffset.UtcNow.ToUnixTimeSeconds();
+
+            defaults.SetString(appliedUpdatedAt.ToString(), KeyLastAppliedUpdatedAt);
+        }
+        finally
+        {
+            PullLock.Release();
+        }
+    }
+
+    internal static async Task TryPushAsync(GymDatabase database, CancellationToken cancellationToken)
+    {
+        if (database == null)
+            return;
+
+        if (database.IsGuestUser)
+            return;
+
+        if (!TryGetSyncIdentifiers(out var localId, out var projectId))
+            return;
+
+        var idToken = await GetValidIdTokenAsync(cancellationToken).ConfigureAwait(false);
         if (string.IsNullOrWhiteSpace(idToken))
             return;
 

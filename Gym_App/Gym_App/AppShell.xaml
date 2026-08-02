@@ -1,0 +1,7 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<Shell xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+       xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+       x:Class="Gym_App.AppShell"
+       Title="Jeanetix">
+    <!-- Pages will be registered here in Phase 4 (UI migration) -->
+</Shell>
