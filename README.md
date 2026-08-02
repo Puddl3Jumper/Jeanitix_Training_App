@@ -1,6 +1,6 @@
 # Jeanetix
 
-### Smart Gym Journal — Android Workout Tracker with AI Pose Detection
+### Smart Gym Journal — Android and IOS Workout Tracker with AI Pose Detection
 
 [![Platform](https://img.shields.io/badge/Platform-Android%207.0%2B-brightgreen)](https://www.android.com/)
 [![Framework](https://img.shields.io/badge/.NET-10.0--android-blue)](https://dotnet.microsoft.com/)
