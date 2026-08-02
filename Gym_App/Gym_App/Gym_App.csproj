@@ -101,10 +101,23 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="Platforms\iOS\**\*.cs" />
+    <None Include="Platforms\iOS\GoogleService-Info.plist" />
     <None Include="Platforms\Android\MainActivity.cs" />
     <None Include="Platforms\Android\MainApplication.cs" />
     <None Include="MauiProgram.cs" />
     <None Include="App.xaml.cs" />
     <None Include="AppShell.xaml.cs" />
+  </ItemGroup>
+
+  <!-- iOS-specific NuGet packages and bundle resources — active when TargetFramework is net10.0-ios -->
+  <ItemGroup Condition="$([MSBuild]::GetTargetPlatformIdentifier('$(TargetFramework)')) == 'ios'">
+    <!--
+      GoogleService-Info.plist must be included as a BundleResource so it is embedded in the
+      .app bundle and can be read at runtime via NSBundle.MainBundle.PathForResource.
+      Replace the placeholder file with the real one downloaded from Firebase Console.
+    -->
+    <BundleResource Include="Platforms\iOS\GoogleService-Info.plist">
+      <LogicalName>GoogleService-Info.plist</LogicalName>
+    </BundleResource>
   </ItemGroup>
 </Project>

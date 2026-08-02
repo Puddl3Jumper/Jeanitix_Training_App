@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<!--
+    PLACEHOLDER — replace this file with the real GoogleService-Info.plist downloaded from the
+    Firebase Console (Project settings → Your apps → iOS app → Download GoogleService-Info.plist).
+
+    Required keys used by this project:
+      PROJECT_ID   — Firebase project ID
+      BUNDLE_ID    — Must match CFBundleIdentifier in Info.plist (com.leiyu.GymJournal)
+      API_KEY      — Firebase Web API key
+      CLIENT_ID    — Google Sign-In client ID (optional; needed for Google auth)
+-->
+<plist version="1.0">
+<dict>
+    <key>PROJECT_ID</key>
+    <string>YOUR_FIREBASE_PROJECT_ID</string>
+    <key>BUNDLE_ID</key>
+    <string>com.leiyu.GymJournal</string>
+    <key>API_KEY</key>
+    <string>YOUR_FIREBASE_WEB_API_KEY</string>
+    <key>CLIENT_ID</key>
+    <string>YOUR_GOOGLE_SIGN_IN_CLIENT_ID</string>
+    <key>REVERSED_CLIENT_ID</key>
+    <string>YOUR_REVERSED_CLIENT_ID</string>
+    <key>GCM_SENDER_ID</key>
+    <string>YOUR_GCM_SENDER_ID</string>
+    <key>GOOGLE_APP_ID</key>
+    <string>YOUR_GOOGLE_APP_ID</string>
+</dict>
+</plist>
