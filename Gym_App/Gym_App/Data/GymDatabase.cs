@@ -72,7 +72,7 @@ namespace Gym_App.Data
             MigrateLegacySessionsToCurrentUser();
             InitializeDefaultExercises();
 
-#if ANDROID
+#if ANDROID || IOS
             WorkoutCloudSyncService.TryScheduleInitialPull(this);
 #endif
         }
@@ -187,6 +187,16 @@ namespace Gym_App.Data
             {
                 var context = Application.Context;
                 var email = context == null ? null : AuthSessionStore.ReadEmail(context);
+                return NormalizeUserKey(email);
+            }
+            catch
+            {
+                return GuestUserKey;
+            }
+#elif IOS
+            try
+            {
+                var email = AuthSessionStore.ReadEmail();
                 return NormalizeUserKey(email);
             }
             catch
@@ -629,6 +639,28 @@ namespace Gym_App.Data
             {
                 return false;
             }
+#elif IOS
+            try
+            {
+                // On iOS, write the CSV to the app's Documents directory, which is accessible
+                // via the Files app when the app declares UIFileSharingEnabled in Info.plist.
+                var docsDir = Foundation.NSFileManager.DefaultManager.GetUrls(
+                    Foundation.NSSearchPathDirectory.DocumentDirectory,
+                    Foundation.NSSearchPathDomain.UserDomain).FirstOrDefault()?.Path;
+
+                if (string.IsNullOrWhiteSpace(docsDir))
+                    return false;
+
+                Directory.CreateDirectory(docsDir);
+                var filePath = Path.Combine(docsDir, fileName);
+                File.WriteAllText(filePath, csvContent);
+                exportedPath = filePath;
+                return true;
+            }
+            catch
+            {
+                return false;
+            }
 #else
             return false;
 #endif
@@ -694,7 +726,7 @@ namespace Gym_App.Data
             }
 
             CompleteWorkout(session.Id);
-#if ANDROID
+#if ANDROID || IOS
             AdvanceVisitPlanForNextSession();
 #endif
             return GetWorkoutSession(session.Id)!;
@@ -1138,7 +1170,7 @@ namespace Gym_App.Data
                 var json = JsonSerializer.Serialize(data, new JsonSerializerOptions { WriteIndented = true });
                 File.WriteAllText(Path.Combine(_dataPath, "gym_data.json"), json);
 
-#if ANDROID
+#if ANDROID || IOS
                 if (triggerCloudSync && !IsGuestUser)
                 {
                     WorkoutCloudSyncService.NotifyLocalWorkoutsChanged(this);

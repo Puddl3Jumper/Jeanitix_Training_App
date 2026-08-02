@@ -49,5 +49,10 @@
         <string>location</string>
         <string>fetch</string>
     </array>
+    <!-- File sharing: allows the Documents folder to be visible in the Files app -->
+    <key>UIFileSharingEnabled</key>
+    <true/>
+    <key>LSSupportsOpeningDocumentsInPlace</key>
+    <true/>
 </dict>
 </plist>
