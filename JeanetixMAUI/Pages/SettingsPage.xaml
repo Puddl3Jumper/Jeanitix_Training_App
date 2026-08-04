@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="JeanetixMAUI.Pages.SettingsPage"
+             BackgroundColor="#1A1A1A"
+             Title="Settings">
+    <ScrollView>
+        <VerticalStackLayout Padding="24,16,24,80" Spacing="12">
+
+            <Label Text="Preferences" FontSize="13" TextColor="#9CA3AF" FontAttributes="Bold" Margin="0,0,0,4"/>
+
+            <Border BackgroundColor="#24242C" StrokeThickness="0" StrokeShape="RoundRectangle 14" Padding="16">
+                <VerticalStackLayout Spacing="16">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Grid.Column="0" Text="Weight Unit" FontSize="15" TextColor="White" VerticalOptions="Center"/>
+                        <Picker x:Name="UnitPicker" Grid.Column="1" TextColor="White" BackgroundColor="Transparent" Title="Unit" WidthRequest="80">
+                            <Picker.Items><x:String>kg</x:String><x:String>lb</x:String></Picker.Items>
+                        </Picker>
+                    </Grid>
+                    <BoxView Color="#2A2A3E" HeightRequest="1"/>
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Grid.Column="0" Text="Weekly Goal" FontSize="15" TextColor="White" VerticalOptions="Center"/>
+                        <Entry x:Name="GoalEntry" Grid.Column="1" TextColor="White" BackgroundColor="#0F0F1A"
+                               Keyboard="Numeric" WidthRequest="60" HorizontalTextAlignment="Center" HeightRequest="36"/>
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <Label Text="Data" FontSize="13" TextColor="#9CA3AF" FontAttributes="Bold" Margin="0,8,0,4"/>
+
+            <Border BackgroundColor="#24242C" StrokeThickness="0" StrokeShape="RoundRectangle 14" Padding="16">
+                <VerticalStackLayout Spacing="12">
+                    <Button Text="Export Workouts (CSV)" BackgroundColor="Transparent" TextColor="#D4AF37"
+                            FontSize="15" HorizontalOptions="Start" Padding="0" Clicked="OnExportClicked"/>
+                </VerticalStackLayout>
+            </Border>
+
+            <Button Text="Save Settings" BackgroundColor="#D4AF37" TextColor="#1F1600"
+                    FontAttributes="Bold" CornerRadius="12" HeightRequest="52" Margin="0,16,0,0"
+                    Clicked="OnSaveClicked"/>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

@@ -1,0 +1,48 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="JeanetixMAUI.Pages.ProgressPage"
+             BackgroundColor="#0F0F14"
+             Title="Progress">
+    <ScrollView>
+        <VerticalStackLayout Padding="20,16,20,80" Spacing="16">
+
+            <!-- Exercise Selector -->
+            <Border BackgroundColor="#1A1A2E" StrokeThickness="0" StrokeShape="RoundRectangle 16" Padding="16">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Exercise Progress" FontSize="13" FontAttributes="Bold" TextColor="#9CA3AF"/>
+                    <Picker x:Name="ExercisePicker" Title="Select exercise" TitleColor="#6B7280"
+                            TextColor="White" BackgroundColor="#0F0F1A"
+                            SelectedIndexChanged="OnExerciseSelected"/>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Progress Chart (weight bars) -->
+            <Border BackgroundColor="#1A1A2E" StrokeThickness="0" StrokeShape="RoundRectangle 16" Padding="16">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Max Weight Over Time" FontSize="13" FontAttributes="Bold" TextColor="#9CA3AF"/>
+                    <ScrollView Orientation="Horizontal">
+                        <HorizontalStackLayout x:Name="ProgressChart" HeightRequest="120" Spacing="6"/>
+                    </ScrollView>
+                    <Label x:Name="ChartEmptyLabel" Text="No data yet for this exercise."
+                           FontSize="13" TextColor="#6B7280" HorizontalOptions="Center" IsVisible="True"/>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- PR Summary -->
+            <Border BackgroundColor="#1A1A2E" StrokeThickness="0" StrokeShape="RoundRectangle 16" Padding="16">
+                <Grid ColumnDefinitions="*,*">
+                    <VerticalStackLayout Grid.Column="0" HorizontalOptions="Center">
+                        <Label x:Name="PrLabel" Text="—" FontSize="24" FontAttributes="Bold" TextColor="#10B981" HorizontalOptions="Center"/>
+                        <Label Text="Personal Record" FontSize="12" TextColor="#9CA3AF" HorizontalOptions="Center"/>
+                    </VerticalStackLayout>
+                    <VerticalStackLayout Grid.Column="1" HorizontalOptions="Center">
+                        <Label x:Name="LastLabel" Text="—" FontSize="24" FontAttributes="Bold" TextColor="White" HorizontalOptions="Center"/>
+                        <Label Text="Last Session" FontSize="12" TextColor="#9CA3AF" HorizontalOptions="Center"/>
+                    </VerticalStackLayout>
+                </Grid>
+            </Border>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

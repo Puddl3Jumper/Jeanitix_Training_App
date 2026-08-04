@@ -1,0 +1,48 @@
+{
+  "project_info": {
+    "project_number": "509759772251",
+    "firebase_url": "https://new-project-6f5fc-default-rtdb.firebaseio.com",
+    "project_id": "new-project-6f5fc",
+    "storage_bucket": "new-project-6f5fc.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:509759772251:android:589a74c436a6e9f387517e",
+        "android_client_info": {
+          "package_name": "com.leiyu.GymJournal"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "509759772251-lgghojmp468s7s4p208ehm60sjkaudje.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.leiyu.GymJournal",
+            "certificate_hash": "7c8bd1510cc87dd0d4c2e1c5e8c7450d200936c5"
+          }
+        },
+        {
+          "client_id": "509759772251-6m9eeeqb2ofi8d3jmh9uhsi85o0phsue.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyCTMfeVebg2jU-kwgNcyvzrYW3SMuc185A"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "509759772251-65miraqe00ml7hf0a49fhispimb0qesk.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

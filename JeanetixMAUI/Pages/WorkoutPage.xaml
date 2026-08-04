@@ -1,0 +1,82 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="JeanetixMAUI.Pages.WorkoutPage"
+             BackgroundColor="#1A1A1A"
+             Shell.NavBarIsVisible="False">
+    <Grid RowDefinitions="Auto,*,Auto" BackgroundColor="#1A1A1A">
+
+        <!-- Header -->
+        <Grid Grid.Row="0" ColumnDefinitions="*,Auto" Margin="20,56,20,16">
+            <VerticalStackLayout Grid.Column="0" Spacing="2">
+                <Label Text="Training" FontSize="24" FontAttributes="Bold" TextColor="White"/>
+                <Label x:Name="WorkoutNameLabel" Text="No active workout" FontSize="13" TextColor="#9CA3AF"/>
+            </VerticalStackLayout>
+            <VerticalStackLayout Grid.Column="1" HorizontalOptions="End" Spacing="2">
+                <Label x:Name="TimerLabel" Text="00:00" FontSize="28" FontAttributes="Bold"
+                       TextColor="#D4AF37" HorizontalOptions="End"/>
+                <Label Text="Duration" FontSize="11" TextColor="#6B7280" HorizontalOptions="End"/>
+            </VerticalStackLayout>
+        </Grid>
+
+        <!-- Content -->
+        <ScrollView Grid.Row="1">
+            <VerticalStackLayout Padding="20,16" Spacing="16">
+
+                <!-- Current Exercise Card -->
+                <Border BackgroundColor="#24242C" StrokeThickness="0" StrokeShape="RoundRectangle 16" Padding="16">
+                    <VerticalStackLayout Spacing="12">
+                        <Grid ColumnDefinitions="*,Auto">
+                            <Label Text="Current Exercise" FontSize="12" TextColor="#9CA3AF" FontAttributes="Bold" Grid.Column="0"/>
+                            <Button Text="+ Add Exercise" FontSize="13" TextColor="#D4AF37" BackgroundColor="Transparent"
+                                    Padding="0" Grid.Column="1" Clicked="OnAddExerciseClicked"/>
+                        </Grid>
+
+                        <Label x:Name="CurrentExerciseLabel" Text="Select an exercise to begin"
+                               FontSize="18" FontAttributes="Bold" TextColor="White"/>
+                        <Label x:Name="ExerciseMuscleLabel" Text="" FontSize="13" TextColor="#9CA3AF"/>
+
+                        <!-- Set Input -->
+                        <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                            <VerticalStackLayout Grid.Column="0" Spacing="4">
+                                <Label Text="Reps" TextColor="#9CA3AF" FontSize="12"/>
+                                <Entry x:Name="RepsEntry" Text="10" Keyboard="Numeric" TextColor="White"
+                                       BackgroundColor="#202026" HeightRequest="44" HorizontalTextAlignment="Center"/>
+                            </VerticalStackLayout>
+                            <VerticalStackLayout Grid.Column="1" Spacing="4">
+                                <Label Text="Weight (kg)" TextColor="#9CA3AF" FontSize="12"/>
+                                <Entry x:Name="WeightEntry" Text="0" Keyboard="Numeric" TextColor="White"
+                                       BackgroundColor="#202026" HeightRequest="44" HorizontalTextAlignment="Center"/>
+                            </VerticalStackLayout>
+                        </Grid>
+
+                        <Button Text="Log Set" BackgroundColor="#D4AF37" TextColor="#1F1600"
+                                FontAttributes="Bold" FontSize="15" CornerRadius="10" HeightRequest="48"
+                                Clicked="OnLogSetClicked"/>
+                    </VerticalStackLayout>
+                </Border>
+
+                <!-- Exercise List / Sets -->
+                <Border BackgroundColor="#24242C" StrokeThickness="0" StrokeShape="RoundRectangle 16" Padding="16">
+                    <VerticalStackLayout Spacing="8">
+                        <Label Text="Exercises &amp; Sets" FontSize="12" TextColor="#9CA3AF" FontAttributes="Bold"/>
+                        <VerticalStackLayout x:Name="ExerciseSetsContainer" Spacing="12"/>
+                        <Label x:Name="NoExercisesLabel" Text="No exercises logged yet." FontSize="14"
+                               TextColor="#6B7280" HorizontalOptions="Center" IsVisible="True"/>
+                    </VerticalStackLayout>
+                </Border>
+
+            </VerticalStackLayout>
+        </ScrollView>
+
+        <!-- Footer Buttons -->
+        <Grid Grid.Row="2" ColumnDefinitions="*,*" ColumnSpacing="12" Padding="20,12,20,28" BackgroundColor="#1A1A1A">
+            <Button Grid.Column="0" Text="Finish Workout" BackgroundColor="#D4AF37" TextColor="#1F1600"
+                    FontAttributes="Bold" CornerRadius="12" HeightRequest="52" Clicked="OnFinishWorkoutClicked"/>
+            <Button Grid.Column="1" Text="History" BackgroundColor="#24242C" TextColor="#E0E0E0"
+                    BorderColor="#49454F" BorderWidth="1" CornerRadius="12" HeightRequest="52"
+                    Clicked="OnHistoryClicked"/>
+        </Grid>
+
+    </Grid>
+</ContentPage>

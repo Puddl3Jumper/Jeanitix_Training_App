@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<Shell
+    x:Class="JeanetixMAUI.AppShell"
+    xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+    xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+    xmlns:pages="clr-namespace:JeanetixMAUI.Pages"
+    Shell.NavBarIsVisible="False"
+    Shell.TabBarBackgroundColor="#1A1A1A"
+    Shell.TabBarForegroundColor="#D4AF37"
+    Shell.TabBarUnselectedColor="#9E9E9E"
+    Shell.TabBarTitleColor="#D4AF37"
+    BackgroundColor="#1A1A1A">
+
+    <TabBar
+        Shell.TabBarBackgroundColor="#1A1A1A"
+        Shell.TabBarForegroundColor="#D4AF37"
+        Shell.TabBarUnselectedColor="#9E9E9E"
+        Shell.TabBarTitleColor="#D4AF37">
+        <ShellContent Title="Home" Icon="tab_home" ContentTemplate="{DataTemplate pages:HomePage}" Route="HomePage"/>
+        <ShellContent Title="Workout" Icon="tab_workout" ContentTemplate="{DataTemplate pages:WorkoutPage}" Route="WorkoutPage"/>
+        <ShellContent Title="History" Icon="tab_history" ContentTemplate="{DataTemplate pages:HistoryPage}" Route="HistoryPage"/>
+        <ShellContent Title="Profile" Icon="tab_profile" ContentTemplate="{DataTemplate pages:ProfilePage}" Route="ProfilePage"/>
+    </TabBar>
+
+</Shell>

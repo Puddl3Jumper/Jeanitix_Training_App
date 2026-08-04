@@ -1,0 +1,104 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="JeanetixMAUI.Pages.HomePage"
+             BackgroundColor="#1A1A1A"
+             Shell.NavBarIsVisible="False">
+    <Grid BackgroundColor="#1A1A1A">
+    <ScrollView>
+        <VerticalStackLayout Padding="20,56,20,40" Spacing="16">
+
+            <!-- Welcome Header -->
+            <Label x:Name="WelcomeLabel" Text="Welcome!" FontSize="24" FontAttributes="Bold" TextColor="White" Margin="0,0,0,8"/>
+
+            <!-- Today's Plan Card -->
+            <Border BackgroundColor="#24242C" StrokeThickness="0" StrokeShape="RoundRectangle 16" Padding="16">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Today's Plan" FontSize="13" FontAttributes="Bold" TextColor="#E0E0E0"/>
+
+                    <Grid ColumnDefinitions="*,*" ColumnSpacing="12">
+                        <!-- Upper Body -->
+                        <Border Grid.Column="0" BackgroundColor="#202026" StrokeThickness="1.5"
+                                Stroke="#D4AF37" StrokeShape="RoundRectangle 12" Padding="12">
+                            <VerticalStackLayout Spacing="6">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <Label Grid.Column="0" Text="UPPER" FontSize="10" TextColor="#6B7280"
+                                           FontAttributes="Bold" VerticalOptions="Center"/>
+                                    <Button x:Name="SkipUpperBtn" Grid.Column="1" Text="Skip" FontSize="10" FontAttributes="Bold" TextColor="#D4AF37"
+                                            BackgroundColor="#2E2A1C" BorderColor="#D4AF37" BorderWidth="1" CornerRadius="9"
+                                            Padding="9,0" HeightRequest="22" HorizontalOptions="End" Clicked="OnSkipUpperClicked"/>
+                                </Grid>
+                                <Label x:Name="UpperBodyLabel" Text="Biceps / Triceps" FontSize="17" TextColor="White" FontAttributes="Bold"/>
+                            </VerticalStackLayout>
+                        </Border>
+                        <!-- Lower Body -->
+                        <Border Grid.Column="1" BackgroundColor="#202026" StrokeThickness="1.5"
+                                Stroke="#D4AF37" StrokeShape="RoundRectangle 12" Padding="12">
+                            <VerticalStackLayout Spacing="6">
+                                <Grid ColumnDefinitions="*,Auto">
+                                    <Label Grid.Column="0" Text="LOWER" FontSize="10" TextColor="#6B7280"
+                                           FontAttributes="Bold" VerticalOptions="Center"/>
+                                    <Button x:Name="SkipLowerBtn" Grid.Column="1" Text="Skip" FontSize="10" FontAttributes="Bold" TextColor="#D4AF37"
+                                            BackgroundColor="#2E2A1C" BorderColor="#D4AF37" BorderWidth="1" CornerRadius="9"
+                                            Padding="9,0" HeightRequest="22" HorizontalOptions="End" Clicked="OnSkipLowerClicked"/>
+                                </Grid>
+                                <Label x:Name="LowerBodyLabel" Text="Legs" FontSize="17" TextColor="White" FontAttributes="Bold"/>
+                            </VerticalStackLayout>
+                        </Border>
+                    </Grid>
+
+                    <Button Text="Start Workout" BackgroundColor="#D4AF37" TextColor="#1F1600"
+                            FontAttributes="Bold" FontSize="16" CornerRadius="12" HeightRequest="52"
+                            Clicked="OnStartWorkoutClicked"/>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Weekly Stats Card -->
+            <Border BackgroundColor="#24242C" StrokeThickness="0" StrokeShape="RoundRectangle 16" Padding="16">
+                <VerticalStackLayout Spacing="12">
+                    <Grid ColumnDefinitions="*,Auto">
+                        <Label Text="This Week" FontSize="13" FontAttributes="Bold" TextColor="#9CA3AF" Grid.Column="0"/>
+                        <Label x:Name="WeekGoalLabel" Text="" FontSize="12" TextColor="#6B7280" Grid.Column="1"/>
+                    </Grid>
+
+                    <!-- Day bars -->
+                    <Grid x:Name="WeeklyChartGrid" ColumnDefinitions="*,*,*,*,*,*,*" HeightRequest="80" ColumnSpacing="4"/>
+
+                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="12">
+                        <VerticalStackLayout Grid.Column="0" HorizontalOptions="Center">
+                            <Label x:Name="WorkoutsThisWeekLabel" Text="0" FontSize="22" FontAttributes="Bold" TextColor="White" HorizontalOptions="Center"/>
+                            <Label Text="workouts" FontSize="11" TextColor="#9CA3AF" HorizontalOptions="Center"/>
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" HorizontalOptions="Center">
+                            <Label x:Name="AvgMinutesLabel" Text="0" FontSize="22" FontAttributes="Bold" TextColor="White" HorizontalOptions="Center"/>
+                            <Label Text="min/day avg" FontSize="11" TextColor="#9CA3AF" HorizontalOptions="Center"/>
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="2" HorizontalOptions="Center">
+                            <Label x:Name="GoalDaysLabel" Text="0" FontSize="22" FontAttributes="Bold" TextColor="#D4AF37" HorizontalOptions="Center"/>
+                            <Label Text="goal days" FontSize="11" TextColor="#9CA3AF" HorizontalOptions="Center"/>
+                        </VerticalStackLayout>
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Today's Exercises Card -->
+            <Border BackgroundColor="#24242C" StrokeThickness="0" StrokeShape="RoundRectangle 16" Padding="16">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Today's Activity" FontSize="13" FontAttributes="Bold" TextColor="#9CA3AF"/>
+                    <VerticalStackLayout x:Name="TodayExercisesContainer" Spacing="8"/>
+                    <Label x:Name="EmptyStateLabel" Text="No workouts today yet.\nTap Start Workout to begin!"
+                           TextColor="#6B7280" FontSize="14" HorizontalOptions="Center"
+                           HorizontalTextAlignment="Center" IsVisible="False" Margin="0,8"/>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Insight -->
+            <Border BackgroundColor="#24242C" StrokeThickness="0" StrokeShape="RoundRectangle 16" Padding="16">
+                <Label x:Name="InsightLabel" Text="🌟 Start your first workout to unlock personalized insights."
+                       TextColor="#9CA3AF" FontSize="13" LineBreakMode="WordWrap"/>
+            </Border>
+
+        </VerticalStackLayout>
+    </ScrollView>
+    </Grid>
+</ContentPage>

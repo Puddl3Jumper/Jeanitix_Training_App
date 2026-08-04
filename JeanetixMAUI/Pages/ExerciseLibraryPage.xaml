@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="JeanetixMAUI.Pages.ExerciseLibraryPage"
+             BackgroundColor="#0F0F14"
+             Title="Exercise Library">
+    <Grid RowDefinitions="Auto,Auto,*">
+        <!-- Search -->
+        <SearchBar x:Name="SearchBar" Grid.Row="0" Placeholder="Search exercises…"
+                   PlaceholderColor="#6B7280" TextColor="White" BackgroundColor="#1A1A2E"
+                   Margin="16,8" TextChanged="OnSearchChanged"/>
+
+        <!-- Muscle filter -->
+        <ScrollView Grid.Row="1" Orientation="Horizontal" Margin="0,0,0,8">
+            <HorizontalStackLayout x:Name="FilterRow" Padding="16,0" Spacing="8"/>
+        </ScrollView>
+
+        <!-- List -->
+        <ScrollView Grid.Row="2">
+            <VerticalStackLayout x:Name="ExerciseList" Padding="16,0,16,80" Spacing="8"/>
+        </ScrollView>
+    </Grid>
+</ContentPage>

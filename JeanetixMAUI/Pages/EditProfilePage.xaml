@@ -1,0 +1,25 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="JeanetixMAUI.Pages.EditProfilePage"
+             BackgroundColor="#1A1A1A"
+             Title="Edit Profile">
+    <ScrollView>
+        <VerticalStackLayout Padding="24,16,24,80" Spacing="16">
+            <Label Text="Full Name" TextColor="#9CA3AF" FontSize="13"/>
+            <Entry x:Name="NameEntry" TextColor="White" BackgroundColor="#24242C" HeightRequest="48"/>
+            <Label Text="Height (cm)" TextColor="#9CA3AF" FontSize="13"/>
+            <Entry x:Name="HeightEntry" TextColor="White" BackgroundColor="#24242C" Keyboard="Numeric" HeightRequest="48"/>
+            <Label Text="Weight" TextColor="#9CA3AF" FontSize="13"/>
+            <Entry x:Name="WeightEntry" TextColor="White" BackgroundColor="#24242C" Keyboard="Numeric" HeightRequest="48"/>
+            <Label Text="Weight Unit" TextColor="#9CA3AF" FontSize="13"/>
+            <Picker x:Name="UnitPicker" TextColor="White" BackgroundColor="#24242C" Title="Select unit">
+                <Picker.Items><x:String>kg</x:String><x:String>lb</x:String></Picker.Items>
+            </Picker>
+            <Label Text="Weekly Goal (workouts/week)" TextColor="#9CA3AF" FontSize="13"/>
+            <Entry x:Name="GoalEntry" TextColor="White" BackgroundColor="#24242C" Keyboard="Numeric" HeightRequest="48"/>
+            <Button Text="Save" BackgroundColor="#D4AF37" TextColor="#1F1600" FontAttributes="Bold"
+                    CornerRadius="12" HeightRequest="52" Margin="0,16,0,0" Clicked="OnSaveClicked"/>
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

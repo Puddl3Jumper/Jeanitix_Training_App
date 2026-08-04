@@ -1,0 +1,80 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="JeanetixMAUI.Pages.ProfilePage"
+             BackgroundColor="#1A1A1A"
+             Shell.NavBarIsVisible="False">
+    <Grid BackgroundColor="#1A1A1A">
+    <ScrollView>
+        <VerticalStackLayout Padding="20,52,20,80" Spacing="16">
+
+            <!-- Profile Header -->
+            <Border BackgroundColor="#24242C" StrokeThickness="0" StrokeShape="RoundRectangle 16" Padding="20">
+                <Grid ColumnDefinitions="Auto,*,Auto" ColumnSpacing="16">
+                    <!-- Avatar -->
+                    <Border Grid.Column="0" BackgroundColor="#D4AF37" StrokeThickness="0"
+                            StrokeShape="RoundRectangle 30" WidthRequest="60" HeightRequest="60">
+                        <Label x:Name="AvatarInitials" Text="?" FontSize="22" FontAttributes="Bold"
+                               TextColor="#1F1600" HorizontalOptions="Center" VerticalOptions="Center"/>
+                    </Border>
+                    <!-- Info -->
+                    <VerticalStackLayout Grid.Column="1" Spacing="2" VerticalOptions="Center">
+                        <Label x:Name="NameLabel" Text="Loading..." FontSize="18" FontAttributes="Bold" TextColor="White"/>
+                        <Label x:Name="EmailLabel" Text="" FontSize="13" TextColor="#9CA3AF"/>
+                        <Label x:Name="StatsLabel" Text="" FontSize="12" TextColor="#6B7280"/>
+                    </VerticalStackLayout>
+                    <!-- Edit -->
+                    <Button Grid.Column="2" Text="Edit" FontSize="13" TextColor="#D4AF37"
+                            BackgroundColor="Transparent" Padding="0" VerticalOptions="Center"
+                            Clicked="OnEditProfileClicked"/>
+                </Grid>
+            </Border>
+
+            <!-- Key Metrics -->
+            <Border BackgroundColor="#24242C" StrokeThickness="0" StrokeShape="RoundRectangle 16" Padding="16">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Key Metrics" FontSize="13" FontAttributes="Bold" TextColor="#9CA3AF"/>
+                    <Grid ColumnDefinitions="*,*,*" ColumnSpacing="8">
+                        <VerticalStackLayout Grid.Column="0" HorizontalOptions="Center">
+                            <Label x:Name="TotalWorkoutsLabel" Text="0" FontSize="22" FontAttributes="Bold" TextColor="White" HorizontalOptions="Center"/>
+                            <Label Text="workouts" FontSize="11" TextColor="#9CA3AF" HorizontalOptions="Center"/>
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="1" HorizontalOptions="Center">
+                            <Label x:Name="ThisWeekLabel" Text="0" FontSize="22" FontAttributes="Bold" TextColor="White" HorizontalOptions="Center"/>
+                            <Label Text="this week" FontSize="11" TextColor="#9CA3AF" HorizontalOptions="Center"/>
+                        </VerticalStackLayout>
+                        <VerticalStackLayout Grid.Column="2" HorizontalOptions="Center">
+                            <Label x:Name="WeeklyGoalLabel" Text="4" FontSize="22" FontAttributes="Bold" TextColor="#D4AF37" HorizontalOptions="Center"/>
+                            <Label Text="weekly goal" FontSize="11" TextColor="#9CA3AF" HorizontalOptions="Center"/>
+                        </VerticalStackLayout>
+                    </Grid>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Personal Records -->
+            <Border BackgroundColor="#24242C" StrokeThickness="0" StrokeShape="RoundRectangle 16" Padding="16">
+                <VerticalStackLayout Spacing="8">
+                    <Label Text="Personal Records" FontSize="13" FontAttributes="Bold" TextColor="#9CA3AF"/>
+                    <VerticalStackLayout x:Name="PrsContainer" Spacing="6"/>
+                </VerticalStackLayout>
+            </Border>
+
+            <!-- Progress -->
+            <Button Text="View Progress Charts" BackgroundColor="#24242C" TextColor="White"
+                    BorderColor="#49454F" BorderWidth="1" CornerRadius="12" HeightRequest="52"
+                    Clicked="OnProgressClicked"/>
+
+            <!-- Settings -->
+            <Button Text="Settings" BackgroundColor="#24242C" TextColor="White"
+                    BorderColor="#49454F" BorderWidth="1" CornerRadius="12" HeightRequest="52"
+                    Clicked="OnSettingsClicked"/>
+
+            <!-- Sign Out -->
+            <Button x:Name="SignOutButton" Text="Sign Out" BackgroundColor="Transparent"
+                    TextColor="#EF4444" BorderColor="#EF444450" BorderWidth="1"
+                    CornerRadius="12" HeightRequest="52" Clicked="OnSignOutClicked"/>
+
+        </VerticalStackLayout>
+    </ScrollView>
+    </Grid>
+</ContentPage>

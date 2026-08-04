@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="JeanetixMAUI.Pages.CreateAccountPage"
+             BackgroundColor="#1A1A1A"
+             Title="Create Account">
+    <ScrollView>
+        <VerticalStackLayout Padding="32,40" Spacing="0">
+
+            <Label Text="Create Account" FontSize="26" FontAttributes="Bold"
+                   TextColor="White" Margin="0,0,0,8"/>
+            <Label Text="Start your fitness journey" FontSize="14" TextColor="#9CA3AF"
+                   Margin="0,0,0,36"/>
+
+            <Label Text="Full Name" TextColor="#E0E0E0" FontSize="13" Margin="0,0,0,6"/>
+            <Entry x:Name="NameEntry" Placeholder="Your name" PlaceholderColor="#9E9E9E"
+                   TextColor="White" BackgroundColor="#24242C" HeightRequest="48" Margin="0,0,0,16"/>
+
+            <Label Text="Email" TextColor="#E0E0E0" FontSize="13" Margin="0,0,0,6"/>
+            <Entry x:Name="EmailEntry" Placeholder="your@email.com" PlaceholderColor="#9E9E9E"
+                   TextColor="White" BackgroundColor="#24242C" Keyboard="Email" HeightRequest="48" Margin="0,0,0,16"/>
+
+            <Label Text="Password" TextColor="#E0E0E0" FontSize="13" Margin="0,0,0,6"/>
+            <Entry x:Name="PasswordEntry" Placeholder="Min 6 characters" PlaceholderColor="#9E9E9E"
+                   TextColor="White" BackgroundColor="#24242C" IsPassword="True" HeightRequest="48" Margin="0,0,0,32"/>
+
+            <Button x:Name="CreateButton" Text="Create Account" BackgroundColor="#D4AF37"
+                    TextColor="#1F1600" FontAttributes="Bold" FontSize="16"
+                    CornerRadius="12" HeightRequest="52" Clicked="OnCreateClicked"/>
+
+        </VerticalStackLayout>
+    </ScrollView>
+</ContentPage>

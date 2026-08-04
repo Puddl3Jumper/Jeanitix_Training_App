@@ -1,0 +1,69 @@
+﻿<?xml version="1.0" encoding="utf-8" ?>
+<ContentPage xmlns="http://schemas.microsoft.com/dotnet/2021/maui"
+             xmlns:x="http://schemas.microsoft.com/winfx/2009/xaml"
+             x:Class="JeanetixMAUI.MainPage"
+             Title="Jeanetix">
+
+    <ScrollView>
+        <VerticalStackLayout Padding="20" Spacing="16">
+            <!-- Welcome Section -->
+            <VerticalStackLayout Spacing="8">
+                <Label Text="Welcome back" FontSize="24" FontAttributes="Bold" />
+                <Label Text="Your gym journal, training plans, and progress in one place."
+                       FontSize="14" TextColor="#999999" />
+            </VerticalStackLayout>
+
+            <!-- Today's Plan Card -->
+            <Frame BorderColor="#2563EB" CornerRadius="20" Padding="16" HasShadow="True">
+                <VerticalStackLayout Spacing="12">
+                    <Label Text="Today's Plan" FontSize="16" FontAttributes="Bold" />
+                    <Label Text="Chest • Incline Press • 3x8" FontSize="13" />
+                    <Label Text="Back • Rows • 3x10" FontSize="13" />
+                    <Button Text="Start Workout" BackgroundColor="#2563EB" TextColor="White" Padding="12" />
+                </VerticalStackLayout>
+            </Frame>
+
+            <!-- Stats Grid -->
+            <Grid ColumnDefinitions="*,*" RowDefinitions="Auto,Auto" ColumnSpacing="12" RowSpacing="12">
+                <!-- Today Card -->
+                <Frame Grid.Row="0" Grid.Column="0" BorderColor="#1F2937" CornerRadius="16" Padding="12" HasShadow="False">
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Today" FontSize="12" FontAttributes="Bold" />
+                        <Label Text="3 workouts" FontSize="16" FontAttributes="Bold" />
+                        <Label Text="Strong week" FontSize="11" TextColor="#999999" />
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Streak Card -->
+                <Frame Grid.Row="0" Grid.Column="1" BorderColor="#1F2937" CornerRadius="16" Padding="12" HasShadow="False">
+                    <VerticalStackLayout Spacing="4">
+                        <Label Text="Streak" FontSize="12" FontAttributes="Bold" />
+                        <Label Text="7 days" FontSize="16" FontAttributes="Bold" />
+                        <Label Text="Keep it going" FontSize="11" TextColor="#999999" />
+                    </VerticalStackLayout>
+                </Frame>
+
+                <!-- Recent Workouts Header -->
+                <Label Grid.Row="1" Grid.ColumnSpan="2" Text="Recent Workouts" FontSize="14" FontAttributes="Bold" Margin="0,8,0,0" />
+            </Grid>
+
+            <!-- Workout List -->
+            <CollectionView x:Name="WorkoutList" SelectionMode="Single">
+                <CollectionView.ItemTemplate>
+                    <DataTemplate>
+                        <Frame BorderColor="#1F2937" CornerRadius="16" Padding="12" Margin="0,4" HasShadow="False">
+                            <VerticalStackLayout Spacing="4">
+                                <Label Text="{Binding Name}" FontSize="14" FontAttributes="Bold" />
+                                <HorizontalStackLayout Spacing="8">
+                                    <Label Text="{Binding StartTime, StringFormat='{0:MMM dd, HH:mm}'}" FontSize="12" TextColor="#999999" />
+                                    <Label Text="{Binding Duration, StringFormat='{0:hh\\:mm}'}" FontSize="12" TextColor="#999999" />
+                                </HorizontalStackLayout>
+                            </VerticalStackLayout>
+                        </Frame>
+                    </DataTemplate>
+                </CollectionView.ItemTemplate>
+            </CollectionView>
+        </VerticalStackLayout>
+    </ScrollView>
+
+</ContentPage>
